@@ -1,9 +1,10 @@
 {
   "include": [
-    "libs/*/tests"
+    "libs/*/tests/**/*.py",
   ],
   "executionEnvironments": [
     {
+      "root": ".",
       "pythonPath": "venv/bin/python",
       "pythonVersion": "3.x"
     }

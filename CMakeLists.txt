@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(project VERSION 0.1.0 
+project(Anvil VERSION 0.1.0 
   LANGUAGES ASM C
-  DESCRIPTION "A template project for C libraries"
+  DESCRIPTION "A C libary collection"
 )
 
 option(BUILD_TESTING "Build Tests" ON)
@@ -12,18 +12,11 @@ include(CompilerStandards)
 
 enable_testing()
 
-find_package(Python3 COMPONENT Interpreter REQUIRED)
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
 message(STATUS "Using Python 3 Interpreter: ${Python3_EXECUTABLE}")
 
-# add_subdirectory(libs/<lib_name>)
+add_subdirectory(libs/memory)
 
 if(NOT DEFINED ENV{VIRTUAL_ENV})
     message(FATAL_ERROR "Please activate your virtual environment before running CMake. Pytest and Hypothesis are required for testing. Use 'source venv/bin/activate' to activate the virtual environment.")
 endif()
-
-add_custom_command(
-    TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E create_symlink
-        ${CMAKE_BINARY_DIR}/compile_commands.json
-        ${CMAKE_SOURCE_DIR}/compile_commands.json
-)
