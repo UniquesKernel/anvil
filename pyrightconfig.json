@@ -1,0 +1,12 @@
+{
+  "include": [
+    "libs/*/tests"
+  ],
+  "executionEnvironments": [
+    {
+      "pythonPath": "venv/bin/python",
+      "pythonVersion": "3.x"
+    }
+  ],
+  "typeCheckingMode": "strict"
+}

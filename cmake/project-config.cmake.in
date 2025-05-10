@@ -1,0 +1,7 @@
+@PACKAGE_INIT@
+
+# Include the exported targets file
+include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@-targets.cmake")
+
+# This line creates an imported target that other projects can link against
+check_required_components("@PROJECT_NAME@")

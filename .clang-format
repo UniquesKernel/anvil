@@ -1,0 +1,107 @@
+# .clang-format configuration based on user's specified C style
+
+# Start with a base style (LLVM is a good configurable base)
+BasedOnStyle: LLVM
+
+# 1. Brace Style: Opening braces always on the same line.
+BreakBeforeBraces: Attach
+AllowShortFunctionsOnASingleLine: None
+AllowShortBlocksOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: Never # Ensures if { stmt; } else { stmt; } is not on one line if braces are used
+AllowShortLoopsOnASingleLine: false
+
+# 2. Indentation: Tab characters, 8 spaces wide.
+UseTab: ForIndentation
+TabWidth: 8
+IndentWidth: 8 # When UseTab is ForIndentation, IndentWidth should match TabWidth for clarity
+
+# 3. Naming Conventions: (Not enforced by clang-format, but style context)
+#    - Variables & Functions: snake_case
+#    - Types: PascalCase
+#    - Constants/Macros: ALL_CAPS_SNAKE_CASE
+
+# 4. Comments:
+#    - In-Code: // and /* ... */
+#    - Documentation: Doxygen (/** ... */)
+FormatCommentBlocks: true # Default, formats block comments
+ReflowComments: true      # Reflows text in comments, including Doxygen, to ColumnLimit
+
+# 5. Line Length: Maximum 120 characters.
+ColumnLimit: 120
+
+# 6. Spacing:
+#    - Spaces around binary operators: a + b
+SpacesInConditionalStatement: true # Adds spaces around '?' and ':' in ternary ops
+SpaceAroundBinaryOperators: true   # Default is true (from LLVM)
+SpaceBeforeAssignmentOperators: true # Default is true
+
+#    - No space for unary operators: !flag, *ptr
+SpaceAroundUnaryOperator: false
+
+#    - Space after commas: foo(a, b)
+SpaceAfterComma: true # Default is true
+
+#    - Space between keyword and condition for control flow: if (condition)
+#    - No space before parentheses in function declarations and calls: void my_func(int arg), result = my_func(arg);
+#    - No space inside parentheses: (a + b)
+SpaceBeforeParensOptions:
+  AfterControlStatements: true          # if (condition)
+  AfterFunctionDeclarationName: false   # void my_func()
+  AfterFunctionDefinitionName: false    # void my_func() {}
+  AfterFunctionCallName: false          # my_func()
+  AfterOverloadedOperator: false        # operator++()
+  BeforeNonEmptyParentheses: false      # For casts like (int)value, or ((A*)b)->c
+SpacesInParentheses: false
+SpacesInCStyleCastParentheses: false
+SpaceAfterCStyleCast: false
+
+#    - Pointer style: int* ptr; (East const -> asterisk with type on the left)
+PointerAlignment: Left
+
+#    - Space after return keyword, no parentheses for the expression: return result;
+#      clang-format generally handles 'return result;' well.
+#      Parentheses around return expression is controlled by user.
+
+#    - sizeof operator must use parentheses around its operand: sizeof(my_variable)
+#      clang-format will format what's there. It won't add parentheses if they are
+#      `sizeof my_var` for an expression, but it will if they are `sizeof(type)`.
+#      This is more of a coding discipline.
+
+# 7. Alignment:
+#    - Align '=', types, identifiers as discussed (tabular/columnar).
+#      This is the most challenging part for full automation of the exact visual.
+AlignConsecutiveAssignments: AcrossEmptyLinesAndComments # Tries to align '=' over lines/comments
+AlignConsecutiveDeclarations: AcrossEmptyLinesAndComments # Tries to align declarations over lines/comments
+AlignOperands: true # Align operands of binary/ternary expressions.
+# The specific leading-space indentation for standalone assignments to match
+# a "declaration identifier column" is very hard to achieve automatically.
+# clang-format aligns based on syntactic blocks.
+
+#    - Align macro definitions
+AlignConsecutiveMacros: AcrossEmptyLinesAndComments # Align macro definitions and their values
+
+# Other potentially useful alignment settings
+AlignTrailingComments: true
+#AlignEscapedNewlines: Left # Default is Right, Left might be preferred by some
+
+# Language Specifics
+Language: C
+Standard: c23 # Or c99, c17, c2x as appropriate for your project
+
+# Penalty configuration (influences line breaking, can affect alignment)
+# Default penalties are usually fine, but can be tweaked if line breaking
+# is not behaving as desired in context of alignment.
+PenaltyExcessCharacter: 1000000
+PenaltyBreakBeforeFirstCallParameter: 19 # Default
+PenaltyBreakComment: 300 # Default
+PenaltyBreakString: 1000 # Default
+PenaltyBreakOpenParenthesis: 1000 # Example, might need adjustment
+
+# Keep empty lines
+MaxEmptyLinesToKeep: 1 # Or 2, based on preference for blank lines
+KeepEmptyLinesAtTheStartOfBlocks: false
+
+# For Doxygen style comments
+CommentPragmas: '^@(brief|invariant|param|return|note|warning|see|deprecated|pre|post|sa|tparam|throw|throws|todo|p)'
+
