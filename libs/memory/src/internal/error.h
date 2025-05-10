@@ -85,4 +85,7 @@
 #define ERR_INVALID_STATE                   E417 ": %s in invalid state: expected %s but was %s"
 #define ERR_OPERATION_INVALID_FOR_STATE     E418 ": Operation %s not valid for %s in state %s"
 
+// Example declaration to satisfy ISO C requirements
+void error_dummy_function(void);
+
 #endif    // ERROR_H

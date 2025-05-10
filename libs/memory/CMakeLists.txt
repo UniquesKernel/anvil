@@ -2,11 +2,10 @@ set(MODULE_NAME memory)
 
 set(MODULE_SOURCE 
     src/utility.c
+    src/memory_allocation.c
 )
 
 set(MODULE_PUBLIC_HEADER 
-    include/utility.h
-    include/error.h
 )
 
 add_library(${MODULE_NAME} STATIC ${MODULE_SOURCE})

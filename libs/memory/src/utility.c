@@ -1,4 +1,4 @@
-#include "utility.h"
+#include "internal/utility.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -16,17 +16,17 @@ void log_and_crash(const char *expr, const char *file, int line, const char *fmt
 	char message[1024] = {0};
 	va_list args;
 	va_start(args, fmt);
-	vsnprintf(message, sizeof(message), fmt, args);
+	(void)vsnprintf(message, sizeof(message), fmt, args);
 	va_end(args);
 
 #ifdef LOG_FILE
 	FILE *log = fopen(LOG_FILE, "a");
 	if (log) {
-		fprintf(log, "[%s] INVARIANT failed: %s at %s:%d\n%s\n\n", time_buf, expr, file, line, message);
+		(void)fprintf(log, "[%s] INVARIANT failed: %s at %s:%d\n%s\n\n", time_buf, expr, file, line, message);
 		fclose(log);
 	}
 #else
-	fprintf(stderr, "INVARIANT failed: %s at %s:%d\n%s\n", expr, file, line, message);
+	(void)fprintf(stderr, "INVARIANT failed: %s at %s:%d\n%s\n", expr, file, line, message);
 #endif /* ifdef LOG_FILE */
 
 	abort();
