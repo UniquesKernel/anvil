@@ -12,7 +12,7 @@ AllowShortIfStatementsOnASingleLine: Never # Ensures if { stmt; } else { stmt; }
 AllowShortLoopsOnASingleLine: false
 
 # 2. Indentation: Tab characters, 8 spaces wide.
-UseTab: ForIndentation
+UseTab: ForContinuationAndIndentation
 TabWidth: 8
 IndentWidth: 8 # When UseTab is ForIndentation, IndentWidth should match TabWidth for clarity
 
@@ -24,7 +24,6 @@ IndentWidth: 8 # When UseTab is ForIndentation, IndentWidth should match TabWidt
 # 4. Comments:
 #    - In-Code: // and /* ... */
 #    - Documentation: Doxygen (/** ... */)
-FormatCommentBlocks: true # Default, formats block comments
 ReflowComments: true      # Reflows text in comments, including Doxygen, to ColumnLimit
 
 # 5. Line Length: Maximum 120 characters.
@@ -33,14 +32,7 @@ ColumnLimit: 120
 # 6. Spacing:
 #    - Spaces around binary operators: a + b
 SpacesInConditionalStatement: true # Adds spaces around '?' and ':' in ternary ops
-SpaceAroundBinaryOperators: true   # Default is true (from LLVM)
 SpaceBeforeAssignmentOperators: true # Default is true
-
-#    - No space for unary operators: !flag, *ptr
-SpaceAroundUnaryOperator: false
-
-#    - Space after commas: foo(a, b)
-SpaceAfterComma: true # Default is true
 
 #    - Space between keyword and condition for control flow: if (condition)
 #    - No space before parentheses in function declarations and calls: void my_func(int arg), result = my_func(arg);
@@ -49,10 +41,12 @@ SpaceBeforeParensOptions:
   AfterControlStatements: true          # if (condition)
   AfterFunctionDeclarationName: false   # void my_func()
   AfterFunctionDefinitionName: false    # void my_func() {}
-  AfterFunctionCallName: false          # my_func()
   AfterOverloadedOperator: false        # operator++()
   BeforeNonEmptyParentheses: false      # For casts like (int)value, or ((A*)b)->c
-SpacesInParentheses: false
+SpacesInParens: Custom
+SpacesInParensOptions:
+  InConditionalStatements: false
+  InEmptyParentheses: false
 SpacesInCStyleCastParentheses: false
 SpaceAfterCStyleCast: false
 
@@ -71,8 +65,17 @@ PointerAlignment: Left
 # 7. Alignment:
 #    - Align '=', types, identifiers as discussed (tabular/columnar).
 #      This is the most challenging part for full automation of the exact visual.
-AlignConsecutiveAssignments: AcrossEmptyLinesAndComments # Tries to align '=' over lines/comments
-AlignConsecutiveDeclarations: AcrossEmptyLinesAndComments # Tries to align declarations over lines/comments
+AlignConsecutiveAssignments: # Tries to align '=' over lines/comments
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: true
+  AlignCompound: true
+AlignConsecutiveDeclarations:  # Tries to align declarations over lines/comments
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: true
+  AlignFunctionPointers: true
+
 AlignOperands: true # Align operands of binary/ternary expressions.
 # The specific leading-space indentation for standalone assignments to match
 # a "declaration identifier column" is very hard to achieve automatically.
@@ -84,10 +87,6 @@ AlignConsecutiveMacros: AcrossEmptyLinesAndComments # Align macro definitions an
 # Other potentially useful alignment settings
 AlignTrailingComments: true
 #AlignEscapedNewlines: Left # Default is Right, Left might be preferred by some
-
-# Language Specifics
-Language: C
-Standard: c23 # Or c99, c17, c2x as appropriate for your project
 
 # Penalty configuration (influences line breaking, can affect alignment)
 # Default penalties are usually fine, but can be tweaked if line breaking

@@ -74,15 +74,15 @@
  * @param __offset Offset within the file.
  * @return Pointer to the mapped memory region.
  */
-inline void *debug_mmap(void *addr, size_t size, int __prod, __flags, __fd, __off_t __offset) {
-	void *result = mmap(addr, size, __prod, __flags, __fd, __off_t__offset);
+inline void* debug_mmap(void* addr, size_t size, int __prod, __flags, __fd, __off_t __offset) {
+	void* result = mmap(addr, size, __prod, __flags, __fd, __off_t__offset);
 	if (result) {
 		memset(addr, MEMOMEMORY_POISON_PATTERN, size);
 	}
 	return result;
 }
 #define mmap debug_mmap
-#endif    // DEBUG
+#endif // DEBUG
 
 /**
  * @brief Logs the time, file and code line and then aborts.
@@ -93,6 +93,6 @@ inline void *debug_mmap(void *addr, size_t size, int __prod, __flags, __fd, __of
  * @param[in] `fmt`  formatted error message to log.
  * @param[in] ... formating arguments.
  */
-void __attribute__((noreturn)) log_and_crash(const char *expr, const char *file, int line, const char *fmt, ...);
+void __attribute__((noreturn)) log_and_crash(const char* expr, const char* file, int line, const char* fmt, ...);
 
-#endif    // !ANVIL_MEMORY_UTILITY_H
+#endif // !ANVIL_MEMORY_UTILITY_H
