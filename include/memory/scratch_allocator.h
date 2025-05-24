@@ -34,8 +34,8 @@ typedef struct ScratchAllocator ScratchAllocator;
  * @param[in] alignment is the alignment of the memory in the allocator.
  * @returns ScratchAllocator*
  */
-ScratchAllocator*               scratch_allocator_create(const size_t capacity,
-							 const size_t alignment) FREE_SCRATCH_ATTRIBUTE WARN_IF_NOT_USED;
+FREE_SCRATCH_ATTRIBUTE WARN_IF_NOT_USED ScratchAllocator*               scratch_allocator_create(const size_t capacity,
+							 const size_t alignment);
 
 /**
  * @brief allocates memory from a scratch allocator and return the memory to the caller.
@@ -51,8 +51,8 @@ ScratchAllocator*               scratch_allocator_create(const size_t capacity,
  * @note The allocator may pad the allocated memory if necessary, thus returning
  * slightly more memory than asked for, if necessary to maintain alignment.
  */
-void*                           scratch_allocator_alloc(ScratchAllocator* restrict allocator, const size_t size,
-							const size_t count) MALLOC_ATTRIBUTE WARN_IF_NOT_USED;
+MALLOC_ATTRIBUTE WARN_IF_NOT_USED void*                           scratch_allocator_alloc(ScratchAllocator* restrict allocator, const size_t size,
+							const size_t count) ;
 
 /**
  * @brief Reset a scratch allocator allowing existing allocation to be overwritten

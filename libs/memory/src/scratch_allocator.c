@@ -37,24 +37,29 @@ static_assert(sizeof(ScratchAllocator) == 32 || sizeof(ScratchAllocator) == 16,
 	      "Scratch Allocator should be 32 bytes or 16 bytes depending on architecture");
 static_assert(alignof(ScratchAllocator) == alignof(void*), "Scratch Allocator should be aligned to void*");
 
-FREE_DYNAMIC_ATTRIBUTE WARN_IF_NOT_USED ScratchAllocator* scratch_allocator_create(const size_t capacity,
+FREE_SCRATCH_ATTRIBUTE WARN_IF_NOT_USED ScratchAllocator* scratch_allocator_create(const size_t capacity,
 									   const size_t alignment) {
 	INVARIANT(capacity > 0, ERR_ZERO_CAPACITY, capacity);
 	INVARIANT(capacity >= alignment, ERR_GREATER_EQUAL, "capacity", "alignment", capacity, alignment);
 	INVARIANT(is_power_of_two(alignment), ERR_ALLOC_ALIGNMENT_NOT_POWER_OF_TWO, alignment);
 
 	ScratchAllocator* allocator = safe_aligned_alloc(sizeof(*allocator), alignof(max_align_t));
-	INVARIANT(allocator, ERR_NULL_POINTER, "allocator");
+	if (!allocator) {
+		return NULL;
+	}
 
 	allocator->base = safe_aligned_alloc(capacity, alignment);
-	INVARIANT(allocator->base, ERR_NULL_POINTER, "allocator base memory");
+	if (!allocator->base) {
+		safe_aligned_free(allocator);
+		return NULL;
+	}
 
 	allocator->allocated = 0;
 	memcpy(&(allocator->alignment), &alignment, sizeof(size_t));
 	memcpy(&(allocator->capacity), &capacity, sizeof(size_t));
 
 	return allocator;
-}
+} 
 
 MALLOC_ATTRIBUTE WARN_IF_NOT_USED void* scratch_allocator_alloc(ScratchAllocator* restrict allocator, const size_t size,
 								const size_t count) {
