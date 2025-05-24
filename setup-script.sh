@@ -19,17 +19,17 @@ sudo apt-get install -y gdb valgrind
 sudo apt-get install -y doxygen doxygen-gui graphviz
 
 # Check if we're in a virtual environment already
-if [[ -z "${VIRTUAL_ENV}" ]]; then
-  echo "No virtual environment detected, creating one..."
+#if [[ -z "${VIRTUAL_ENV}" ]]; then
+#  echo "No virtual environment detected, creating one..."
   # Create venv if it doesn't exist
-  if [ ! -d "venv" ]; then
-    python3 -m venv venv
-  fi
+#  if [ ! -d "venv" ]; then
+#    python3 -m venv venv
+#  fi
   # Activate venv
-  source venv/bin/activate
-else
-  echo "Using existing virtual environment: ${VIRTUAL_ENV}"
-fi
+#  source venv/bin/activate
+#else
+#  echo "Using existing virtual environment: ${VIRTUAL_ENV}"
+#fi
 
 # Install Python dependencies
 pip install -r requirements.txt

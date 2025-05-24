@@ -2,6 +2,8 @@
 venv/
 .vscode/
 build/
+.pytest_cache/
+
 # Prerequisites
 *.d
 

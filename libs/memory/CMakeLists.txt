@@ -36,8 +36,6 @@ if(BUILD_TESTING)
 
     target_compile_options(${MODULE_NAME}_test_shared PRIVATE -fPIC -O0 -g)
 
-    message("BINARY DIR: ${CMAKE_CURRENT_BINARY_DIR}")
-    message("SOURCE DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
     add_test(
         NAME ${MODULE_NAME}_pytest
         COMMAND ${Python3_EXECUTABLE} -m pytest "${CMAKE_CURRENT_SOURCE_DIR}/tests/"

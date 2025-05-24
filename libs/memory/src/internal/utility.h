@@ -27,14 +27,14 @@
  *
  * @param x The condition to evaluate.
  */
-#define likely(x)             __builtin_expect(!!(x), 1)
+#define LIKELY(x)            __builtin_expect(!!(x), 1)
 
 /**
  * @brief Optimization hint indicating that a condition is unlikely to be true.
  *
  * @param x The condition to evaluate.
  */
-#define unlikely(x)           __builtin_expect(!!(x), 0)
+#define UNLIKELY(x)           __builtin_expect(!!(x), 0)
 
 /**
  * @brief Pattern used to poison freed or uninitialized memory for debugging.

@@ -35,6 +35,7 @@ void safe_free(void* ptr) {
 		return;
 	}
 	free(*(void**)ptr);
+	*(void**)ptr = NULL;
 }
 
 void safe_aligned_free(void* ptr) {

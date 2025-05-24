@@ -20,14 +20,14 @@ venv:
 configure:
 	@cmake -B $(BUILD_DIR) $(CMAKE_OPTS) .
 
-build:
+build: configure
 	@cmake --build $(BUILD_DIR)
 
-test:
+test: build
 	@cd $(BUILD_DIR) && ctest --output-on-failure
 
 docs:
 	@doxygen Doxyfile
 
 clean:
-	@rm -rf $(BUILD_DIR)
+	@rm -rf $(BUILD_DIR) docs/doxygen
