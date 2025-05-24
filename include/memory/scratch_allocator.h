@@ -6,6 +6,9 @@
  * typically linear, allocation from a pre-allocated buffer. It is designed
  * for temporary allocations where all allocated memory can be freed at once
  * by resetting the allocator. This makes it suitable for short-lived data.
+ * 
+ * @warning These allocators are not thread-safe. Concurrent access from multiple threads
+ * may lead to race conditions and undefined behavior.
  */
 #ifndef ANVIL_MEMORY_SCRATCH_ALLOCATOR_H
 #define ANVIL_MEMORY_SCRATCH_ALLOCATOR_H
@@ -22,7 +25,7 @@
 #define WARN_IF_NOT_USED
 #endif
 
-typedef struct ScratchAllocator ScratchAllocator;
+typedef struct ScratchAllocator                           ScratchAllocator;
 
 /**
  * @brief Creates a scratch allocator, with an capacity and memory alignment.
@@ -33,9 +36,10 @@ typedef struct ScratchAllocator ScratchAllocator;
  * @param[in] capacity is the size of the allocators memory.
  * @param[in] alignment is the alignment of the memory in the allocator.
  * @returns ScratchAllocator*
+ * 
+ * @note Breaking invariants will cause the program to crash.
  */
-FREE_SCRATCH_ATTRIBUTE WARN_IF_NOT_USED ScratchAllocator*               scratch_allocator_create(const size_t capacity,
-							 const size_t alignment);
+FREE_SCRATCH_ATTRIBUTE WARN_IF_NOT_USED ScratchAllocator* scratch_allocator_create(const size_t capacity, const size_t alignment);
 
 /**
  * @brief allocates memory from a scratch allocator and return the memory to the caller.
@@ -50,9 +54,9 @@ FREE_SCRATCH_ATTRIBUTE WARN_IF_NOT_USED ScratchAllocator*               scratch_
  *
  * @note The allocator may pad the allocated memory if necessary, thus returning
  * slightly more memory than asked for, if necessary to maintain alignment.
+ * @note Breaking invariants will cause the program to crash.
  */
-MALLOC_ATTRIBUTE WARN_IF_NOT_USED void*                           scratch_allocator_alloc(ScratchAllocator* restrict allocator, const size_t size,
-							const size_t count) ;
+MALLOC_ATTRIBUTE WARN_IF_NOT_USED void*                   scratch_allocator_alloc(ScratchAllocator* restrict allocator, const size_t size, const size_t count);
 
 /**
  * @brief Reset a scratch allocator allowing existing allocation to be overwritten
@@ -65,8 +69,9 @@ MALLOC_ATTRIBUTE WARN_IF_NOT_USED void*                           scratch_alloca
  *
  * @note Any allocated memory, allocated before calling the method should be considered invalid
  * after calling this function.
+ * @note Breaking invariants will cause the program to crash.
  */
-void                            scratch_allocator_reset(ScratchAllocator* restrict allocator);
+void                                                      scratch_allocator_reset(ScratchAllocator* restrict allocator);
 
 /**
  * @brief Destroy a scratch allocator, deallocating all memory it holds
@@ -77,7 +82,8 @@ void                            scratch_allocator_reset(ScratchAllocator* restri
  * @param[out] allocator to destroy
  *
  * @note All allocations made using the allocator should be considered invalid after this function is called
+ * @note Breaking invariants will cause the program to crash.
  */
-void                            scratch_allocator_destroy(ScratchAllocator** allocator);
+void                                                      scratch_allocator_destroy(ScratchAllocator** allocator);
 
 #endif // ANVIL_MEMORY_SCRATCH_ALLOCATOR_H
