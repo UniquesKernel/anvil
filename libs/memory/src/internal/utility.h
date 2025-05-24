@@ -27,7 +27,7 @@
  *
  * @param x The condition to evaluate.
  */
-#define LIKELY(x)            __builtin_expect(!!(x), 1)
+#define LIKELY(x)             __builtin_expect(!!(x), 1)
 
 /**
  * @brief Optimization hint indicating that a condition is unlikely to be true.
@@ -52,37 +52,12 @@
  * @param fmt Format string for the error message.
  * @param ... Arguments for the format string.
  */
-#define INVARIANT(expr, fmt, ...)                                                                                      \
-	do {                                                                                                           \
-		if (!(expr)) {                                                                                         \
-			log_and_crash(#expr, __FILE__, __LINE__, fmt, ##__VA_ARGS__);                                  \
-		}                                                                                                      \
+#define INVARIANT(expr, fmt, ...)                                                                                                                                                  \
+	do {                                                                                                                                                                       \
+		if (!(expr)) {                                                                                                                                                     \
+			log_and_crash(#expr, __FILE__, __LINE__, fmt, ##__VA_ARGS__);                                                                                              \
+		}                                                                                                                                                                  \
 	} while (0)
-
-#ifdef DEBUG
-/**
- * @brief Debug version of mmap that poisons allocated memory.
- *
- * In debug builds, this function replaces the standard mmap and fills
- * newly allocated memory with the poison pattern for easier debugging.
- *
- * @param addr Suggested address for the mapping.
- * @param size Size of the memory region to map.
- * @param __prod Protection flags.
- * @param __flags Mapping flags.
- * @param __fd File descriptor.
- * @param __offset Offset within the file.
- * @return Pointer to the mapped memory region.
- */
-inline void* debug_mmap(void* addr, size_t size, int __prod, __flags, __fd, __off_t __offset) {
-	void* result = mmap(addr, size, __prod, __flags, __fd, __off_t__offset);
-	if (result) {
-		memset(addr, MEMOMEMORY_POISON_PATTERN, size);
-	}
-	return result;
-}
-#define mmap debug_mmap
-#endif // DEBUG
 
 /**
  * @brief Logs the time, file and code line and then aborts.
