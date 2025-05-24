@@ -23,8 +23,4 @@ void*                              dynamic_allocator_alloc() MALLOC_ATTRIBUTE WA
 void                               dynamic_allocator_reset();
 void                               dynamic_allocator_destroy();
 
-#undef MALLOC_ATTRIBUTE
-#undef FREE_DYNAMIC_ATTRIBUTE
-#undef WARN_IF_NOT_USED
-
 #endif // ANVIL_MEMORY_DYNAMIC_ALLOCATOR_H

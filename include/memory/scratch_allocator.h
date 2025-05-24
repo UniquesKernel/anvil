@@ -80,8 +80,4 @@ void                            scratch_allocator_reset(ScratchAllocator* restri
  */
 void                            scratch_allocator_destroy(ScratchAllocator** allocator);
 
-#undef MALLOC_ATTRIBUTE
-#undef FREE_SCRATCH_ATTRIBUTE
-#undef WARN_IF_NOT_USED
-
 #endif // ANVIL_MEMORY_SCRATCH_ALLOCATOR_H
