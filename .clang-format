@@ -12,7 +12,6 @@ AllowShortIfStatementsOnASingleLine: Never # Ensures if { stmt; } else { stmt; }
 AllowShortLoopsOnASingleLine: false
 
 # 2. Indentation: Tab characters, 8 spaces wide.
-UseTab: ForContinuationAndIndentation
 TabWidth: 8
 IndentWidth: 8 # When UseTab is ForIndentation, IndentWidth should match TabWidth for clarity
 

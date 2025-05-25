@@ -6,7 +6,7 @@
  * and can grow by allocating new blocks when needed. It provides more flexibility than
  * a scratch allocator by dynamically expanding its capacity, making it suitable for
  * longer-lived data with unpredictable memory requirements.
- * 
+ *
  * @warning These allocators are not thread-safe. Concurrent access from multiple threads
  * may lead to race conditions and undefined behavior.
  */
@@ -28,18 +28,18 @@
 typedef struct dynamic_allocator_t                        DynamicAllocator;
 
 /**
- * @brief Creates a dynamic allocator, with an capacity and memory alignment.
+ * @brief Creates a dynamic allocator, with an initial capacity and memory alignment.
  *
  * @invariant `alignment` is a power of two.
- * @invariant `capacity` is larger than zero.
+ * @invariant `initial_capacity` is larger than zero.
  *
- * @param[in] capacity is the size of the allocators memory.
+ * @param[in] initial_capacity is the size of the allocator's memory.
  * @param[in] alignment is the alignment of the memory in the allocator.
  * @returns DynamicAllocator*
- * 
+ *
  * @note Breaking invariants will cause the program to crash.
  */
-FREE_DYNAMIC_ATTRIBUTE WARN_IF_NOT_USED DynamicAllocator* dynamic_allocator_create(const size_t capacity, const size_t alignment);
+FREE_DYNAMIC_ATTRIBUTE WARN_IF_NOT_USED DynamicAllocator* dynamic_allocator_create(const size_t initial_capacity, const size_t alignment);
 
 /**
  * @brief allocates memory from a dynamic allocator and return the memory to the caller.

@@ -33,8 +33,7 @@ typedef struct Metadata {
 	void*  base;
 	size_t total_size;
 } Metadata;
-static_assert(sizeof(Metadata) == 16 || sizeof(Metadata) == 8,
-	      "Metadata should be 16 or 8 bytes depending on architecture");
+static_assert(sizeof(Metadata) == 16 || sizeof(Metadata) == 8, "Metadata should be 16 or 8 bytes depending on architecture");
 static_assert(alignof(Metadata) == alignof(void*), "should have the natural alignment of a void pointer");
 
 /**

@@ -18,7 +18,9 @@ void* safe_aligned_alloc(size_t size, size_t alignment) {
 	total_size        = (total_size + page_size - 1) & ~(page_size - 1);
 	void* base        = mmap(NULL, total_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
-	INVARIANT(base != MAP_FAILED, ERR_OUT_OF_MEMORY, total_size);
+	if (base == MAP_FAILED) {
+		return NULL;
+	}
 
 	uintptr_t addr         = (uintptr_t)base + sizeof(Metadata);
 	uintptr_t aligned_addr = (addr + alignment - 1) & ~(alignment - 1);

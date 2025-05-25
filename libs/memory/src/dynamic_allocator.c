@@ -28,10 +28,10 @@
  * @note The 'allocated' field tracks the number of bytes currently in use within the block.
  */
 typedef struct memory_block_t {
-	void*                  base;
-	struct memory_block_t* next;
-	const size_t           capacity;
-	size_t                 allocated;
+        void*                  base;
+        struct memory_block_t* next;
+        const size_t           capacity;
+        size_t                 allocated;
 } MemoryBlock;
 
 static_assert(sizeof(MemoryBlock) == 32 || sizeof(MemoryBlock) == 16, "MemoryBlock size must be 32 or 16 bytes depending on architecture");
@@ -55,69 +55,113 @@ static_assert(alignof(MemoryBlock) == alignof(void*), "MemoryBlock alignment mus
  * @note The 'alignment' field is constant after initialization, ensuring all allocations meet the specified alignment.
  */
 typedef struct dynamic_allocator_t {
-	MemoryBlock* memory_block;
-	const size_t alignment;
+        MemoryBlock* memory_block;
+        const size_t alignment;
 } DynamicAllocator;
 
-static_assert(sizeof(DynamicAllocator) == (sizeof(void*) + sizeof(size_t)), "DynamicAllocator size must match pointer + size_t");
+static_assert(sizeof(DynamicAllocator) == 16 || sizeof(DynamicAllocator) == 8, "DynamicAllocator size must be 16 or 8 bytes depending on architecture");
 static_assert(alignof(DynamicAllocator) == alignof(void*), "DynamicAllocator alignment must match pointer alignment");
 
 FREE_DYNAMIC_ATTRIBUTE WARN_IF_NOT_USED DynamicAllocator* dynamic_allocator_create(const size_t capacity, const size_t alignment) {
-	INVARIANT(capacity > 0, ERR_GREATER_THAN, "capacity", "0", capacity, 0);
-	INVARIANT(capacity >= alignment, ERR_GREATER_EQUAL, "capacity", "alignment", capacity, alignment);
-	INVARIANT(is_power_of_two(alignment), ERR_ALLOC_ALIGNMENT_NOT_POWER_OF_TWO, alignment);
+        INVARIANT(capacity > 0, ERR_GREATER_THAN, "capacity", "0", capacity, 0);
+        INVARIANT(capacity >= alignment, ERR_GREATER_EQUAL, "capacity", "alignment", capacity, alignment);
+        INVARIANT(is_power_of_two(alignment), ERR_ALLOC_ALIGNMENT_NOT_POWER_OF_TWO, alignment);
 
-	DynamicAllocator* allocator = safe_aligned_alloc(sizeof(*allocator), alignof(DynamicAllocator));
+        DynamicAllocator* allocator = safe_aligned_alloc(sizeof(*allocator), alignof(DynamicAllocator));
 
-	if (!allocator) {
-		return NULL;
-	}
-	memcpy(&allocator->alignment, &alignment, sizeof(size_t));
+        if (!allocator) {
+                return NULL;
+        }
+        memcpy(&allocator->alignment, &alignment, sizeof(size_t));
 
-	allocator->memory_block = safe_aligned_alloc(sizeof(*allocator->memory_block), alignof(MemoryBlock));
-	if (!allocator->memory_block) {
-		safe_aligned_free(allocator);
-		return NULL;
-	}
+        allocator->memory_block = safe_aligned_alloc(sizeof(*allocator->memory_block), alignof(MemoryBlock));
+        if (!allocator->memory_block) {
+                safe_aligned_free(allocator);
+                return NULL;
+        }
 
-	allocator->memory_block->allocated = 0;
-	memcpy(&allocator->memory_block->capacity, &capacity, sizeof(size_t));
-	allocator->memory_block->next = NULL;
-	allocator->memory_block->base = safe_aligned_alloc(capacity, alignment);
+        allocator->memory_block->allocated = 0;
+        memcpy(&allocator->memory_block->capacity, &capacity, sizeof(size_t));
+        allocator->memory_block->next = NULL;
+        allocator->memory_block->base = safe_aligned_alloc(capacity, alignment);
 
-	if (!allocator->memory_block->base) {
-		safe_aligned_free(allocator->memory_block);
-		safe_aligned_free(allocator);
-		return NULL;
-	}
+        if (!allocator->memory_block->base) {
+                safe_aligned_free(allocator->memory_block);
+                safe_aligned_free(allocator);
+                return NULL;
+        }
 
-	return allocator;
+        return allocator;
 }
 
 MALLOC_ATTRIBUTE WARN_IF_NOT_USED void* dynamic_allocator_alloc(DynamicAllocator* restrict allocator, const size_t size, const size_t count) {
-	return NULL;
+        INVARIANT(allocator, ERR_NULL_POINTER, "allocator");
+        INVARIANT(size > 0, ERR_GREATER_THAN, "size", "0", size, 0);
+        INVARIANT(count > 0, ERR_GREATER_THAN, "count", "0", count, 0);
+
+        size_t allocation_size;
+        if (__builtin_umull_overflow(size, count, &allocation_size)) {
+                return NULL;
+        }
+
+        for (MemoryBlock *current = allocator->memory_block, *n; current != NULL && (n = current->next, 1); current = n) {
+                uintptr_t base      = current->base;
+                uintptr_t m_current = base + current->allocated;
+                uintptr_t aligned   = (m_current + (allocator->alignment - 1)) & ~(uintptr_t)(allocator->alignment - 1);
+                size_t    padding   = current - aligned;
+
+                size_t    total_size;
+                if (UNLIKELY(__builtin_uaddl_overflow(padding, allocation_size, &total_size))) {
+                        return NULL;
+                }
+
+                if (total_size > current->capacity - current->allocated) {
+					if (current->next) {
+						break;
+					} 
+					
+					current->next = safe_aligned_alloc(sizeof(MemoryBlock), allocator->alignment);
+					if (!current->next) {
+						return NULL;
+					}
+
+					current->next->base = safe_aligned_alloc(current->capacity << 1, allocator->alignment);
+					if (!current->next->base) {
+						safe_aligned_free(current->next);
+						return NULL;
+					}
+
+					size_t next_block_capacity = current->capacity << 1;
+					memcpy(&current->next->capacity, &next_block_capacity, sizeof(size_t));
+					current->next->allocated = 0;
+					break;
+                }
+
+				return (void*) aligned;
+        }
+		__builtin_unreachable();
 }
 
 void dynamic_allocator_reset(DynamicAllocator* restrict allocator) {
-	INVARIANT(allocator, ERR_NULL_POINTER, "allocator");
-	INVARIANT(allocator->memory_block, ERR_NULL_MEMORY_BLOCK);
+        INVARIANT(allocator, ERR_NULL_POINTER, "allocator");
+        INVARIANT(allocator->memory_block, ERR_NULL_MEMORY_BLOCK);
 
-	for (MemoryBlock *current = allocator->memory_block->next, *n; current != NULL && (n = current->next, 1); current = n) {
-		safe_aligned_free(current->base);
-		safe_aligned_free(current);
-	}
-	allocator->memory_block->allocated = 0;
-	allocator->memory_block->next      = NULL;
+        for (MemoryBlock *current = allocator->memory_block->next, *n; current != NULL && (n = current->next, 1); current = n) {
+                safe_aligned_free(current->base);
+                safe_aligned_free(current);
+        }
+        allocator->memory_block->allocated = 0;
+        allocator->memory_block->next      = NULL;
 }
 
 void dynamic_allocator_destroy(DynamicAllocator** allocator) {
-	INVARIANT(allocator && *allocator, ERR_NULL_POINTER, "allocator");
-	INVARIANT((*allocator)->memory_block, ERR_NULL_MEMORY_BLOCK);
+        INVARIANT(allocator && *allocator, ERR_NULL_POINTER, "allocator");
+        INVARIANT((*allocator)->memory_block, ERR_NULL_MEMORY_BLOCK);
 
-	for (MemoryBlock *current = (*allocator)->memory_block, *n; current != NULL && (n = current->next, 1); current = n) {
-		safe_aligned_free(current->base);
-		safe_aligned_free(current);
-	}
-	safe_aligned_free((*allocator));
-	(*allocator) = NULL;
+        for (MemoryBlock *current = (*allocator)->memory_block, *n; current != NULL && (n = current->next, 1); current = n) {
+                safe_aligned_free(current->base);
+                safe_aligned_free(current);
+        }
+        safe_aligned_free((*allocator));
+        (*allocator) = NULL;
 }

@@ -6,7 +6,7 @@
  * typically linear, allocation from a pre-allocated buffer. It is designed
  * for temporary allocations where all allocated memory can be freed at once
  * by resetting the allocator. This makes it suitable for short-lived data.
- * 
+ *
  * @warning These allocators are not thread-safe. Concurrent access from multiple threads
  * may lead to race conditions and undefined behavior.
  */
@@ -36,7 +36,7 @@ typedef struct ScratchAllocator                           ScratchAllocator;
  * @param[in] capacity is the size of the allocators memory.
  * @param[in] alignment is the alignment of the memory in the allocator.
  * @returns ScratchAllocator*
- * 
+ *
  * @note Breaking invariants will cause the program to crash.
  */
 FREE_SCRATCH_ATTRIBUTE WARN_IF_NOT_USED ScratchAllocator* scratch_allocator_create(const size_t capacity, const size_t alignment);
