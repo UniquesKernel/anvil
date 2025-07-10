@@ -1,8 +1,9 @@
 set(MODULE_NAME memory)
 
 set(MODULE_SOURCE 
-    src/utility.c
+    src/error.c
     src/memory_allocation.c
+    src/scratch_allocator.c
 )
 
 set(MODULE_PUBLIC_HEADER 
@@ -12,7 +13,7 @@ add_library(${MODULE_NAME} STATIC ${MODULE_SOURCE})
 
 target_include_directories(${MODULE_NAME}
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
     PRIVATE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
@@ -24,7 +25,7 @@ if(BUILD_TESTING)
 
     target_include_directories(${MODULE_NAME}_test_shared
         PUBLIC
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
         PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/src>
     )

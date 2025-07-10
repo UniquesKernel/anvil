@@ -1,91 +1,210 @@
+#ifndef ANVIL_ERROR_H
+#define ANVIL_ERROR_H
+
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
 /**
- * @file error.h
- * @brief Error message templates for the Anvil Memory system.
+ * @brief Attribute to automatically call a cleanup function when a variable goes out of scope.
  *
- * This header defines standardized error messages and codes used throughout
- * the Anvil Memory library. The error codes follow a structured format (EXYZ)
- * where X represents the category, Y the subcategory, and Z the specific error.
- *
- * Categories:
- * - E1xx: Memory allocation errors
- * - E2xx: Pointer validation errors
- * - E3xx: Value range errors
- * - E4xx: State errors
- *
- * These error templates are used with the INVARIANT macro to provide
- * consistent and informative error messages when invariants are violated.
+ * @param clean_up_func The function to call for cleanup when the variable goes out of scope.
  */
+#define DEFER(clean_up_func) __attribute__((cleanup(clean_up_func)))
 
-#ifndef ERROR_H
-#define ERROR_H
+// Convinient Branch Prediction Hints
+#define UNLIKELY(x)          __builtin_expect(!!(x), 0)
+#define LIKELY(x)            __builtin_expect(!!(x), 1)
 
-// Error code groups
-// Format: EXYZ where:
-// X: Category (1=Memory, 2=Pointer, 3=Value, 4=State)
-// Y: Subcategory
-// Z: Specific error
+// Cold Path optimization for error_handlers
+#define COLD_FUNC            __attribute__((cold, noinline))
+#define HOT_FUNC             __attribute__((hot, always_inline))
 
-// Memory allocation errors (E1xx)
-#define E101                                 "E101" // Size zero
-#define E102                                 "E102" // Alignment not power of two
-#define E103                                 "E103" // Alignment too large
-#define E104                                 "E104" // Out of memory
+typedef enum {
+        ERR_DOMAIN_NONE    = 0,
+        ERR_DOMAIN_MEMORY  = 1,
+        ERR_DOMAIN_IO      = 2,
+        ERR_DOMAIN_NETWORK = 3,
+        ERR_DOMAIN_STATE   = 4,
+        ERR_DOMAIN_VALUE   = 5,
+        ERR_DOMAIN_MAX     = 16
+} ErrorDomain;
+static_assert(ERR_DOMAIN_MAX <= 16, "Domain count exceeds 4-bit limit");
 
-#define ERR_ALLOC_SIZE_ZERO                  E101 ": Size must be positive but was 0"
-#define ERR_ALLOC_ALIGNMENT_NOT_POWER_OF_TWO E102 ": Alignment must be a power of two but was %zu"
-#define ERR_ALLOC_ALIGNMENT_TOO_LARGE        E103 ": Alignment must be <= %zu but was %zu"
-#define ERR_OUT_OF_MEMORY                    E104 ": Failed to allocate %zu bytes (system out of memory)"
+typedef enum {
+        ERR_SEVERITY_INFO    = 0,
+        ERR_SEVERITY_WARNING = 1,
+        ERR_SEVERITY_ERROR   = 2,
+        ERR_SEVERITY_FATAL   = 3 // Invariant violations
+} ErrorSeverity;
 
-// Pointer validation errors (E2xx)
-#define E201                                 "E201" // Null pointer
-#define E202                                 "E202" // Null memory block
-#define E203                                 "E203" // Null memory pointer
+typedef struct {
+        uint16_t severity : 2; // Severity level (0-3)
+        uint16_t reserved : 2; // Future use
+        uint16_t domain : 4;   // Error domain (0-15)
+        uint16_t code : 8;     // Error code within domain (0-255)
+} ErrorCode;
+static_assert(sizeof(ErrorCode) == 2, "Error Code is expected to be 2 bytes");
 
-#define ERR_NULL_POINTER                     E201 ": %s pointer must not be NULL"
-#define ERR_NULL_MEMORY_BLOCK                E202 ": Memory block pointer must not be NULL"
-#define ERR_NULL_MEMORY                      E203 ": Memory pointer must not be NULL"
+// Convert to/from uint16_t for efficient passing
+#define ERROR_TO_U16(e) (*(uint16_t*)&(e))
+#define U16_TO_ERROR(u) (*(ErrorCode*)&(u))
 
-// Value range errors (E3xx)
-#define E301                                 "E301" // Value out of range
-#define E302                                 "E302" // Value below minimum
-#define E303                                 "E303" // Value above maximum
+// X-Macro definitions for invariant violations (fatal errors)
+#define INVARIANT_ERRORS(X)                                                                                            \
+        X(INV_NULL_POINTER, ERR_DOMAIN_MEMORY, 0x01, "Null pointer violation")                                         \
+        X(INV_ZERO_SIZE, ERR_DOMAIN_MEMORY, 0x02, "Size must be positive")                                             \
+        X(INV_BAD_ALIGNMENT, ERR_DOMAIN_MEMORY, 0x03, "Alignment not power of two")                                    \
+        X(INV_ALIGN_TOO_LARGE, ERR_DOMAIN_MEMORY, 0x04, "Alignment exceeds maximum")                                   \
+        X(INV_INVALID_STATE, ERR_DOMAIN_STATE, 0x01, "Invalid state transition")                                       \
+        X(INV_OUT_OF_RANGE, ERR_DOMAIN_VALUE, 0x01, "Value out of valid range")                                        \
+        X(INV_PRECONDITION, ERR_DOMAIN_STATE, 0x02, "Precondition violation")                                          \
+        X(INV_POSTCONDITION, ERR_DOMAIN_STATE, 0x03, "Postcondition violation")
 
-#define ERR_VALUE_RANGE                      E301 ": Value %s must be between %d and %d but was %d"
-#define ERR_VALUE_MIN                        E302 ": Value %s must be >= %d but was %d"
-#define ERR_VALUE_MAX                        E303 ": Value %s must be <= %d but was %d"
+// X-Macro definitions for runtime errors (recoverable)
+#define RUNTIME_ERRORS(X)                                                                                              \
+        X(ERR_OUT_OF_MEMORY, ERR_DOMAIN_MEMORY, 0x10, "Memory allocation failed")                                      \
+        X(ERR_MEMORY_PERMISSION_CHANGE, ERR_DOMAIN_MEMORY, 0x20,                                                       \
+          "Failed to change permissions on virutal and physical memory")                                               \
+        X(ERR_MEMORY_DEALLOCATION, ERR_DOMAIN_MEMORY, 0x30,                                                            \
+          "Failed to properly deallocate virtual or physical memory")                                                  \
+        X(ERR_FILE_NOT_FOUND, ERR_DOMAIN_IO, 0x01, "File not found")                                                   \
+        X(ERR_PERMISSION, ERR_DOMAIN_IO, 0x02, "Permission denied")                                                    \
+        X(ERR_NETWORK_DOWN, ERR_DOMAIN_NETWORK, 0x01, "Network unreachable")                                           \
+        X(ERR_TIMEOUT, ERR_DOMAIN_NETWORK, 0x02, "Operation timeout")                                                  \
+        X(ERR_BUSY, ERR_DOMAIN_STATE, 0x10, "Resource busy")                                                           \
+        X(ERR_NOT_INITIALIZED, ERR_DOMAIN_STATE, 0x11, "Not initialized")
 
-// State errors (E4xx)
-#define E401                                 "E401" // Invalid allocator type
-#define E402                                 "E402" // Zero capacity
-#define E403                                 "E403" // Alignment too small
-#define E404                                 "E404" // Allocation too large
+// Generate error code enum
+#define X(name, domain, code, msg) name = ((domain) << 12) | ((code) << 4) | ERR_SEVERITY_FATAL,
+typedef enum { ERR_SUCCESS = 0, INVARIANT_ERRORS(X) } InvariantError;
+#undef X
 
-#define ERR_INVALID_ALLOCATOR_TYPE           E401 ": Allocator type must be < %d but was %d"
-#define ERR_ZERO_CAPACITY                    E402 ": Arena capacity must be > 0 but was %zu"
-#define ERR_ALIGNMENT_TOO_SMALL              E403 ": Alignment must be >= %zu but was %zu"
-#define ERR_ALLOCATION_TOO_LARGE             E404 ": Allocation size %zu exceeds available capacity %zu"
+#define X(name, domain, code, msg) name = ((domain) << 12) | ((code) << 4) | ERR_SEVERITY_ERROR,
+typedef enum { RUNTIME_ERRORS(X) } RuntimeError;
+#undef X
 
-#define E411                                 "E411" // Less than comparison failed
-#define E412                                 "E412" // Less equal comparison failed
-#define E413                                 "E413" // Greater than comparison failed
-#define E414                                 "E414" // Greater equal comparison failed
-#define E415                                 "E415" // Equality comparison failed
-#define E416                                 "E416" // Inequality comparison failed
+typedef uint16_t Error;
 
-#define ERR_LESS_THAN                        E411 ": %s must be < %s: %zu not < %zu"
-#define ERR_LESS_EQUAL                       E412 ": %s must be <= %s: %zu not <= %zu"
-#define ERR_GREATER_THAN                     E413 ": %s must be > %s: %zu not > %zu"
-#define ERR_GREATER_EQUAL                    E414 ": %s must be >= %s: %zu not >= %zu"
-#define ERR_EQUAL                            E415 ": %s must == %s: %zu != %zu"
-#define ERR_NOT_EQUAL                        E416 ": %s must != %s: %zu == %zu"
+#define X(name, domain, code, msg) [name] = msg,
+static const char* const invariant_messages[] = {[ERR_SUCCESS] = "Success", INVARIANT_ERRORS(X)};
 
-#define E417                                 "E417" // Invalid state
-#define E418                                 "E418" // Operation invalid for state
+static const char* const runtime_messages[]   = {RUNTIME_ERRORS(X)};
+#undef X
 
-#define ERR_INVALID_STATE                    E417 ": %s in invalid state: expected %s but was %s"
-#define ERR_OPERATION_INVALID_FOR_STATE      E418 ": Operation %s not valid for %s in state %s"
+// Error context for rich diagnostics (stack-allocated)
+typedef struct error_context {
+        Error                 error;
+        const char*           file;
+        int                   line;
+        const char*           expr;
+        struct error_context* parent;
+} ErrorContext;
 
-// Example declaration to satisfy ISO C requirements
-void error_dummy_function(void);
+static __thread ErrorContext*                   g_error_context = NULL;
 
-#endif // ERROR_H
+// Core error handling functions
+COLD_FUNC void __attribute__((noreturn)) anvil_abort_invariant(const char* expr, const char* file, int line,
+                                                               InvariantError err, const char* fmt, ...);
+
+COLD_FUNC Error                          anvil_set_error(Error err, const char* file, int line);
+
+COLD_FUNC static Error                   anvil_get_last_error(void) {
+        return g_error_context ? g_error_context->error : ERR_SUCCESS;
+}
+
+HOT_FUNC static inline bool anvil_is_error(Error err) {
+        return UNLIKELY(err != ERR_SUCCESS);
+}
+
+HOT_FUNC static inline bool anvil_is_fatal(Error err) {
+        ErrorCode e = U16_TO_ERROR(err);
+        return e.severity == ERR_SEVERITY_FATAL;
+}
+
+// Invariant checking macros (abort on failure)
+#define INVARIANT(expr, err, ...)                                                                                      \
+        do {                                                                                                           \
+                if (UNLIKELY(!(expr))) {                                                                               \
+                        anvil_abort_invariant(#expr, __FILE__, __LINE__, err, ##__VA_ARGS__);                          \
+                }                                                                                                      \
+        } while (0)
+
+// Common invariant checks with optimized messages
+#define INVARIANT_NOT_NULL(ptr) INVARIANT((ptr) != NULL, INV_NULL_POINTER, "%s", #ptr)
+
+#define INVARIANT_POSITIVE(val) INVARIANT((val) > 0, INV_ZERO_SIZE, "%s = %zd", #val, (size_t)(val))
+
+#define INVARIANT_RANGE(val, min, max)                                                                                 \
+        INVARIANT((val) >= (min) && (val) <= (max), INV_OUT_OF_RANGE, "%s = %d not in [%d, %d]", #val, (val), (min),   \
+                  (max))
+
+// Runtime error checking macros (graceful handling)
+#define CHECK(expr, err) (LIKELY(expr) ? ERR_SUCCESS : anvil_set_error(err, __FILE__, __LINE__))
+
+#define CHECK_NULL(ptr)  CHECK((ptr) != NULL, ERR_OUT_OF_MEMORY)
+
+#define TRY(expr)                                                                                                      \
+        do {                                                                                                           \
+                Error _err = (expr);                                                                                   \
+                if (UNLIKELY(anvil_is_error(_err))) {                                                                  \
+                        return _err;                                                                                   \
+                }                                                                                                      \
+        } while (0)
+
+#define TRY_CHECK(expr, err)                                                                                           \
+        do {                                                                                                           \
+                Error _err = CHECK(expr, err);                                                                         \
+                if (UNLIKELY(anvil_is_error(_err))) {                                                                  \
+                        return _err;                                                                                   \
+                }                                                                                                      \
+        } while (0)
+
+// Error context management
+#define WITH_ERROR_CONTEXT(ctx_name)                                                                                   \
+        ErrorContext ctx_name = {                                                                                      \
+            .error = ERR_SUCCESS, .file = __FILE__, .line = __LINE__, .expr = NULL, .parent = g_error_context};        \
+        ErrorContext* DEFER(anvil_restore_context) _saved_ctx = g_error_context;                                       \
+        g_error_context                                       = &ctx_name;
+
+static inline void anvil_restore_context(ErrorContext** ctx) {
+        g_error_context = (*ctx)->parent;
+}
+
+// Error code analysis helpers
+COLD_FUNC static ErrorDomain anvil_error_domain(Error err) {
+        ErrorCode e = U16_TO_ERROR(err);
+        return (ErrorDomain)e.domain;
+}
+
+COLD_FUNC static uint8_t anvil_error_code(Error err) {
+        ErrorCode e = U16_TO_ERROR(err);
+        return e.code;
+}
+
+COLD_FUNC static const char* anvil_error_message(Error err) {
+        if (err == ERR_SUCCESS)
+                return "Success";
+
+        ErrorCode e = U16_TO_ERROR(err);
+        if (e.severity == ERR_SEVERITY_FATAL) {
+                return invariant_messages[err];
+        } else {
+                return runtime_messages[err];
+        }
+}
+
+#ifdef ANVIL_ERROR_STATS
+typedef struct {
+        uint64_t invariant_checks;
+        uint64_t runtime_checks;
+        uint64_t errors_set;
+        uint64_t branch_hints_correct;
+} ErrorStats;
+
+#define STAT_INC(field) __atomic_add_fetch(&g_error_stats.field, 1, __ATOMIC_RELAXED)
+#else
+#define STAT_INC(field) ((void)0)
+#endif
+
+#endif // ANVIL_ERROR_H

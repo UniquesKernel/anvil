@@ -1,0 +1,122 @@
+\newcommand{\anvimmem}{Anvil-Memory}
+\newcommand{\C}{\textit{C}}
+\newcommand{\CPP}{\textit{C++}}
+
+\definecolor{definitioncolor}{RGB}{242,249,255} % Light blue
+\definecolor{theoremcolor}{RGB}{243,255,243} % Light green  
+\definecolor{lemmacolor}{RGB}{255,246,238} % Light orange
+\definecolor{proofcolor}{RGB}{252,252,252} % Very light gray
+\definecolor{remarkcolor}{RGB}{252,248,255} % Very light purple
+\definecolor{examplecolor}{RGB}{245,245,245} % Light gray
+\definecolor{conditioncolor}{RGB}{255,241,241} % Light red
+
+% Create new tcolorbox environments
+\newtcbtheorem[number within=section]{definition}{Definition}{
+	enhanced,
+	frame hidden,
+	boxrule=0pt,
+	borderline west={2pt}{0pt}{blue!80!black},
+	sharp corners,
+	colback=definitioncolor,
+	coltitle=black,
+	fonttitle=\bfseries,
+	separator sign none,
+	description font=\normalfont,
+	terminator sign={.}
+}{def}
+
+\newtcbtheorem[number within=section]{theorem}{Theorem}{
+	enhanced,
+	frame hidden,
+	boxrule=0pt,
+	borderline west={2pt}{0pt}{green!70!black},
+	sharp corners,
+	colback=theoremcolor,
+	coltitle=black,
+	fonttitle=\bfseries,
+	separator sign none,
+	description font=\normalfont,
+	terminator sign={.}
+}{thm}
+
+\newtcbtheorem[number within=section]{lemma}{Lemma}{
+	enhanced,
+	frame hidden,
+	boxrule=0pt,
+	borderline west={2pt}{0pt}{orange!80!black},
+	sharp corners,
+	colback=lemmacolor,
+	coltitle=black,
+	fonttitle=\bfseries,
+	separator sign none,
+	description font=\normalfont,
+	terminator sign={.}
+}{lem}
+
+\newtcbtheorem[number within=section]{corollary}{Corollary}{
+	enhanced,
+	frame hidden,
+	boxrule=0pt,
+	borderline west={2pt}{0pt}{green!50!black},
+	sharp corners,
+	colback=theoremcolor!80,
+	coltitle=black,
+	fonttitle=\bfseries,
+	separator sign none,
+	description font=\normalfont,
+	terminator sign={.}
+}{cor}
+
+\newtcbtheorem[number within=section]{condition}{Condition}{
+	enhanced,
+	frame hidden,
+	boxrule=0pt,
+	borderline west={2pt}{0pt}{red!70!black},
+	sharp corners,
+	colback=conditioncolor,
+	coltitle=black,
+	fonttitle=\bfseries,
+	separator sign none,
+	description font=\normalfont,
+	terminator sign={.}
+}{cond}
+
+\newtcbtheorem[number within=section]{example}{Example}{
+	enhanced,
+	frame hidden,
+	boxrule=0pt,
+	borderline west={2pt}{0pt}{gray!80!black},
+	sharp corners,
+	colback=examplecolor,
+	coltitle=black,
+	fonttitle=\bfseries,
+	separator sign none,
+	description font=\normalfont,
+	terminator sign={.}
+}{ex}
+
+\newtcbtheorem[number within=section]{remark}{Remark}{
+	enhanced,
+	frame hidden,
+	boxrule=0pt,
+	borderline west={2pt}{0pt}{purple!70!black},
+	sharp corners,
+	colback=remarkcolor,
+	coltitle=black,
+	fonttitle=\bfseries,
+	separator sign none,
+	description font=\normalfont,
+	terminator sign={.}
+}{rem}
+
+% For proofs, we'll use a slightly different style
+\tcolorboxenvironment{proof}{
+	enhanced,
+	frame hidden,
+	boxrule=0pt,
+	borderline west={2pt}{0pt}{black!30},
+	sharp corners,
+	colback=proofcolor,
+	before skip=\baselineskip,
+	after skip=\baselineskip
+}

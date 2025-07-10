@@ -26,7 +26,7 @@ IndentWidth: 8 # When UseTab is ForIndentation, IndentWidth should match TabWidt
 ReflowComments: true      # Reflows text in comments, including Doxygen, to ColumnLimit
 
 # 5. Line Length: Maximum 120 characters.
-ColumnLimit: 180
+ColumnLimit: 120
 
 # 6. Spacing:
 #    - Spaces around binary operators: a + b

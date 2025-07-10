@@ -1,0 +1,27 @@
+\section{Allocation Strategy}
+\label{sec:Allocation-Strategy}
+
+\begin{definition}{contiguous Memory}{contiguous-memory}
+	Let $\mathcal{M}$ be the set of memory addresses.
+	Let $F$ be the set of free addresses.
+	A subset $C$ of $\mathcal{M}$ is said to be contiguous
+	if $\exists x,y \in \mathcal{M}, C = \{a | x \leq a \leq y, x \leq y\} \wedge C \subseteq F$.
+\end{definition}
+
+\begin{definition}{Allocation Strategy}{allocation-strategy}
+	Let $\mathcal{M}$ be the set of memory addresses.
+	Let $F \subseteq \mathcal{M}$ be the set of free memory addresses.
+	Let $A \subseteq \mathcal{M}$ be the set of allocated Memory addresses.
+	Let $n \in \mathbb{N}$ be some natural number greater than zero.
+	Then an allocation strategy $\sigma(F,n)$ is defined as:
+	\[
+		\sigma(F,n) \rightarrow \phi\left((F \backslash C, A \cup C, C)\right),
+	\]
+	Where $C \subseteq F$ is some contiguous piece of memory
+	(see \ref{def:contiguous-memory}) such that $|C| = n$ and that
+	satisfy some selection policy $\phi$\footnote{We shall intentionally leave $\phi$ as
+		abstractly defined as it is better discussed as an implementation
+		detail.} (e.g., first-fit, best-fit, worst-fit) .
+\end{definition}
+
+\newpage

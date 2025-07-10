@@ -1,88 +1,92 @@
 /**
- * @file memory_allocation_internal.h
- * @brief Internal memory allocation functions for the Anvil Memory system.
+ * @file memory_allocation.h
+ * @brief Virtual memory allocation, deallocation, and management interface
  *
- * This header file defines the core low-level memory allocation functions used by
- * the Anvil Memory allocators. It provides aligned memory allocation with proper
- * metadata tracking to support safe deallocation.
+ * This header defines an interface for the systematic manipulation of virtual
+ * memory address spaces, encompassing the fundamental operations of allocation,
+ * deallocation, and the binding of physical memory resources to virtual pages.
+ * The interface further provides mechanisms for the bidirectional transformation
+ * between virtual and physical memory addresses. The virtual address spaces
+ * allocated through this interface exist in an uncommitted state until physical
+ * memory resources are explicitly bound to the corresponding virtual pages.
+ *
+ * @note The computational model employed herein adheres to the principle of
+ *       fail-fast semantics, wherein erroneous program states precipitate
+ *       immediate termination with diagnostic output rather than the propagation
+ *       of error conditions through the call stack.
+ *
+ * @note The memory regions allocated through this interface do not possess
+ *       inherent thread-safety properties and require explicit synchronization
+ *       primitives to ensure correctness under concurrent access patterns.
  */
 
-#ifndef MEMORY_ALLOCATION_H
-#define MEMORY_ALLOCATION_H
+#ifndef ANVIL_MEMORY_ALLOCATION_H
+#define ANVIL_MEMORY_ALLOCATION_H
 
-#include <assert.h>
-#include <stdalign.h>
-#include <stdbool.h>
 #include <stddef.h>
+#include "error.h"
+
+#define MALLOC              __attribute__((malloc))
+#define WARN_UNSURED_RESULT __attribute__((warn_unused_result))
 
 /**
- * @brief Encapsulates metadata for an aligned memory block, primarily storing the base pointer
- *        and total size of the original allocation to facilitate deallocation.
+ * @brief Allocation of virtual memory pages within the computational model
  *
- * @invariant base != NULL
- * @invariant total_size > 0
+ * This primitive operation establishes a mapping from virtual addresses to an
+ * address space of specified extent, wherein the correspondence between virtual
+ * and physical memory remains undefined until explicit commitment is enacted.
+ * The allocation constitutes a reservation of virtual address space without
+ * immediate physical memory binding.
  *
- * @note This structure is typically prepended to the user-aligned memory block.
+ * @invariant capacity > 0
+ * @invariant sufficient virtual address space exists for allocation
+ * @invariant alignment is a power of two.
  *
- * Fields     | Type   | Size (Bytes)  | Description
- * ---------- | ------ | ------------- | -------------------------------------------------
- * base       | void*  | sizeof(void*) | Pointer to the start of the originally allocated (potentially unaligned) memory
- * block. total_size | size_t | sizeof(size_t)| Total size of the originally allocated memory block in bytes.
+ * The function yields a pointer to the allocated virtual address space upon
+ * successful completion of the allocation operation.
+ *
+ * @param[in] capacity   Cardinality of the virtual address space measured in octets
+ * @param[in] alignment  Alignment of the returned initial address point.
+ * @return pointer       Element of the virtual address space denoting the base address
+ *
+ * @note The compiler will express a warning if the return result is unused.
  */
-typedef struct Metadata {
-	void*  base;
-	size_t total_size;
-} Metadata;
-static_assert(sizeof(Metadata) == 16 || sizeof(Metadata) == 8, "Metadata should be 16 or 8 bytes depending on architecture");
-static_assert(alignof(Metadata) == alignof(void*), "should have the natural alignment of a void pointer");
+MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc(const size_t capacity, const size_t alignment);
 
 /**
- * @brief Allocates a memory segment of specified `size` with `alignment` constraints.
+ * @brief Reclamation of memory resources to the computational environment
  *
- * @invariant size > 0
- * @invariant alignment is a power of two (i.e., 1, 2, 4, 8, 16, ..., 65536)
- * @invariant alignment <= 65536
- * @invariant System possesses sufficient memory for the requested allocation plus metadata.
+ * This operation effects the complete dissolution of the mapping established
+ * between virtual and physical memory resources, returning all associated
+ * memory to the domain of the operating system. The
+ * operation terminates both the virtual address space reservation and any
+ * committed physical memory bindings.
  *
- * @param[in] size The quantum of memory to allocate (in bytes).
- * @param[in] alignment The required memory alignment. Must be a power of two and <= 2^16.
- * @return Pointer to the beginning of the aligned, user-accessible memory segment.
+ * @invariant ptr != NULL
+ * @invariant ptr must reference memory allocated by anvil_memory_alloc
  *
- * @note This function employs a fail-fast paradigm; violations of preconditions result in program termination.
- * @note The actual physical allocation size will exceed `size` to accommodate alignment requirements and internal metadata.
- * @note Memory allocated by this function must be deallocated using `safe_aligned_free()`.
+ * @param[out] ptr       Address denoting the commencement of the memory region
+ *                       to be returned to the computational environment
+ * @return Error         Error code indicating success or failure of the deallocation operation
  */
-void* __attribute__((malloc)) safe_aligned_alloc(const size_t size, const size_t alignment);
+WARN_UNSURED_RESULT Error        anvil_memory_dealloc(void* ptr);
 
 /**
- * @brief Determines if a given unsigned integer `x` is a power of two.
+ * @brief On demand commital of memory resources from virtual memory to physical memory
  *
- * @param[in] x The unsigned integer to evaluate.
- * @return `true` if `x` is a power of two (i.e., x = 2^n for some integer n >= 0, and x != 0); `false` otherwise.
+ * This operation establishes read and write permission to an extension of the already
+ * established mapping between virtual and physical memory resources.
  *
- * @note Zero (0) is not considered a power of two by this function.
+ * @invariant ptr != NULL
+ * @invariant ptr must reference memory allocated with anvil_memory_alloc
+ * @invariant commit_size must be positive and non zero
+ *
+ * @param[out] ptr          Address denoting the commencement of the memory region
+ *                          to which additional physical memory resources should be commited.
+ * @param[out] commit_size  the size (bytes) of additional physical resource to be commited.
+ *
+ * @return Error            Error code indicating success or failure of commiting additional physical memory.
  */
-bool __attribute__((pure))    is_power_of_two(const size_t x);
+WARN_UNSURED_RESULT Error        anvil_memory_commit(void* ptr, const size_t commit_size);
 
-/**
- * @brief Deallocates a memory segment previously allocated by standard, non-aligning allocation mechanisms.
- *
- * @param[in] ptr Pointer to the memory segment to deallocate. May be `NULL`.
- *
- * @note If `ptr` is `NULL`, no operation is performed, ensuring idempotent behavior with null pointers.
- * @note This function should not be utilized for memory segments allocated via `safe_aligned_alloc()`.
- */
-void                          safe_free(void* ptr);
-
-/**
- * @brief Deallocates a memory segment previously allocated by `safe_aligned_alloc()`.
- *
- * @param[in] ptr Pointer to the aligned, user-accessible memory segment to deallocate. May be `NULL`.
- *
- * @note If `ptr` is `NULL`, no operation is performed.
- * @note This function correctly interprets internal metadata, prepended to the user block, to free the entire originally allocated physical memory block.
- * @note Employing standard `free()` or `safe_free()` on memory allocated by `safe_aligned_alloc()` will lead to undefined behavior or resource leaks.
- */
-void                          safe_aligned_free(void* ptr);
-
-#endif // !MEMORY_ALLOCATION_H
+#endif

@@ -1,0 +1,32 @@
+% Preamble Setup
+%------------------
+\usepackage[T1]{fontenc}
+\usepackage{mathpazo} % Palatino for text with matching math
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{geometry}
+\usepackage{inputenc}
+\usepackage{upgreek}
+\geometry{
+	letterpaper,
+	top=1in,
+	bottom=1in,
+	left=1.25in,
+	right=1.25in
+}
+\usepackage{setspace}
+\onehalfspacing
+\setlength{\parindent}{0.25in}
+\setlength{\parskip}{0pt}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{} % Clear all header/footer fields
+\rfoot{\thepage} % Page number in the footer, right aligned
+\renewcommand{\headrulewidth}{0pt} % No header rule
+
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc}
+
+\usepackage[most]{tcolorbox} % Main package for colored boxes
+\usepackage{xcolor} % For custom colors
+\usepackage{hyperref}
