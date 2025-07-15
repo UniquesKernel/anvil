@@ -1,4 +1,4 @@
-#include "internal/error.h"
+#include "memory/error.h"
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
