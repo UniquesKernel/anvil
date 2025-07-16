@@ -4,6 +4,7 @@ set(MODULE_SOURCE
     src/error.c
     src/memory_allocation.c
     src/scratch_allocator.c
+    src/utility.c
 )
 
 set(MODULE_PUBLIC_HEADER 
@@ -39,7 +40,7 @@ if(BUILD_TESTING)
 
     add_test(
         NAME ${MODULE_NAME}_pytest
-        COMMAND ${Python3_EXECUTABLE} -m pytest "${CMAKE_CURRENT_SOURCE_DIR}/tests/"
+        COMMAND ${Python3_EXECUTABLE} -m pytest --hypothesis-show-statistics "${CMAKE_CURRENT_SOURCE_DIR}/tests/"
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     )
     set_tests_properties(${MODULE_NAME}_pytest PROPERTIES ENVIRONMENT "LD_LIBRARY_PATH=${CMAKE_CURRENT_BINARY_DIR};PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tests")

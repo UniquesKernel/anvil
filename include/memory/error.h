@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
 /**
  * @brief Attribute to automatically call a cleanup function when a variable goes out of scope.
@@ -101,7 +102,7 @@ typedef struct error_context {
         struct error_context* parent;
 } ErrorContext;
 
-static __thread ErrorContext*                   g_error_context = NULL;
+extern __thread ErrorContext*            g_error_context;
 
 // Core error handling functions
 COLD_FUNC void __attribute__((noreturn)) anvil_abort_invariant(const char* expr, const char* file, int line,
@@ -163,11 +164,14 @@ HOT_FUNC static inline bool anvil_is_fatal(Error err) {
 // Error context management
 #define WITH_ERROR_CONTEXT(ctx_name)                                                                                   \
         ErrorContext ctx_name = {                                                                                      \
-            .error = ERR_SUCCESS, .file = __FILE__, .line = __LINE__, .expr = NULL, .parent = g_error_context};        \
+            .error = ERR_SUCCESS, .file = __FILE__, .line = __LINE__, .expr = __func__, .parent = g_error_context};    \
         ErrorContext* DEFER(anvil_restore_context) _saved_ctx = g_error_context;                                       \
         g_error_context                                       = &ctx_name;
 
 static inline void anvil_restore_context(ErrorContext** ctx) {
+        if (CHECK(ctx && (*ctx), INV_NULL_POINTER) != ERR_SUCCESS) {
+                return;
+        }
         g_error_context = (*ctx)->parent;
 }
 

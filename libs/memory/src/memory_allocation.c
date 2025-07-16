@@ -1,5 +1,6 @@
 #include "internal/memory_allocation.h"
 #include "internal/utility.h"
+#include "memory/constants.h"
 #include "memory/error.h"
 #include "sys/mman.h"
 #include <stdbool.h>
@@ -39,7 +40,7 @@ static_assert(alignof(Metadata) == alignof(void*), "Metadata should have the nat
 MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_lazy(const size_t capacity, const size_t alignment) {
         INVARIANT_POSITIVE(capacity);
         INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "%s = %zd", alignment, alignment);
-        INVARIANT_RANGE(alignment, 1, (1 << 16));
+        INVARIANT_RANGE(alignment, MIN_ALIGNMENT, MAX_ALIGNMENT);
 
         const size_t page_size  = (size_t)sysconf(_SC_PAGESIZE);
         size_t       total_size = capacity + sizeof(Metadata);
@@ -69,12 +70,13 @@ MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_lazy(const size_t capacity, 
 }
 
 MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_eager(const size_t capacity, const size_t alignment) {
+
         INVARIANT_POSITIVE(capacity);
         INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "%s = %zd", alignment, alignment);
-        INVARIANT_RANGE(alignment, 1, (1 << 16));
+        INVARIANT_RANGE(alignment, MIN_ALIGNMENT, MAX_ALIGNMENT);
 
         const size_t page_size  = (size_t)sysconf(_SC_PAGESIZE);
-        size_t       total_size = capacity + sizeof(Metadata);
+        size_t       total_size = capacity + sizeof(Metadata) + page_size;
         total_size              = (total_size + (page_size - 1)) & ~(page_size - 1);
         void* base              = mmap(NULL, total_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 

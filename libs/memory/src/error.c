@@ -7,6 +7,7 @@
 #ifdef ANVIL_ERROR_STATS
 ErrorStats g_error_stats = {0};
 #endif
+__thread ErrorContext* g_error_context = NULL;
 
 COLD_FUNC void anvil_abort_invariant(const char* expr, const char* file, int line, InvariantError err, const char* fmt,
                                      ...) {
@@ -45,8 +46,8 @@ COLD_FUNC void anvil_abort_invariant(const char* expr, const char* file, int lin
 
                 if (g_error_context) {
                         fprintf(log, "\nCall Stack:\n");
-                        error_context_t* ctx   = g_error_context;
-                        int              depth = 0;
+                        ErrorContext* ctx   = g_error_context;
+                        int           depth = 0;
                         while (ctx && depth < 20) { // Limit depth to prevent infinite loops
                                 fprintf(log, "  [%d] %s:%d", depth, ctx->file, ctx->line);
                                 if (ctx->error != ERR_SUCCESS) {
@@ -72,12 +73,14 @@ COLD_FUNC void anvil_abort_invariant(const char* expr, const char* file, int lin
         }
 
         // Print context chain if available
+
         if (g_error_context) {
                 fprintf(stderr, "\nError Context:\n");
                 ErrorContext* ctx   = g_error_context;
                 int           depth = 0;
                 while (ctx && depth < 10) {
-                        fprintf(stderr, "  [%d] %s:%d\n", depth, ctx->file, ctx->line);
+                        fprintf(stderr, "  [%d] %s:%d in %s()\n", depth, ctx->file, ctx->line,
+                                ctx->expr ? ctx->expr : "unknown");
                         ctx = ctx->parent;
                         depth++;
                 }

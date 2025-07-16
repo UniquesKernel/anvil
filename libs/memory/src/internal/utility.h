@@ -1,5 +1,5 @@
 #ifndef ANVIL_UTILITY_H
-#define ANVIL_UTILTIY_H
+#define ANVIL_UTILITY_H
 
 #include <stddef.h>
 

@@ -38,9 +38,10 @@
  * The allocation constitutes a reservation of virtual address space without
  * immediate physical memory binding.
  *
- * @invariant capacity > 0
- * @invariant sufficient virtual address space exists for allocation
- * @invariant alignment is a power of two.
+ * @pre `capacity > 0`
+ * @pre sufficient virtual address space exists for allocation
+ * @pre `alignment` is a power of two.
+ * @pre `MIN_ALIGNMENT <= alignment <= MAX_ALIGNMENT`
  *
  * The function yields a pointer to the allocated virtual address space upon
  * successful completion of the allocation operation.
@@ -60,9 +61,10 @@ MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_lazy(const size_t capacity, 
  * physical memory. The provided memory is immediately available for both Read and Write
  * operations.
  *
- * @invariant capacity > 0
- * @invariant address space exists for allocation
- * @invariant alignment is a power of two.
+ * @pre `capacity > 0`.
+ * @pre address space exists for allocation
+ * @pre `alignment` is a power of two.
+ * @pre `MIN_ALIGNMENT <= alignment <= MAX_ALIGNMENT`
  *
  * The function yields a pointer to the allocated virtual address space upon
  * successful completion of the allocation operation.
@@ -84,8 +86,8 @@ MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_eager(const size_t capacity,
  * operation terminates both the virtual address space reservation and any
  * committed physical memory bindings.
  *
- * @invariant ptr != NULL
- * @invariant ptr must reference memory allocated by anvil_memory_alloc_lazy or anvil_memory_alloc_eager
+ * @pre ptr != NULL
+ * @pre ptr must reference memory allocated by anvil_memory_alloc_lazy or anvil_memory_alloc_eager
  *
  * @param[out] ptr       Address denoting the commencement of the memory region
  *                       to be returned to the computational environment
@@ -101,9 +103,9 @@ WARN_UNSURED_RESULT Error        anvil_memory_dealloc(void* ptr);
  * This operation establishes read and write permission to an extension of the already
  * established mapping between virtual and physical memory resources.
  *
- * @invariant ptr != NULL
- * @invariant ptr must reference memory allocated with anvil_memory_alloc_lazy or anvil_memory_alloc_eager
- * @invariant commit_size must be positive and non zero
+ * @pre ptr != NULL
+ * @pre ptr must reference memory allocated with anvil_memory_alloc_lazy or anvil_memory_alloc_eager
+ * @pre commit_size must be positive and non zero
  *
  * @param[out] ptr          Address denoting the commencement of the memory region
  *                          to which additional physical memory resources should be commited.
