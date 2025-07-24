@@ -47,8 +47,9 @@ class ScratchAllocatorModel(RuleBasedStateMachine):
     def __init__(self):
         super().__init__()
         self.allocator = None
-        self.allocations: List[tuple[int,int]] = []
+        self.allocations: List[tuple[int,int, int]] = []
         self.is_destroyed = True
+        self.capacity = 0
 
     def teardown(self):
         if self.allocator is not None:
@@ -64,6 +65,7 @@ class ScratchAllocatorModel(RuleBasedStateMachine):
         alignment = 1 << exponent
 
         self.allocator = lib.anvil_memory_scratch_allocator_create(capacity, alignment)
+        self.capacity = capacity
         self.is_destroyed = False
 
     @rule()
@@ -75,6 +77,7 @@ class ScratchAllocatorModel(RuleBasedStateMachine):
             self.allocator = None
             self.allocations = []
             self.is_destroyed = True
+            self.capacity = 0
 
     @rule(
             alloc_size=integers(min_value=1, max_value=(1 << 20)),
@@ -87,7 +90,7 @@ class ScratchAllocatorModel(RuleBasedStateMachine):
             ptr = lib.anvil_memory_scratch_allocator_alloc(self.allocator, alloc_size, alignment)
 
             if ptr:
-                self.allocations.append((ptr, alloc_size))
+                self.allocations.append((ptr, alloc_size, alignment))
 
     @rule()
     @precondition(lambda self: self.is_destroyed == False)
@@ -95,20 +98,78 @@ class ScratchAllocatorModel(RuleBasedStateMachine):
         if self.allocator is not None:
             err = lib.anvil_memory_scratch_allocator_reset(self.allocator)
             self.allocations = []
-            assert err == Error.SUCCESS
+            assert err == Error.SUCCESS, f"Allocator reset failed with error code {err}"
 
     @invariant()
     def inv_no_alloc_overlap(self):
         if len(self.allocations) <= 1:
-            assert True
+            return
         
-        for i, (address, size) in enumerate(self.allocations):
-            for address2, size2 in self.allocations[i+1:]:
+        for i, (address, size,_) in enumerate(self.allocations):
+            for (address2, size2,_) in self.allocations[i+1:]:
                 if address < address2 + size2 and address2 < address + size:
-                    assert False
+                    assert False, f"Memory allocations overlap: allocation at {address} (size {size}) overlaps with allocation at {address2} (size {size2})"
+    
+    @invariant()
+    def inv_allocations_are_contiguous(self):
+        if len(self.allocations) <= 1:
+            return
+
+        for i, (address, size, _) in enumerate(self.allocations):
+            if i == len(self.allocations) - 1:
+                break
+
+            next_address, _, next_alignment = self.allocations[i + 1]
         
+            # Calculate where this allocation ends
+            current_end = address + size
+        
+            # Calculate where the next allocation should start (aligned)
+            expected_next_start = align_up(current_end, next_alignment) # type: ignore
+        
+            # Check if allocations are properly contiguous with alignment
+            assert expected_next_start == next_address, f"Allocations not contiguous: expected {expected_next_start}, got {next_address}"
+
+    @invariant()
+    def inv_allocations_properly_aligned(self):
+        for address, _, alignment in self.allocations:
+            if address % alignment != 0:
+                assert False, f"Address {address} not aligned to {alignment}"
         assert True
 
+    @invariant()
+    def inv_allocations_within_bounds(self):
+        if not self.allocations:
+            assert True
+            return
+        
+        # Calculate total allocated space including padding
+        first_addr = self.allocations[0][0]
+        last_addr, last_size, _ = self.allocations[-1]
+        total_used = (last_addr + last_size) - first_addr
+        
+        # Should not exceed the allocator's capacity
+        # (You'd need to track capacity in your model)
+        assert total_used <= self.capacity, f"Used {total_used} bytes exceeds capacity {self.capacity}"
 
-   
+    @invariant()
+    def inv_power_of_two_alignments(self):
+        for _, _, alignment in self.allocations:
+            if alignment <= 0 or (alignment & (alignment - 1)) != 0:
+                assert False, f"Alignment {alignment} is not a power of 2"
+        assert True
+
+    @invariant()
+    def inv_positive_sizes(self):
+        for _, size, _ in self.allocations:
+            if size <= 0:
+                assert False, f"Invalid allocation size: {size}"
+        assert True
+
+def align_up(address: int, alignment: int): 
+    """Align address up to next alignment boundary"""
+    remainder = address % alignment
+    return address if remainder == 0 else address + (alignment - remainder)
+
+
 TestMyStateMachine = ScratchAllocatorModel.TestCase # type: ignore

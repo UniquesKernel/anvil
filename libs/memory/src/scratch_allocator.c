@@ -50,12 +50,14 @@ ScratchAllocator* anvil_memory_scratch_allocator_create(const size_t capacity, c
 
         allocator->base       = (void*)((uintptr_t)allocator + sizeof(*allocator));
         allocator->base       = (void*)(((uintptr_t)allocator->base + (alignment - 1)) & ~(alignment - 1));
-        allocator->capacity   = total_memory_needed - ((uintptr_t)allocator->base - (uintptr_t)allocator);
+        const size_t actually_available_capacity   = total_memory_needed - ((uintptr_t)allocator->base - (uintptr_t)allocator);
 
-        if (allocator->capacity < capacity) {
+        if (actually_available_capacity < capacity) {
+                INVARIANT(anvil_memory_dealloc(allocator) == ERR_SUCCESS, ERR_MEMORY_DEALLOCATION, "Failed to Deallocate memory");
                 return NULL;
         }
 
+        allocator->capacity = capacity;
         allocator->allocated  = 0;
         allocator->alloc_mode = EAGER;
 
