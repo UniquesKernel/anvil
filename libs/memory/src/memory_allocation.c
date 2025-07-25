@@ -76,7 +76,7 @@ MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_eager(const size_t capacity,
         INVARIANT_RANGE(alignment, MIN_ALIGNMENT, MAX_ALIGNMENT);
 
         const size_t page_size  = (size_t)sysconf(_SC_PAGESIZE);
-        size_t       total_size = capacity + sizeof(Metadata) + page_size;
+        size_t       total_size = capacity + sizeof(Metadata);
         total_size              = (total_size + (page_size - 1)) & ~(page_size - 1);
         void* base              = mmap(NULL, total_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 

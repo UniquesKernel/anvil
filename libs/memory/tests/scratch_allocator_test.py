@@ -42,6 +42,9 @@ lib.anvil_memory_scratch_allocator_copy.restype = void_p
 lib.anvil_memory_scratch_allocator_move.argtypes = [ScratchAllocatorPtr, ctypes.POINTER(void_p), size_t, ctypes.c_void_p]
 lib.anvil_memory_scratch_allocator_move.restype = void_p
 
+MIN_ALIGNMENT = 1
+MAX_ALIGNMENT = 22
+
 @hypothesis.settings(max_examples=10000)
 class ScratchAllocatorModel(RuleBasedStateMachine):
     def __init__(self):
@@ -57,7 +60,7 @@ class ScratchAllocatorModel(RuleBasedStateMachine):
         self.allocations = []
    
     @rule(
-            exponent=integers(min_value=3, max_value=22),
+            exponent=integers(min_value=MIN_ALIGNMENT, max_value=MAX_ALIGNMENT),
             capacity=integers(min_value=1, max_value=(1 << 20))
     )
     @precondition(lambda self: self.is_destroyed == True)
@@ -81,7 +84,7 @@ class ScratchAllocatorModel(RuleBasedStateMachine):
 
     @rule(
             alloc_size=integers(min_value=1, max_value=(1 << 20)),
-            exponent=integers(min_value=3, max_value=22)
+            exponent=integers(min_value=MIN_ALIGNMENT, max_value=MAX_ALIGNMENT)
     )
     @precondition(lambda self: self.is_destroyed == False)
     def alloc(self, alloc_size:int, exponent: int):

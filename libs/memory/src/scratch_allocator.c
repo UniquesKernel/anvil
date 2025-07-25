@@ -49,7 +49,6 @@ ScratchAllocator* anvil_memory_scratch_allocator_create(const size_t capacity, c
         }
 
         allocator->base       = (void*)((uintptr_t)allocator + sizeof(*allocator));
-        allocator->base       = (void*)(((uintptr_t)allocator->base + (alignment - 1)) & ~(alignment - 1));
         const size_t actually_available_capacity   = total_memory_needed - ((uintptr_t)allocator->base - (uintptr_t)allocator);
 
         if (actually_available_capacity < capacity) {
@@ -100,9 +99,7 @@ Error anvil_memory_scratch_allocator_reset(ScratchAllocator* const allocator) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_NOT_NULL(allocator->base);
 
-        if (UNLIKELY(allocator->allocated == 0)) {
-                memset(allocator->base, 0x0, allocator->allocated);
-        }
+        memset(allocator->base, 0x0, allocator->allocated);
         allocator->allocated = 0;
 
         return ERR_SUCCESS;
