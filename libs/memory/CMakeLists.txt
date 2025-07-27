@@ -4,6 +4,7 @@ set(MODULE_SOURCE
     src/error.c
     src/memory_allocation.c
     src/scratch_allocator.c
+    src/stack_allocator.c
     src/utility.c
 )
 

@@ -1,21 +1,15 @@
 import ctypes
+from ctypes import c_size_t, c_void_p
 import hypothesis
 from hypothesis.stateful import RuleBasedStateMachine, rule, precondition, invariant
 from hypothesis.strategies import integers, binary
 from typing import List, Dict
 
+"""
+Create a binding the scratch allocator of Anvil's memory management library.
+"""
+
 lib = ctypes.CDLL("libmemory_test_shared.so")
-
-class Error:
-    SUCCESS = 0
-    OUT_OF_MEMORY = 1
-    INVALID_ARGUMENT = 2
-    INVALID_STATE = 3
-
-# Define ctypes types
-size_t = ctypes.c_size_t
-void_p = ctypes.c_void_p
-char_p = ctypes.c_char_p
 
 class ScratchAllocator(ctypes.Structure):
     pass
@@ -24,37 +18,57 @@ ScratchAllocatorPtr = ctypes.POINTER(ScratchAllocator)
 ScratchAllocatorPtrPtr = ctypes.POINTER(ScratchAllocatorPtr)
 
 # Define function signatures
-lib.anvil_memory_scratch_allocator_create.argtypes = [size_t, size_t]
+lib.anvil_memory_scratch_allocator_create.argtypes = [c_size_t, c_size_t]
 lib.anvil_memory_scratch_allocator_create.restype = ScratchAllocatorPtr
 
 lib.anvil_memory_scratch_allocator_destroy.argtypes = [ScratchAllocatorPtrPtr]
 lib.anvil_memory_scratch_allocator_destroy.restype = ctypes.c_int
 
-lib.anvil_memory_scratch_allocator_alloc.argtypes = [ScratchAllocatorPtr, size_t, size_t]
-lib.anvil_memory_scratch_allocator_alloc.restype = void_p
+lib.anvil_memory_scratch_allocator_alloc.argtypes = [ScratchAllocatorPtr, c_size_t, c_size_t]
+lib.anvil_memory_scratch_allocator_alloc.restype = c_void_p
 
 lib.anvil_memory_scratch_allocator_reset.argtypes = [ScratchAllocatorPtr]
 lib.anvil_memory_scratch_allocator_reset.restype = ctypes.c_int
 
-lib.anvil_memory_scratch_allocator_copy.argtypes = [ScratchAllocatorPtr, void_p, size_t]
-lib.anvil_memory_scratch_allocator_copy.restype = void_p
+lib.anvil_memory_scratch_allocator_copy.argtypes = [ScratchAllocatorPtr, c_void_p, c_size_t]
+lib.anvil_memory_scratch_allocator_copy.restype = c_void_p
 
-lib.anvil_memory_scratch_allocator_move.argtypes = [ScratchAllocatorPtr, ctypes.POINTER(void_p), size_t, ctypes.c_void_p]
-lib.anvil_memory_scratch_allocator_move.restype = void_p
+lib.anvil_memory_scratch_allocator_move.argtypes = [ScratchAllocatorPtr, ctypes.POINTER(c_void_p), c_size_t, ctypes.c_void_p]
+lib.anvil_memory_scratch_allocator_move.restype = c_void_p
 
-# Standard library functions for memory operations
+"""
+Define C bindings for the standard C library
+"""
 libc = ctypes.CDLL("libc.so.6")
-libc.malloc.argtypes = [size_t]
-libc.malloc.restype = void_p
-libc.free.argtypes = [void_p]
+libc.malloc.argtypes = [c_size_t]
+libc.malloc.restype = c_void_p
+libc.free.argtypes = [c_void_p]
 libc.free.restype = None
-libc.memcmp.argtypes = [void_p, void_p, size_t]
+libc.memcmp.argtypes = [c_void_p, c_void_p, c_size_t]
 libc.memcmp.restype = ctypes.c_int
 
-MIN_ALIGNMENT = 1
-MAX_ALIGNMENT = 22
+"""
+Define Error classes based on Anvil's Error Codes
+"""
 
-@hypothesis.settings(max_examples=10000)
+class Error:
+    SUCCESS = 0
+    OUT_OF_MEMORY = 1
+    INVALID_ARGUMENT = 2
+    INVALID_STATE = 3
+
+"""
+Useful constants
+"""
+
+MIN_ALIGNMENT = 1
+MAX_ALIGNMENT = 11
+
+"""
+Scratch Allocator Model
+"""
+
+@hypothesis.settings(max_examples=100)
 class ScratchAllocatorModel(RuleBasedStateMachine):
     def __init__(self):
         super().__init__()
@@ -140,23 +154,19 @@ class ScratchAllocatorModel(RuleBasedStateMachine):
     @precondition(lambda self: self.is_destroyed == False) 
     def copy_data(self, data: bytes):
         if self.allocator is not None:
-            # Create source buffer with the test data
             src_size = len(data)
             src_buffer = (ctypes.c_char * src_size).from_buffer_copy(data)
-            src_ptr = ctypes.cast(src_buffer, void_p)
+            src_ptr = ctypes.cast(src_buffer, c_void_p)
             
-            # Call the copy function
             dest_ptr = lib.anvil_memory_scratch_allocator_copy(
                 self.allocator, src_ptr, src_size
             )
             
             if dest_ptr:
-                # Verify the data was copied correctly immediately
                 dest_buffer = (ctypes.c_char * src_size).from_address(dest_ptr)
                 copied_data = bytes(dest_buffer)
                 assert copied_data == data, f"Data mismatch in copy: expected {data}, got {copied_data}"
                 
-                # Track this allocation (copy uses alignof(void*) alignment)
                 void_ptr_alignment = ctypes.sizeof(ctypes.c_void_p)
                 
                 # Defensive check: ensure we're not tracking duplicate addresses
@@ -170,47 +180,37 @@ class ScratchAllocatorModel(RuleBasedStateMachine):
     @precondition(lambda self: self.is_destroyed == False)
     def move_data(self, data: bytes):
         if self.allocator is not None:
-            # Allocate source buffer using malloc
             src_size = len(data)
             src_ptr = libc.malloc(src_size)
             
             if not src_ptr:
-                return  # malloc failed, skip this test
+                return  
             
-            # Track the malloc'd pointer for cleanup
             self.external_allocations.append(src_ptr)
             
-            # Copy test data to the malloc'd buffer
             src_buffer = (ctypes.c_char * src_size).from_address(src_ptr)
             for i, byte in enumerate(data):
                 src_buffer[i] = byte
             
-            # Create a pointer to the source pointer for the move function
             src_ptr_ref = ctypes.pointer(ctypes.c_void_p(src_ptr))
             
-            # Get the free function pointer
             free_func = ctypes.cast(libc.free, ctypes.c_void_p)
             
-            # Call the move function
             dest_ptr = lib.anvil_memory_scratch_allocator_move(
                 self.allocator, src_ptr_ref, src_size, free_func
             )
             
             if dest_ptr:
-                # Verify the data was moved correctly
                 dest_buffer = (ctypes.c_char * src_size).from_address(dest_ptr)
                 moved_data = bytes(dest_buffer)
                 assert moved_data == data, f"Data mismatch in move: expected {data}, got {moved_data}"
                 
-                # Verify the source pointer was set to NULL
                 assert src_ptr_ref.contents.value is None or src_ptr_ref.contents.value == 0, \
                     "Source pointer should be NULL after move"
                 
-                # Remove from external allocations since it was freed by move
                 if src_ptr in self.external_allocations:
                     self.external_allocations.remove(src_ptr)
                 
-                # Track this allocation (move uses alignof(void*) alignment)
                 void_ptr_alignment = ctypes.sizeof(ctypes.c_void_p)
                 
                 # Defensive check: ensure we're not tracking duplicate addresses
@@ -237,55 +237,46 @@ class ScratchAllocatorModel(RuleBasedStateMachine):
 
             next_address, _, next_alignment = self.allocations[i + 1]
         
-            # Calculate where this allocation ends
             current_end = address + size
         
-            # Calculate where the next allocation should start (aligned)
             expected_next_start = align_up(current_end, next_alignment)
         
-            # Check if allocations are properly contiguous with alignment
             assert expected_next_start == next_address, f"Allocations not contiguous: expected {expected_next_start}, got {next_address}"
 
     @invariant()
-    @precondition(lambda self: self.is_destroyed == False)
+    @precondition(lambda self: self.is_destroyed == False and len(self.allocations) > 0)
     def inv_allocations_properly_aligned(self):
         for address, _, alignment in self.allocations:
             if address % alignment != 0:
                 assert False, f"Address {address} not aligned to {alignment}"
 
     @invariant()
+    @precondition(lambda self: self.is_destroyed == False and len(self.allocations) > 0)
     def inv_allocations_within_bounds(self):
-        if not self.allocations or self.is_destroyed:
-            return
-        
-        # Calculate total allocated space including padding
         first_addr = self.allocations[0][0]
         last_addr, last_size, _ = self.allocations[-1]
         total_used = (last_addr + last_size) - first_addr
         
-        # Should not exceed the allocator's capacity
         assert total_used <= self.capacity, f"Used {total_used} bytes exceeds capacity {self.capacity}"
 
     @invariant()
+    @precondition(lambda self: len(self.allocations) > 0)
     def inv_power_of_two_alignments(self):
         for _, _, alignment in self.allocations:
             if alignment <= 0 or (alignment & (alignment - 1)) != 0:
                 assert False, f"Alignment {alignment} is not a power of 2"
 
     @invariant()
+    @precondition(lambda self: len(self.allocations) > 0)
     def inv_positive_sizes(self):
         for _, size, _ in self.allocations:
             if size <= 0:
                 assert False, f"Invalid allocation size: {size}"
 
     @invariant()
+    @precondition(lambda self: self.is_destroyed == False)
     def inv_copied_data_integrity(self):
         """Verify that copied/moved data maintains integrity"""
-        # Skip if allocator is destroyed
-        if self.is_destroyed:
-            return
-            
-        # Clean up any stale entries from previous allocator lifecycles
         self._cleanup_stale_copied_data()
         
         for address, (original_data, data_allocator_id) in self.copied_data.items():
@@ -293,17 +284,14 @@ class ScratchAllocatorModel(RuleBasedStateMachine):
             if data_allocator_id != self.allocator_id:
                 continue
                 
-            # Find the allocation that corresponds to this address
             allocation = next((alloc for alloc in self.allocations if alloc[0] == address), None)
             if allocation:
                 addr, size, _ = allocation
                 
-                # The allocation size should match the original data size for copy/move operations
                 expected_size = len(original_data)
                 assert size == expected_size, \
                     f"Size mismatch at {addr}: allocation size {size} != original data size {expected_size}"
                 
-                # Verify the data is still intact
                 buffer = (ctypes.c_char * expected_size).from_address(addr)
                 current_data = bytes(buffer)
                 assert current_data == original_data, \

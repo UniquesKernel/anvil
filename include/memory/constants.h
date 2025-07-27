@@ -3,9 +3,9 @@
 
 #include <stdalign.h>
 
-#define EAGER 0b00000001
-#define LAZY  0b00000010
-#define MAX_ALIGNMENT (1 << 22)
+#define EAGER (1 << 0)
+#define LAZY  (1 << 1)
+#define MAX_ALIGNMENT (1 << 11) // alignment is capped at half a page.
 #define MIN_ALIGNMENT 1
 
 #endif // ANVIL_MEMORY_CONSTANTS_H

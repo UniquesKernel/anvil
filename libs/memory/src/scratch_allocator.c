@@ -3,9 +3,9 @@
 #include "internal/utility.h"
 #include "memory/constants.h"
 #include "memory/error.h"
+#include <stdalign.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdalign.h>
 #include <string.h>
 
 /**
@@ -40,23 +40,24 @@ ScratchAllocator* anvil_memory_scratch_allocator_create(const size_t capacity, c
         INVARIANT_RANGE(alignment, MIN_ALIGNMENT, MAX_ALIGNMENT);
 
         const size_t      total_memory_needed = capacity + sizeof(ScratchAllocator) + alignment - 1;
-        ScratchAllocator* allocator           = NULL;
 
-        allocator = (ScratchAllocator*)anvil_memory_alloc_eager(total_memory_needed, alignment);
+        ScratchAllocator* allocator = (ScratchAllocator*)anvil_memory_alloc_eager(total_memory_needed, alignment);
 
         if (CHECK_NULL(allocator)) {
                 return NULL;
         }
 
-        allocator->base       = (void*)((uintptr_t)allocator + sizeof(*allocator));
-        const size_t actually_available_capacity   = total_memory_needed - ((uintptr_t)allocator->base - (uintptr_t)allocator);
+        allocator->base = (void*)((uintptr_t)allocator + sizeof(*allocator));
+        const size_t actually_available_capacity =
+            total_memory_needed - ((uintptr_t)allocator->base - (uintptr_t)allocator);
 
         if (actually_available_capacity < capacity) {
-                INVARIANT(anvil_memory_dealloc(allocator) == ERR_SUCCESS, ERR_MEMORY_DEALLOCATION, "Failed to Deallocate memory");
+                INVARIANT(anvil_memory_dealloc(allocator) == ERR_SUCCESS, ERR_MEMORY_DEALLOCATION,
+                          "Failed to Deallocate memory");
                 return NULL;
         }
 
-        allocator->capacity = capacity;
+        allocator->capacity   = capacity;
         allocator->allocated  = 0;
         allocator->alloc_mode = EAGER;
 

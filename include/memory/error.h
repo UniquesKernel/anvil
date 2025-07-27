@@ -172,7 +172,7 @@ static inline void anvil_restore_context(ErrorContext** ctx) {
         if (CHECK(ctx && (*ctx), INV_NULL_POINTER) != ERR_SUCCESS) {
                 return;
         }
-        g_error_context = (*ctx)->parent;
+        g_error_context = (*ctx);
 }
 
 // Error code analysis helpers
