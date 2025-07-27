@@ -69,6 +69,7 @@ static_assert(sizeof(ErrorCode) == 2, "Error Code is expected to be 2 bytes");
           "Failed to change permissions on virutal and physical memory")                                               \
         X(ERR_MEMORY_DEALLOCATION, ERR_DOMAIN_MEMORY, 0x30,                                                            \
           "Failed to properly deallocate virtual or physical memory")                                                  \
+        X(ERR_MEMORY_WRITE_ERROR, ERR_DOMAIN_MEMORY, 0x40, "Failed to write to physical memory")                       \
         X(ERR_FILE_NOT_FOUND, ERR_DOMAIN_IO, 0x01, "File not found")                                                   \
         X(ERR_PERMISSION, ERR_DOMAIN_IO, 0x02, "Permission denied")                                                    \
         X(ERR_NETWORK_DOWN, ERR_DOMAIN_NETWORK, 0x01, "Network unreachable")                                           \

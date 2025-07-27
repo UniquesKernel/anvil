@@ -81,4 +81,51 @@ void* anvil_memory_stack_allocator_alloc(StackAllocator* const allocator, const 
  */
 Error anvil_memory_stack_allocator_reset(StackAllocator* const allocator);
 
+/**
+ * @brief Writes data from from one region outside the StackAllocator's managed region to a sub-region inside the ScratchAllocator's managed region.
+ * 
+ * @pre `allocator != NULL`.
+ * @pre `src != NULL`.
+ * @pre `n_bytes > 0`.
+ * 
+ * @post StackAllocator's capacity shrinks by `n_bytes` bytes with worstcase being `n_bytes + page size - 1` amount of bytes.
+ * @post The returned memory region contains `n_bytes` amount of data from `src`.
+ * @post The returned memory region is aligned to `alignof(void*)`.
+ * 
+ * @param[in] allocator     StackAllocator to whose region the outside data should be written.
+ * @param[in] src           The outside memory region from where the data should be retrieved.
+ * @param[in] n_bytes       The amount of bytes to be read from `src` and written to the allocator's sub-region.
+ * 
+ * @return Pointer to sub-region of `allocator` containing `n_bytes` bytes copied from `src`.
+ * 
+ * @note This operation is non destructive and does not affect the data stored in `src`. 
+ */
+void* anvil_memory_stack_allocator_copy(StackAllocator* const allocator, const void* const src, const size_t n_bytes);
+
+/**
+ * @brief Writes data from one region outside the StackAllocator's Managed region to a sub-region of the ScratchAllocator's managed region, then it invalidates the outside region
+ * 
+ * @pre `allocator != NULL`.
+ * @pre `src != NULL`.
+ * @pre `*src != NULL`.
+ * @pre `free_func != NULL`.
+ * @pre `n_bytes > 0`.
+ * 
+ * @post StackAllocator's capacity shrinks by `n_bytes` bytes with worstcase being `n_bytes + page size - 1` amount of bytes.
+ * @post The returned memory region contains `n_bytes` amount of data from `src`.
+ * @post The returned memory region is aligned to `alignof(void*)`.
+ * @post `*src == NULL`.
+ * 
+ * @param[in] allocator     StackAllocator to whose region the outside data should be written.
+ * @param[in,out] src           The outside memory region from where the data should be retrieved.
+ * @param[in] n_bytes       The amount of bytes to be read from `src` and written to the allocator's sub-region.
+ * @param[in] free_func     Pointer to the appropriate function that should be used to free the `src` pointer.
+ * 
+ * @return Pointer to sub-region of `allocator` containing `n_bytes` bytes copied from `src`.
+ * 
+ * @note This operation is destructive as `src` is invalid after this operation.
+ */
+void* anvil_memory_stack_allocator_move(StackAllocator* const allocator, void** src, const size_t n_bytes,
+                                          void (*free_func)(void*));
+
 #endif // ANVIL_MEMORY_STACK_ALLOCATOR_H

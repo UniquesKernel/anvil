@@ -4,6 +4,7 @@
 #include "memory/constants.h"
 #include "memory/error.h"
 #include <stddef.h>
+#include <string.h>
 
 /**
  * @brief Encapsulates metadata for a stack allocator, storing information
@@ -78,4 +79,79 @@ Error anvil_memory_stack_allocator_destroy(StackAllocator** allocator) {
         *allocator = NULL;
 
         return ERR_SUCCESS;
+}
+
+Error anvil_memory_stack_allocator_reset(StackAllocator* const allocator) {
+        INVARIANT_NOT_NULL(allocator);
+        INVARIANT_NOT_NULL(allocator->base);
+
+        memset(allocator->base, 0x0, allocator->allocated);
+        allocator->allocated = 0;
+
+        return ERR_SUCCESS;
+}
+
+void* anvil_memory_stack_allocator_alloc(StackAllocator* const allocator, const size_t allocation_size,
+                                         const size_t alignment) {
+        INVARIANT_NOT_NULL(allocator);
+        INVARIANT_POSITIVE(allocation_size);
+        INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "alignment was %zu", alignment);
+        INVARIANT_RANGE(alignment, MIN_ALIGNMENT, MAX_ALIGNMENT);
+
+        const uintptr_t current_addr     = (uintptr_t)allocator->base + allocator->allocated;
+        const uintptr_t aligned_addr     = (current_addr + (alignment - 1)) & ~(alignment - 1);
+        const size_t    offset           = aligned_addr - current_addr;
+
+        const size_t    total_allocation = allocation_size + offset;
+        
+        if (allocator->alloc_mode == EAGER) {
+            if (total_allocation > allocator->capacity - allocator->allocated) {
+                    return NULL;
+            }
+        } else if (anvil_memory_commit(allocator->base, total_allocation) != ERR_SUCCESS) {
+                return NULL;    
+        }
+
+        allocator->allocated += total_allocation;
+        return (void*)aligned_addr;
+}
+void* anvil_memory_stack_allocator_copy(StackAllocator* const allocator, const void* const src,
+                                          const size_t n_bytes) {
+        INVARIANT_NOT_NULL(allocator);
+        INVARIANT_NOT_NULL(src);
+        INVARIANT_POSITIVE(n_bytes);
+
+        void* dest = anvil_memory_stack_allocator_alloc(allocator, n_bytes, alignof(void*));
+
+        if (CHECK(dest, ERR_OUT_OF_MEMORY) != ERR_SUCCESS) {
+                return NULL;
+        }
+        memcpy(dest, src, n_bytes);
+
+        INVARIANT(memcmp(dest, src, n_bytes) == 0, INV_INVALID_STATE, "Failed to copy memory to ScratchAllocator");
+
+        return dest;
+}
+
+void* anvil_memory_stack_allocator_move(StackAllocator* const allocator, void** src, const size_t n_bytes,
+                                          void (*free_func)(void*)) {
+        INVARIANT_NOT_NULL(allocator);
+        INVARIANT_NOT_NULL(src);
+        INVARIANT_NOT_NULL(*src);
+        INVARIANT_NOT_NULL(free_func);
+        INVARIANT_POSITIVE(n_bytes);
+
+        void* dest = anvil_memory_stack_allocator_alloc(allocator, n_bytes, alignof(void*));
+
+        if (CHECK(dest, ERR_OUT_OF_MEMORY) != ERR_SUCCESS) {
+                return NULL;
+        }
+        memcpy(dest, *src, n_bytes);
+
+        INVARIANT(memcmp(dest, *src, n_bytes) == 0, INV_INVALID_STATE, "Failed to move memory to ScratchAllocator");
+
+        free_func(*src);
+        *src = NULL;
+
+        return dest;
 }
