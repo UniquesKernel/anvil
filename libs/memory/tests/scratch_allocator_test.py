@@ -68,7 +68,7 @@ MAX_ALIGNMENT = 11
 Scratch Allocator Model
 """
 
-@hypothesis.settings(max_examples=100)
+@hypothesis.settings(max_examples=10000)
 class ScratchAllocatorModel(RuleBasedStateMachine):
     def __init__(self):
         super().__init__()

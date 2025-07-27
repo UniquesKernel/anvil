@@ -28,8 +28,9 @@ typedef struct stack_allocator_t {
         size_t capacity;
         size_t allocated;
         size_t alloc_mode;
+        size_t committed_capacity; // How much memory is actually committed by the OS
 } StackAllocator;
-static_assert(sizeof(StackAllocator) == 32, "StacjAllocator size must be 32 bytes");
+static_assert(sizeof(StackAllocator) == 40, "StacjAllocator size must be 40 bytes");
 static_assert(alignof(StackAllocator) == alignof(void*), "StackAllocator alignment must match void* alignment");
 
 StackAllocator* anvil_memory_stack_allocator_create(const size_t capacity, const size_t alignment,
@@ -103,20 +104,21 @@ void* anvil_memory_stack_allocator_alloc(StackAllocator* const allocator, const 
         const size_t    offset           = aligned_addr - current_addr;
 
         const size_t    total_allocation = allocation_size + offset;
-        
-        if (allocator->alloc_mode == EAGER) {
-            if (total_allocation > allocator->capacity - allocator->allocated) {
-                    return NULL;
-            }
-        } else if (anvil_memory_commit(allocator->base, total_allocation) != ERR_SUCCESS) {
-                return NULL;    
+
+        if (total_allocation > allocator->capacity - allocator->allocated) {
+                return NULL;
+        }
+
+        if (allocator->alloc_mode == LAZY) {
+                if (anvil_memory_commit(allocator, total_allocation) != ERR_SUCCESS) {
+                        return NULL;
+                }
         }
 
         allocator->allocated += total_allocation;
         return (void*)aligned_addr;
 }
-void* anvil_memory_stack_allocator_copy(StackAllocator* const allocator, const void* const src,
-                                          const size_t n_bytes) {
+void* anvil_memory_stack_allocator_copy(StackAllocator* const allocator, const void* const src, const size_t n_bytes) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_NOT_NULL(src);
         INVARIANT_POSITIVE(n_bytes);
@@ -134,7 +136,7 @@ void* anvil_memory_stack_allocator_copy(StackAllocator* const allocator, const v
 }
 
 void* anvil_memory_stack_allocator_move(StackAllocator* const allocator, void** src, const size_t n_bytes,
-                                          void (*free_func)(void*)) {
+                                        void (*free_func)(void*)) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_NOT_NULL(src);
         INVARIANT_NOT_NULL(*src);
