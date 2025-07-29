@@ -123,13 +123,9 @@ WARN_UNSURED_RESULT Error anvil_memory_commit(void* ptr, const size_t commit_siz
         const size_t _commit_size = (commit_size + (page_size - 1)) & ~(page_size - 1);
         /// NOTE: (UniquesKernel) TRY_CHECK will return early using the provided Error.
         TRY_CHECK(_commit_size <= metadata->virtual_capacity - metadata->capacity, ERR_OUT_OF_MEMORY);
-
-        void* start_addr = (void*)((uintptr_t)metadata->base + metadata->capacity);
-        size_t length = _commit_size;
-
-
-        TRY_CHECK(mprotect(start_addr, length, PROT_READ | PROT_WRITE) == 0,
-              ERR_MEMORY_PERMISSION_CHANGE);
+        TRY_CHECK(mprotect((void*)((uintptr_t)metadata->base + metadata->capacity), _commit_size,
+                           PROT_READ | PROT_WRITE) == 0,
+                  ERR_MEMORY_PERMISSION_CHANGE);
 
         metadata->capacity   += _commit_size;
         metadata->page_count  = metadata->capacity >> __builtin_ctzl(page_size);

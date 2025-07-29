@@ -24,13 +24,14 @@
  * allocated        | size_t | sizeof(size_t)| Current number of bytes allocated from the stack allocator
  */
 typedef struct stack_allocator_t {
-        void*  base;
-        size_t capacity;
-        size_t allocated;
-        size_t alloc_mode;
-        size_t committed_capacity; // How much memory is actually committed by the OS
+        void*     base;
+        size_t    capacity;
+        size_t    allocated;
+        size_t    alloc_mode;
+        size_t    stack_depth;
+        size_t stack[MAX_STACK_DEPTH];
 } StackAllocator;
-static_assert(sizeof(StackAllocator) == 40, "StacjAllocator size must be 40 bytes");
+static_assert(sizeof(StackAllocator) == 552, "StackAllocator size must be 552 bytes");
 static_assert(alignof(StackAllocator) == alignof(void*), "StackAllocator alignment must match void* alignment");
 
 StackAllocator* anvil_memory_stack_allocator_create(const size_t capacity, const size_t alignment,
@@ -65,9 +66,10 @@ StackAllocator* anvil_memory_stack_allocator_create(const size_t capacity, const
                 return NULL;
         }
 
-        allocator->capacity   = capacity;
-        allocator->allocated  = 0;
-        allocator->alloc_mode = alloc_mode;
+        allocator->capacity    = capacity;
+        allocator->allocated   = 0;
+        allocator->alloc_mode  = alloc_mode;
+        allocator->stack_depth = 0;
 
         return allocator;
 }
@@ -156,4 +158,28 @@ void* anvil_memory_stack_allocator_move(StackAllocator* const allocator, void** 
         *src = NULL;
 
         return dest;
+}
+
+Error anvil_memory_stack_allocator_record(StackAllocator* const allocator) {
+        INVARIANT_NOT_NULL(allocator);
+        INVARIANT_NOT_NULL(allocator->base);
+        INVARIANT_RANGE(allocator->stack_depth, 0, MAX_STACK_DEPTH - 1);
+
+        allocator->stack[allocator->stack_depth] = allocator->allocated;
+        allocator->stack_depth++;
+
+        return ERR_SUCCESS;
+}
+
+Error anvil_memory_stack_allocator_unwind(StackAllocator* const allocator) {
+        INVARIANT_NOT_NULL(allocator);
+        INVARIANT(allocator->stack_depth > 0, INV_INVALID_STATE, "Cannot unwind from empty stack (stack_depth = %zu)",
+                  allocator->stack_depth);
+        INVARIANT_RANGE(allocator->stack_depth, 1, MAX_STACK_DEPTH - 1);
+
+        uintptr_t restored_allocated = allocator->stack[allocator->stack_depth - 1];
+        allocator->allocated         = restored_allocated;
+        allocator->stack_depth--;
+
+        return ERR_SUCCESS;
 }

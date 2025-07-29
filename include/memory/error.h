@@ -75,7 +75,8 @@ static_assert(sizeof(ErrorCode) == 2, "Error Code is expected to be 2 bytes");
         X(ERR_NETWORK_DOWN, ERR_DOMAIN_NETWORK, 0x01, "Network unreachable")                                           \
         X(ERR_TIMEOUT, ERR_DOMAIN_NETWORK, 0x02, "Operation timeout")                                                  \
         X(ERR_BUSY, ERR_DOMAIN_STATE, 0x10, "Resource busy")                                                           \
-        X(ERR_NOT_INITIALIZED, ERR_DOMAIN_STATE, 0x11, "Not initialized")
+        X(ERR_NOT_INITIALIZED, ERR_DOMAIN_STATE, 0x11, "Not initialized")                                              \
+        X(ERR_STACK_DEPTH, ERR_DOMAIN_STATE, 0x12, "Stack depth exceeded")
 
 // Generate error code enum
 #define X(name, domain, code, msg) name = ((domain) << 12) | ((code) << 4) | ERR_SEVERITY_FATAL,
