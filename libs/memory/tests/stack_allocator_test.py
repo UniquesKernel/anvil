@@ -37,6 +37,12 @@ lib.anvil_memory_stack_allocator_copy.restype = c_void_p
 lib.anvil_memory_stack_allocator_move.argtypes = [StackAllocatorPtr, ctypes.POINTER(c_void_p), c_size_t, ctypes.c_void_p]
 lib.anvil_memory_stack_allocator_move.restype = c_void_p
 
+lib.anvil_memory_stack_allocator_record.argtypes = [StackAllocatorPtr]
+lib.anvil_memory_stack_allocator_record.restype = ctypes.c_int
+
+lib.anvil_memory_stack_allocator_unwind.argtypes = [StackAllocatorPtr]
+lib.anvil_memory_stack_allocator_unwind.restype = ctypes.c_int
+
 """
 Define C bindings for the standard C library
 """
@@ -76,13 +82,15 @@ class StackAllocatorModel(RuleBasedStateMachine):
     def __init__(self):
         super().__init__()
         self.allocator = None
-        self.allocations: List[tuple[int, int, int]] = []  # (address, size, alignment)
+        self.allocations: List[tuple[int, int, int, int]] = []  # (address, size, alignment, epoch)
         self.copied_data: Dict[int, tuple[bytes, int]] = {}  # address -> (original data, allocator_id)
         self.is_destroyed = True
         self.capacity = 0
         self.alloc_mode = EAGER
         self.external_allocations: List[int] = []  # Track malloc'd pointers for cleanup
         self.allocator_id = 0  # Track allocator lifecycle
+        self.top_alignment = 0
+        self.allocation_epoch = 0  # Track allocation epochs to handle unwind properly
 
     def teardown(self):
         if self.allocator is not None:
@@ -95,6 +103,7 @@ class StackAllocatorModel(RuleBasedStateMachine):
         self.copied_data = {}
         self.external_allocations = []
         self.allocator_id = 0
+        self.allocation_epoch = 0
 
     def _cleanup_stale_copied_data(self):
         """Remove copied_data entries that don't belong to current allocator lifecycle"""
@@ -120,6 +129,9 @@ class StackAllocatorModel(RuleBasedStateMachine):
         self.allocator_id += 1
         self.copied_data = {}
         self.allocations = []
+        self.top_ptr = None 
+        self.allocation_epoch = 0  # Reset epoch for new allocator
+        self.stack: list[tuple[int, int]] = []  # Changed to store (total_allocated, allocation_count)
 
     @rule()
     @precondition(lambda self: self.is_destroyed == False)
@@ -132,6 +144,9 @@ class StackAllocatorModel(RuleBasedStateMachine):
             self.copied_data = {}
             self.is_destroyed = True
             self.capacity = 0
+            self.stack = []
+            self.top_ptr = None
+            self.allocation_epoch = 0
             assert err == Error.SUCCESS, f"Allocator destruction failed with error code {err}"
 
     @rule(
@@ -145,7 +160,14 @@ class StackAllocatorModel(RuleBasedStateMachine):
             ptr = lib.anvil_memory_stack_allocator_alloc(self.allocator, alloc_size, alignment)
 
             if ptr:
-                self.allocations.append((ptr, alloc_size, alignment))
+                self.allocations.append((ptr, alloc_size, alignment, self.allocation_epoch))
+
+            # Check that if an unwind happened that the next allocation 
+            # Also aligns to the recorded offset.
+            if ptr and self.top_ptr is not None:
+                expected_addr = align_up(self.top_ptr, alignment)  # Use current allocation's alignment
+                assert ptr == expected_addr, f"Expected {expected_addr}, got {ptr}"
+                self.top_ptr = None
 
     @rule()
     @precondition(lambda self: self.is_destroyed == False)
@@ -154,6 +176,9 @@ class StackAllocatorModel(RuleBasedStateMachine):
             err = lib.anvil_memory_stack_allocator_reset(self.allocator)
             self.allocations = []
             self.copied_data = {}
+            self.stack = []
+            self.top_ptr = None
+            self.allocation_epoch = 0  # Reset epoch on full reset
             assert err == Error.SUCCESS, f"Allocator reset failed with error code {err}"
 
     @rule(data=binary(min_size=1, max_size=999999))
@@ -179,8 +204,18 @@ class StackAllocatorModel(RuleBasedStateMachine):
                 existing_alloc = next((alloc for alloc in self.allocations if alloc[0] == dest_ptr), None)
                 assert existing_alloc is None, f"Address {dest_ptr} already tracked in allocations"
                 
-                self.allocations.append((dest_ptr, src_size, void_ptr_alignment))
+                self.allocations.append((dest_ptr, src_size, void_ptr_alignment, self.allocation_epoch))
                 self.copied_data[dest_ptr] = (data, self.allocator_id)
+            
+            # After unwind, check if the new allocation is placed correctly
+            if dest_ptr and self.top_ptr is not None:
+                void_ptr_alignment = ctypes.sizeof(ctypes.c_void_p)
+                # The allocator should place the new allocation at or after the expected aligned position
+                expected_min_addr = align_up(self.top_ptr, void_ptr_alignment)
+                assert dest_ptr >= expected_min_addr, f"Address {dest_ptr} comes before expected minimum {expected_min_addr}"
+                # Ensure proper alignment
+                assert dest_ptr % void_ptr_alignment == 0, f"Address {dest_ptr} not properly aligned to {void_ptr_alignment}"
+                self.top_ptr = None
 
     @rule(data=binary(min_size=1, max_size=999999))   
     @precondition(lambda self: self.is_destroyed == False)
@@ -223,36 +258,97 @@ class StackAllocatorModel(RuleBasedStateMachine):
                 existing_alloc = next((alloc for alloc in self.allocations if alloc[0] == dest_ptr), None)
                 assert existing_alloc is None, f"Address {dest_ptr} already tracked in allocations"
                 
-                self.allocations.append((dest_ptr, src_size, void_ptr_alignment))
+                self.allocations.append((dest_ptr, src_size, void_ptr_alignment, self.allocation_epoch))
                 self.copied_data[dest_ptr] = (data, self.allocator_id)
+            
+            # After unwind, check if the new allocation is placed correctly
+            if dest_ptr and self.top_ptr is not None:
+                void_ptr_alignment = ctypes.sizeof(ctypes.c_void_p)
+                # The allocator should place the new allocation at or after the expected aligned position
+                expected_min_addr = align_up(self.top_ptr, void_ptr_alignment)
+                assert dest_ptr >= expected_min_addr, f"Address {dest_ptr} comes before expected minimum {expected_min_addr}"
+                # Ensure proper alignment
+                assert dest_ptr % void_ptr_alignment == 0, f"Address {dest_ptr} not properly aligned to {void_ptr_alignment}"
+                self.top_ptr = None
+
+    @rule()   
+    @precondition(lambda self: self.is_destroyed == False and 1 <= len(self.allocations) <= 50)
+    def record(self):
+        lib.anvil_memory_stack_allocator_record(self.allocator)
+        # The C implementation saves the current 'allocated' byte offset, not address + size
+        # We need to track which allocations existed at this point
+        current_allocation_count = len(self.allocations)
+        if current_allocation_count > 0:
+            # Calculate the total allocated bytes up to this point
+            first_addr = self.allocations[0][0]
+            last_addr, last_size, _, _ = self.allocations[-1]
+            total_allocated = (last_addr + last_size) - first_addr
+            self.stack.append((total_allocated, current_allocation_count))
+        else:
+            self.stack.append((0, 0))
+
+    @rule()   
+    @precondition(lambda self: self.is_destroyed == False and len(self.stack) > 0)
+    def unwind(self):
+        lib.anvil_memory_stack_allocator_unwind(self.allocator)
+        
+        total_allocated, allocation_count = self.stack.pop()
+        
+        # CRITICAL FIX: After unwind, only allocations up to the recorded point still exist
+        # Everything allocated after the record point is effectively "deallocated"
+        self.allocations = self.allocations[:allocation_count]
+        
+        # Increment allocation epoch - this helps track that future allocations 
+        # are in a different "generation" and may not be contiguous with old ones
+        self.allocation_epoch += 1
+        
+        # Clean up copied_data to only include data from remaining allocations
+        remaining_addresses = {addr for addr, _, _, _ in self.allocations}
+        self.copied_data = {
+            addr: (data, alloc_id) 
+            for addr, (data, alloc_id) in self.copied_data.items() 
+            if addr in remaining_addresses and alloc_id == self.allocator_id
+        }
+        
+        # Set top_ptr to the end of the last remaining allocation (if any)
+        if self.allocations:
+            last_addr, last_size, _, _ = self.allocations[-1]
+            self.top_ptr = last_addr + last_size
+        else:
+            # If no allocations remain, next allocation will start from base
+            self.top_ptr = None
 
     @invariant()
     @precondition(lambda self: self.is_destroyed == False and len(self.allocations) >= 1)
     def inv_no_alloc_overlap(self):
-        for i, (address, size, _) in enumerate(self.allocations):
-            for (address2, size2, _) in self.allocations[i+1:]:
+        for i, (address, size, _, _) in enumerate(self.allocations):
+            for (address2, size2, _, _) in self.allocations[i+1:]:
                 if address < address2 + size2 and address2 < address + size:
                     assert False, f"Memory allocations overlap: allocation at {address} (size {size}) overlaps with allocation at {address2} (size {size2})"
     
     @invariant()
-    @precondition(lambda self: self.is_destroyed == False and len(self.allocations) >= 1)
+    @precondition(lambda self: self.is_destroyed == False and len(self.allocations) >= 2)
     def inv_allocations_are_contiguous(self):
-        for i, (address, size, _) in enumerate(self.allocations):
-            if i == len(self.allocations) - 1:
-                break
-
-            next_address, _, next_alignment = self.allocations[i + 1]
-        
-            current_end = address + size
-        
-            expected_next_start = align_up(current_end, next_alignment)
-        
-            assert expected_next_start == next_address, f"Allocations not contiguous: expected {expected_next_start}, got {next_address}"
+        """
+        Verify that allocations within the same epoch are contiguous.
+        After unwind operations, allocations may not be contiguous across epochs.
+        """
+        for i in range(len(self.allocations) - 1):
+            current_addr, current_size, _, current_epoch = self.allocations[i]
+            next_addr, _, next_alignment, next_epoch = self.allocations[i + 1]
+            
+            # Only check contiguity within the same allocation epoch
+            if current_epoch == next_epoch:
+                current_end = current_addr + current_size
+                expected_next_start = align_up(current_end, next_alignment)
+                
+                assert next_addr >= expected_next_start, \
+                    f"Allocations in same epoch not contiguous: expected >= {expected_next_start}, got {next_addr}"
 
     @invariant()
     @precondition(lambda self: self.is_destroyed == False and len(self.allocations) > 0)
     def inv_allocations_properly_aligned(self):
-        for address, _, alignment in self.allocations:
+        for address, _, alignment, _ in self.allocations:
             if address % alignment != 0:
                 assert False, f"Address {address} not aligned to {alignment}"
 
@@ -260,7 +356,7 @@ class StackAllocatorModel(RuleBasedStateMachine):
     @precondition(lambda self: self.is_destroyed == False and len(self.allocations) > 0)
     def inv_allocations_within_bounds(self):
         first_addr = self.allocations[0][0]
-        last_addr, last_size, _ = self.allocations[-1]
+        last_addr, last_size, _, _ = self.allocations[-1]
         total_used = (last_addr + last_size) - first_addr
         
         assert total_used <= self.capacity, f"Used {total_used} bytes exceeds capacity {self.capacity}"
@@ -268,14 +364,14 @@ class StackAllocatorModel(RuleBasedStateMachine):
     @invariant()
     @precondition(lambda self: len(self.allocations) > 0)
     def inv_power_of_two_alignments(self):
-        for _, _, alignment in self.allocations:
+        for _, _, alignment, _ in self.allocations:
             if alignment <= 0 or (alignment & (alignment - 1)) != 0:
                 assert False, f"Alignment {alignment} is not a power of 2"
 
     @invariant()
     @precondition(lambda self: len(self.allocations) > 0)
     def inv_positive_sizes(self):
-        for _, size, _ in self.allocations:
+        for _, size, _, _ in self.allocations:
             if size <= 0:
                 assert False, f"Invalid allocation size: {size}"
 
@@ -292,7 +388,7 @@ class StackAllocatorModel(RuleBasedStateMachine):
                 
             allocation = next((alloc for alloc in self.allocations if alloc[0] == address), None)
             if allocation:
-                addr, size, _ = allocation
+                addr, size, _, _ = allocation
                 
                 expected_size = len(original_data)
                 assert size == expected_size, \

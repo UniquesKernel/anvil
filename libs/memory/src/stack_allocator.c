@@ -90,6 +90,7 @@ Error anvil_memory_stack_allocator_reset(StackAllocator* const allocator) {
 
         memset(allocator->base, 0x0, allocator->allocated);
         allocator->allocated = 0;
+        allocator->stack_depth = 0;
 
         return ERR_SUCCESS;
 }
