@@ -1,4 +1,5 @@
-\contentsline {section}{\numberline {1}Memory Management}{2}{section.1}%
-\contentsline {subsection}{\numberline {1.1}Scope-Centralized Memory Management}{2}{subsection.1.1}%
-\contentsline {subsection}{\numberline {1.2}Initialization-Centralized Memory Management}{3}{subsection.1.2}%
-\contentsline {section}{\numberline {2}Allocation Strategy}{5}{section.2}%
+\contentsline {section}{\numberline {1}Introduction to the Problem}{2}{section.1}%
+\contentsline {section}{\numberline {2}Memory Management}{3}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Scope-Centralized Memory Management}{3}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Initialization-Centralized Memory Management}{4}{subsection.2.2}%
+\contentsline {section}{\numberline {3}Allocation Strategy}{6}{section.3}%
