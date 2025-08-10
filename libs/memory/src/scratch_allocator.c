@@ -33,6 +33,7 @@ typedef struct scratch_allocator_t {
 } ScratchAllocator;
 static_assert(sizeof(ScratchAllocator) == 32, "ScratchAllocator size must be 32 bytes");
 static_assert(alignof(ScratchAllocator) == alignof(void*), "ScratchAllocator alignment must match void* alignment");
+static_assert(sizeof(ScratchAllocator) > 3 * sizeof(size_t), "ScratchAllocator is too small for transfer protocol");
 
 ScratchAllocator* anvil_memory_scratch_allocator_create(const size_t capacity, const size_t alignment) {
         INVARIANT_POSITIVE(capacity);
@@ -67,6 +68,10 @@ ScratchAllocator* anvil_memory_scratch_allocator_create(const size_t capacity, c
 Error anvil_memory_scratch_allocator_destroy(ScratchAllocator** allocator) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_NOT_NULL(*allocator);
+
+        if ((*(size_t*)*allocator) == TRANSFER_MAGIC) {
+                return ERR_SUCCESS;
+        }
 
         /// NOTE: (UniquesKernel) TRY will return early using the provided Error.
         TRY(anvil_memory_dealloc(*allocator));
@@ -144,5 +149,45 @@ void* anvil_memory_scratch_allocator_move(ScratchAllocator* const allocator, voi
         free_func(*src);
         *src = NULL;
 
+        return dest;
+}
+
+ScratchAllocator* anvil_memory_scratch_allocator_transfer(ScratchAllocator* allocator, void* src, const size_t data_size, const size_t alignment) {
+        INVARIANT_NOT_NULL(allocator);
+        INVARIANT_NOT_NULL(src);
+        INVARIANT_RANGE(data_size, 1, allocator->capacity);
+        INVARIANT(is_power_of_two(alignment),INV_BAD_ALIGNMENT, "alignment was not a power two but was %zu", alignment);
+
+        void* transfer = (void*)allocator;
+        *(size_t*) transfer = TRANSFER_MAGIC;
+        *((size_t*) transfer + 1) = data_size;
+        *((size_t*) transfer + 2) = alignment;
+        memcpy(((size_t*)transfer + 3), src, data_size);
+
+        return (ScratchAllocator*)transfer;
+}
+
+void* anvil_memory_scratch_allocator_absorb(ScratchAllocator* allocator, void* src, Error(*destroy_fn)(void**)) {
+        INVARIANT_NOT_NULL(allocator);
+        INVARIANT_NOT_NULL(src);
+        INVARIANT_NOT_NULL(destroy_fn);
+        
+        if (*(size_t*) src != TRANSFER_MAGIC) {
+                return NULL;
+        }
+
+        size_t data_size = (*((size_t*) src + 1));
+        size_t alignment = (*((size_t*) src + 2));
+        void* dest = anvil_memory_scratch_allocator_alloc(allocator, data_size, alignment);
+        
+        if (!dest) {
+                destroy_fn(&src);
+                return NULL;
+        }
+
+        *(size_t*) src = 0x0;
+        memcpy(dest, ((size_t*)src + 3), data_size);
+        
+        destroy_fn(&src);
         return dest;
 }

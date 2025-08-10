@@ -292,7 +292,7 @@ class StackAllocatorModel(RuleBasedStateMachine):
     def unwind(self):
         lib.anvil_memory_stack_allocator_unwind(self.allocator)
         
-        total_allocated, allocation_count = self.stack.pop()
+        _, allocation_count = self.stack.pop()
         
         # CRITICAL FIX: After unwind, only allocations up to the recorded point still exist
         # Everything allocated after the record point is effectively "deallocated"

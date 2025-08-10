@@ -12,7 +12,7 @@
  *       trigger immediate abort with diagnostics.
  *
  * @note The scratch allocators are **NOT** thread safe and should not be used
- *       in a concurrent environment without proper synchronization
+ *       in a concurrent environment without proper synchronization.
  */
 
 #ifndef ANVIL_MEMORY_SCRATCH_ALLOCATOR_H
@@ -24,19 +24,19 @@
 typedef struct scratch_allocator_t ScratchAllocator;
 
 /**
- * @brief Establishes a region of physical memory that is managed as a contiguous region.
+ * @brief Creates a scratch allocator that manages a contiguous region of memory.
  *
  * @pre `capacity > 0`.
  * @pre `alignment` is a power of two.
  * @pre `MIN_ALIGNMENT <= alignment <= MAX_ALIGNMENT`.
  *
- * @post ScratchAllocator manages `capacity` amount of bytes with worstcase being `capacity + page size - 1` amount of bytes.
- * @post All allocation from ScratchAllocator is aligned to `alignment`.
- * @post Initially the ScratchAllocator as allocated zero bytes.
+ * @post ScratchAllocator manages `capacity` amount of bytes with worst case being `capacity + page size - 1` amount of bytes.
+ * @post All allocations from ScratchAllocator are aligned to `alignment`.
+ * @post Initially the ScratchAllocator has allocated zero bytes.
  * @post Object is opaque and only interface operations are defined.
  *
  * @param[in] capacity      The amount of physical memory to allocate.
- * @param[in] alignment     The alignment of the all memory allocated from the ScratchAllocator
+ * @param[in] alignment     The alignment of all memory allocated from the ScratchAllocator
  *
  * @return Pointer to a ScratchAllocator.
  */
@@ -63,7 +63,7 @@ Error                              anvil_memory_scratch_allocator_destroy(Scratc
  *
  * @pre `allocator != NULL`.
  * @pre `allocation_size > 0`.
- * @pre `alignment` is power of two.
+ * @pre `alignment` is a power of two.
  * @pre `MIN_ALIGNMENT <= alignment <= MAX_ALIGNMENT`.
  *
  * @post `allocator` shrinks by `allocation_size + padding`, where `0 <= padding < alignment`.
@@ -73,11 +73,11 @@ Error                              anvil_memory_scratch_allocator_destroy(Scratc
  *
  * @param[in] allocator         ScratchAllocator from which the allocation should be made.
  * @param[in] allocation_size   Size in bytes of the allocation that should be made.
- * @param[in] alignment         alignment of the returned memory region.
+ * @param[in] alignment         Alignment of the returned memory region.
  *
  * @return Pointer to aligned memory region of size `allocation_size` (bytes).
  *
- * @note Uncertainty in allocator memory usages is improved by making `allocation_size` a multiple of
+ * @note Memory usage uncertainty is reduced by making `allocation_size` a multiple of
  * `alignment`.
  */
 void* anvil_memory_scratch_allocator_alloc(ScratchAllocator* const allocator, const size_t allocation_size,
@@ -88,9 +88,9 @@ void* anvil_memory_scratch_allocator_alloc(ScratchAllocator* const allocator, co
  *
  * @pre `allocator != NULL`.
  * @pre `allocator->base != NULL`.
- * 
+ *
  * @post All previous allocations from this allocator become invalid.
- * @post `allocator` has identical state to its initialization state from `anvil_memory_scratch_allocator_create`.
+ * @post `allocator` returns to its initial state from `anvil_memory_scratch_allocator_create`.
  *
  * @param[in] allocator     ScratchAllocator that should be reset.
  *
@@ -99,49 +99,56 @@ void* anvil_memory_scratch_allocator_alloc(ScratchAllocator* const allocator, co
 Error anvil_memory_scratch_allocator_reset(ScratchAllocator* const allocator);
 
 /**
- * @brief Writes data from from one region outside the ScratchAllocator's managed region to a sub-region inside the ScratchAllocator's managed region.
- * 
+ * @brief Copies data from one region outside the ScratchAllocator's managed region to a sub-region inside the ScratchAllocator's managed region.
+ *
  * @pre `allocator != NULL`.
  * @pre `src != NULL`.
  * @pre `n_bytes > 0`.
- * 
- * @post ScratchAllocator's capacity shrinks by `n_bytes` bytes with worstcase being `n_bytes + page size - 1` amount of bytes.
+ *
+ * @post ScratchAllocator's capacity shrinks by `n_bytes` bytes with worst case being `n_bytes + page size - 1` amount of bytes.
  * @post The returned memory region contains `n_bytes` amount of data from `src`.
  * @post The returned memory region is aligned to `alignof(void*)`.
- * 
- * @param[in] allocator     ScratchAllocator to whose region the outside data should be written.
+ *
+ * @param[in] allocator     ScratchAllocator into whose region the outside data should be written.
  * @param[in] src           The outside memory region from where the data should be retrieved.
  * @param[in] n_bytes       The amount of bytes to be read from `src` and written to the allocator's sub-region.
- * 
+ *
  * @return Pointer to sub-region of `allocator` containing `n_bytes` bytes copied from `src`.
- * 
- * @note This operation is non destructive and does not affect the data stored in `src`. 
+ *
+ * @note This operation is non-destructive and does not affect the data stored in `src`.
  */
-void* anvil_memory_scratch_allocator_copy(ScratchAllocator* const allocator, const void* const src, const size_t n_bytes);
+void* anvil_memory_scratch_allocator_copy(ScratchAllocator* const allocator, const void* const src,
+                                          const size_t n_bytes);
 
 /**
- * @brief Writes data from one region outside the ScratchAllocator's Managed region to a sub-region of the ScratchAllocator's managed region, then it invalidates the outside region
- * 
+ * @brief Moves data from one region outside the ScratchAllocator's managed region to a sub-region of the ScratchAllocator's managed region, then invalidates the outside region.
+ *
  * @pre `allocator != NULL`.
  * @pre `src != NULL`.
  * @pre `*src != NULL`.
  * @pre `free_func != NULL`.
  * @pre `n_bytes > 0`.
- * 
- * @post ScratchAllocator's capacity shrinks by `n_bytes` bytes with worstcase being `n_bytes + page size - 1` amount of bytes.
+ *
+ * @post ScratchAllocator's capacity shrinks by `n_bytes` bytes with worst case being `n_bytes + page size - 1` amount of bytes.
  * @post The returned memory region contains `n_bytes` amount of data from `src`.
  * @post The returned memory region is aligned to `alignof(void*)`.
  * @post `*src == NULL`.
- * 
- * @param[in] allocator     ScratchAllocator to whose region the outside data should be written.
- * @param[in,out] src           The outside memory region from where the data should be retrieved.
+ *
+ * @param[in] allocator     ScratchAllocator into whose region the outside data should be written.
+ * @param[in,out] src       The outside memory region from where the data should be retrieved.
  * @param[in] n_bytes       The amount of bytes to be read from `src` and written to the allocator's sub-region.
  * @param[in] free_func     Pointer to the appropriate function that should be used to free the `src` pointer.
- * 
+ *
  * @return Pointer to sub-region of `allocator` containing `n_bytes` bytes copied from `src`.
- * 
+ *
  * @note This operation is destructive as `src` is invalid after this operation.
  */
 void* anvil_memory_scratch_allocator_move(ScratchAllocator* const allocator, void** src, const size_t n_bytes,
                                           void (*free_func)(void*));
+
+ScratchAllocator* anvil_memory_scratch_allocator_transfer(ScratchAllocator* const ScratchAllocator, void* src,
+                                              const size_t data_size, const size_t alignment);
+
+void* anvil_memory_scratch_allocator_absorb(ScratchAllocator* const ScratchAllocator, void* src,
+                                            Error (*destroy_fn)(void**));
 #endif // ANVIL_MEMORY_SCRATCH_ALLOCATOR_H

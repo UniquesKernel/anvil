@@ -1,3 +1,21 @@
+/**
+ * @file stack_allocator.h
+ * @brief Stack-based memory allocator interface for contiguous memory management
+ *
+ * This header defines a high-level interface for stack memory allocation using
+ * a contiguous memory region strategy. The stack allocator provides efficient,
+ * sequential memory allocation with customizable alignment guarantees. The allocator
+ * is designed for scenarios where memory allocations follow a stack-like pattern
+ * (LIFO - Last In, First Out), making it ideal for nested scope-based memory
+ * management and high-performance applications requiring memory locality.
+ *
+ * @note All functions in this module follow fail-fast design - programmer errors
+ *       trigger immediate abort with diagnostics.
+ *
+ * @note The stack allocators are **NOT** thread safe and should not be used
+ *       in a concurrent environment without proper synchronization.
+ */
+
 #ifndef ANVIL_MEMORY_STACK_ALLOCATOR_H
 #define ANVIL_MEMORY_STACK_ALLOCATOR_H
 
@@ -13,13 +31,14 @@ typedef struct stack_allocator_t StackAllocator;
  * @pre `alignment` is a power of two.
  * @pre `MIN_ALIGNMENT <= alignment <= MAX_ALIGNMENT`.
  *
- * @post StackAllocator manages `capacity` amount of bytes with worstcase being `capacity + page size - 1` amount of bytes.
- * @post All allocation from StackAllocator is aligned to `alignment`.
- * @post Initially the StackAllocator as allocated zero bytes.
+ * @post StackAllocator manages `capacity` amount of bytes with worst case being `capacity + page size - 1` amount of bytes.
+ * @post All allocations from StackAllocator are aligned to `alignment`.
+ * @post Initially the StackAllocator has allocated zero bytes.
  * @post Object is opaque and only interface operations are defined.
  *
  * @param[in] capacity      The amount of physical memory to allocate.
- * @param[in] alignment     The alignment of the all memory allocated from the StackAllocator
+ * @param[in] alignment     The alignment of all memory allocated from the StackAllocator.
+ * @param[in] alloc_mode    The allocation mode for the StackAllocator.
  *
  * @return Pointer to a StackAllocator.
  */
@@ -46,7 +65,7 @@ Error                              anvil_memory_stack_allocator_destroy(StackAll
  *
  * @pre `allocator != NULL`.
  * @pre `allocation_size > 0`.
- * @pre `alignment` is power of two.
+ * @pre `alignment` is a power of two.
  * @pre `MIN_ALIGNMENT <= alignment <= MAX_ALIGNMENT`.
  *
  * @post `allocator` shrinks by `allocation_size + padding`, where `0 <= padding < alignment`.
@@ -56,11 +75,11 @@ Error                              anvil_memory_stack_allocator_destroy(StackAll
  *
  * @param[in] allocator         StackAllocator from which the allocation should be made.
  * @param[in] allocation_size   Size in bytes of the allocation that should be made.
- * @param[in] alignment         alignment of the returned memory region.
+ * @param[in] alignment         Alignment of the returned memory region.
  *
  * @return Pointer to aligned memory region of size `allocation_size` (bytes).
  *
- * @note Uncertainty in allocator memory usages is improved by making `allocation_size` a multiple of
+ * @note Uncertainty in allocator memory usage is improved by making `allocation_size` a multiple of
  * `alignment`.
  */
 void* anvil_memory_stack_allocator_alloc(StackAllocator* const allocator, const size_t allocation_size,
@@ -73,7 +92,7 @@ void* anvil_memory_stack_allocator_alloc(StackAllocator* const allocator, const 
  * @pre `allocator->base != NULL`.
  * 
  * @post All previous allocations from this allocator become invalid.
- * @post `allocator` has identical state to its initialization state from `anvil_memory_scratch_allocator_create`.
+ * @post `allocator` has identical state to its initialization state from `anvil_memory_stack_allocator_create`.
  *
  * @param[in] allocator     StackAllocator that should be reset.
  *
@@ -82,13 +101,13 @@ void* anvil_memory_stack_allocator_alloc(StackAllocator* const allocator, const 
 Error anvil_memory_stack_allocator_reset(StackAllocator* const allocator);
 
 /**
- * @brief Writes data from from one region outside the StackAllocator's managed region to a sub-region inside the ScratchAllocator's managed region.
+ * @brief Writes data from one region outside the StackAllocator's managed region to a sub-region inside the StackAllocator's managed region.
  * 
  * @pre `allocator != NULL`.
  * @pre `src != NULL`.
  * @pre `n_bytes > 0`.
  * 
- * @post StackAllocator's capacity shrinks by `n_bytes` bytes with worstcase being `n_bytes + page size - 1` amount of bytes.
+ * @post StackAllocator's capacity shrinks by `n_bytes` bytes with worst case being `n_bytes + page size - 1` amount of bytes.
  * @post The returned memory region contains `n_bytes` amount of data from `src`.
  * @post The returned memory region is aligned to `alignof(void*)`.
  * 
@@ -98,12 +117,12 @@ Error anvil_memory_stack_allocator_reset(StackAllocator* const allocator);
  * 
  * @return Pointer to sub-region of `allocator` containing `n_bytes` bytes copied from `src`.
  * 
- * @note This operation is non destructive and does not affect the data stored in `src`. 
+ * @note This operation is non-destructive and does not affect the data stored in `src`. 
  */
 void* anvil_memory_stack_allocator_copy(StackAllocator* const allocator, const void* const src, const size_t n_bytes);
 
 /**
- * @brief Writes data from one region outside the StackAllocator's Managed region to a sub-region of the ScratchAllocator's managed region, then it invalidates the outside region
+ * @brief Writes data from one region outside the StackAllocator's managed region to a sub-region of the StackAllocator's managed region, then it invalidates the outside region.
  * 
  * @pre `allocator != NULL`.
  * @pre `src != NULL`.
@@ -111,13 +130,13 @@ void* anvil_memory_stack_allocator_copy(StackAllocator* const allocator, const v
  * @pre `free_func != NULL`.
  * @pre `n_bytes > 0`.
  * 
- * @post StackAllocator's capacity shrinks by `n_bytes` bytes with worstcase being `n_bytes + page size - 1` amount of bytes.
+ * @post StackAllocator's capacity shrinks by `n_bytes` bytes with worst case being `n_bytes + page size - 1` amount of bytes.
  * @post The returned memory region contains `n_bytes` amount of data from `src`.
  * @post The returned memory region is aligned to `alignof(void*)`.
  * @post `*src == NULL`.
  * 
  * @param[in] allocator     StackAllocator to whose region the outside data should be written.
- * @param[in,out] src           The outside memory region from where the data should be retrieved.
+ * @param[in,out] src       The outside memory region from where the data should be retrieved.
  * @param[in] n_bytes       The amount of bytes to be read from `src` and written to the allocator's sub-region.
  * @param[in] free_func     Pointer to the appropriate function that should be used to free the `src` pointer.
  * 
