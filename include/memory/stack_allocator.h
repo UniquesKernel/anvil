@@ -42,7 +42,8 @@ typedef struct stack_allocator_t StackAllocator;
  *
  * @return Pointer to a StackAllocator.
  */
-StackAllocator*                  anvil_memory_stack_allocator_create(const size_t capacity, const size_t alignment, const size_t alloc_mode);
+StackAllocator*                  anvil_memory_stack_allocator_create(const size_t capacity, const size_t alignment,
+                                                                     const size_t alloc_mode);
 
 /**
  * @brief Removes a mapping to a contiguous region of physical memory.
@@ -58,7 +59,7 @@ StackAllocator*                  anvil_memory_stack_allocator_create(const size_
  *
  * @return Error code, zero indicates success while other values indicate error.
  */
-Error                              anvil_memory_stack_allocator_destroy(StackAllocator** allocator);
+Error                            anvil_memory_stack_allocator_destroy(StackAllocator** allocator);
 
 /**
  * @brief Establishes a contiguous sub-region of memory from an allocator's total contiguous region.
@@ -83,14 +84,14 @@ Error                              anvil_memory_stack_allocator_destroy(StackAll
  * `alignment`.
  */
 void* anvil_memory_stack_allocator_alloc(StackAllocator* const allocator, const size_t allocation_size,
-                                           const size_t alignment);
+                                         const size_t alignment);
 
 /**
  * @brief Re-initialize the state of a StackAllocator.
  *
  * @pre `allocator != NULL`.
  * @pre `allocator->base != NULL`.
- * 
+ *
  * @post All previous allocations from this allocator become invalid.
  * @post `allocator` has identical state to its initialization state from `anvil_memory_stack_allocator_create`.
  *
@@ -102,49 +103,52 @@ Error anvil_memory_stack_allocator_reset(StackAllocator* const allocator);
 
 /**
  * @brief Writes data from one region outside the StackAllocator's managed region to a sub-region inside the StackAllocator's managed region.
- * 
+ *
  * @pre `allocator != NULL`.
  * @pre `src != NULL`.
  * @pre `n_bytes > 0`.
- * 
+ *
  * @post StackAllocator's capacity shrinks by `n_bytes` bytes with worst case being `n_bytes + page size - 1` amount of bytes.
  * @post The returned memory region contains `n_bytes` amount of data from `src`.
  * @post The returned memory region is aligned to `alignof(void*)`.
- * 
+ *
  * @param[in] allocator     StackAllocator to whose region the outside data should be written.
  * @param[in] src           The outside memory region from where the data should be retrieved.
  * @param[in] n_bytes       The amount of bytes to be read from `src` and written to the allocator's sub-region.
- * 
+ *
  * @return Pointer to sub-region of `allocator` containing `n_bytes` bytes copied from `src`.
- * 
- * @note This operation is non-destructive and does not affect the data stored in `src`. 
+ *
+ * @note This operation is non-destructive and does not affect the data stored in `src`.
  */
 void* anvil_memory_stack_allocator_copy(StackAllocator* const allocator, const void* const src, const size_t n_bytes);
 
 /**
  * @brief Writes data from one region outside the StackAllocator's managed region to a sub-region of the StackAllocator's managed region, then it invalidates the outside region.
- * 
+ *
  * @pre `allocator != NULL`.
  * @pre `src != NULL`.
  * @pre `*src != NULL`.
  * @pre `free_func != NULL`.
  * @pre `n_bytes > 0`.
- * 
+ *
  * @post StackAllocator's capacity shrinks by `n_bytes` bytes with worst case being `n_bytes + page size - 1` amount of bytes.
  * @post The returned memory region contains `n_bytes` amount of data from `src`.
  * @post The returned memory region is aligned to `alignof(void*)`.
  * @post `*src == NULL`.
- * 
+ *
  * @param[in] allocator     StackAllocator to whose region the outside data should be written.
  * @param[in,out] src       The outside memory region from where the data should be retrieved.
  * @param[in] n_bytes       The amount of bytes to be read from `src` and written to the allocator's sub-region.
  * @param[in] free_func     Pointer to the appropriate function that should be used to free the `src` pointer.
- * 
+ *
  * @return Pointer to sub-region of `allocator` containing `n_bytes` bytes copied from `src`.
- * 
+ *
  * @note This operation is destructive as `src` is invalid after this operation.
  */
 void* anvil_memory_stack_allocator_move(StackAllocator* const allocator, void** src, const size_t n_bytes,
-                                          void (*free_func)(void*));
+                                        void (*free_func)(void*));
 
+StackAllocator* anvil_memory_stack_allocator_transfer(StackAllocator* allocator, void* src, const size_t data_size,
+                                                     const size_t alignment);
+void*          anvil_memory_stack_allocator_absorb(StackAllocator* allocator, void* src, Error (*destroy_fn)(void**));
 #endif // ANVIL_MEMORY_STACK_ALLOCATOR_H

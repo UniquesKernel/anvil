@@ -69,7 +69,7 @@ Error anvil_memory_scratch_allocator_destroy(ScratchAllocator** allocator) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_NOT_NULL(*allocator);
 
-        if ((*(size_t*)*allocator) == TRANSFER_MAGIC) {
+        if (UNLIKELY((*(size_t*)*allocator) == TRANSFER_MAGIC)) {
                 return ERR_SUCCESS;
         }
 

@@ -24,11 +24,11 @@
  * allocated        | size_t | sizeof(size_t)| Current number of bytes allocated from the stack allocator
  */
 typedef struct stack_allocator_t {
-        void*     base;
-        size_t    capacity;
-        size_t    allocated;
-        size_t    alloc_mode;
-        size_t    stack_depth;
+        void*  base;
+        size_t capacity;
+        size_t allocated;
+        size_t alloc_mode;
+        size_t stack_depth;
         size_t stack[MAX_STACK_DEPTH];
 } StackAllocator;
 static_assert(sizeof(StackAllocator) == 552, "StackAllocator size must be 552 bytes");
@@ -78,6 +78,10 @@ Error anvil_memory_stack_allocator_destroy(StackAllocator** allocator) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_NOT_NULL(*allocator);
 
+        if (UNLIKELY((*(size_t*)*allocator) == TRANSFER_MAGIC)) {
+                return ERR_SUCCESS;
+        }
+
         TRY(anvil_memory_dealloc(*allocator));
         *allocator = NULL;
 
@@ -89,7 +93,7 @@ Error anvil_memory_stack_allocator_reset(StackAllocator* const allocator) {
         INVARIANT_NOT_NULL(allocator->base);
 
         memset(allocator->base, 0x0, allocator->allocated);
-        allocator->allocated = 0;
+        allocator->allocated   = 0;
         allocator->stack_depth = 0;
 
         return ERR_SUCCESS;
@@ -112,10 +116,8 @@ void* anvil_memory_stack_allocator_alloc(StackAllocator* const allocator, const 
                 return NULL;
         }
 
-        if (allocator->alloc_mode == LAZY) {
-                if (anvil_memory_commit(allocator, total_allocation) != ERR_SUCCESS) {
+        if (allocator->alloc_mode == LAZY && anvil_memory_commit(allocator, total_allocation) != ERR_SUCCESS) {
                         return NULL;
-                }
         }
 
         allocator->allocated += total_allocation;
@@ -183,4 +185,46 @@ Error anvil_memory_stack_allocator_unwind(StackAllocator* const allocator) {
         allocator->stack_depth--;
 
         return ERR_SUCCESS;
+}
+
+StackAllocator* anvil_memory_stack_allocator_transfer(StackAllocator* allocator, void* src, const size_t data_size,
+                                                      const size_t alignment) {
+        INVARIANT_NOT_NULL(allocator);
+        INVARIANT_NOT_NULL(src);
+        INVARIANT_RANGE(data_size, 1, allocator->capacity);
+        INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "alignment was not a power two but was %zu",
+                  alignment);
+
+        void* transfer           = (void*)allocator;
+        *(size_t*)transfer       = TRANSFER_MAGIC;
+        *((size_t*)transfer + 1) = data_size;
+        *((size_t*)transfer + 2) = alignment;
+        memcpy(((size_t*)transfer + 3), src, data_size);
+
+        return (StackAllocator*)transfer;
+}
+
+void* anvil_memory_stack_allocator_absorb(StackAllocator* allocator, void* src, Error (*destroy_fn)(void**)) {
+        INVARIANT_NOT_NULL(allocator);
+        INVARIANT_NOT_NULL(src);
+        INVARIANT_NOT_NULL(destroy_fn);
+
+        if (*(size_t*)src != TRANSFER_MAGIC) {
+                return NULL;
+        }
+
+        size_t data_size = (*((size_t*)src + 1));
+        size_t alignment = (*((size_t*)src + 2));
+        void*  dest      = anvil_memory_scratch_allocator_alloc(allocator, data_size, alignment);
+
+        if (!dest) {
+                destroy_fn(&src);
+                return NULL;
+        }
+
+        *(size_t*)src = 0x0;
+        memcpy(dest, ((size_t*)src + 3), data_size);
+
+        destroy_fn(&src);
+        return dest;
 }

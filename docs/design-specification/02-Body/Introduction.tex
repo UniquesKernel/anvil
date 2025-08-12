@@ -6,7 +6,11 @@ Let $A \subset I$ denote the set of allocation instructions and let $B \subset I
 the set of deallocation instructions. For $P$ to be temporally memory safe, it must satisfy
 that for all execution paths $\pi \in \Pi(P)$ there exists a bijective mapping $T_{\pi}: A_{\pi} \rightarrow B_{\pi}$. Moreover $P$ exhibits exponential complexity, with a lower bound of $2^{|C|}$ where $C \subset I$ denotes the set of conditional instructions.
 
+\vspace{1em}
+
 Individual tracking of allocation-deallocation pairs admits no systematic method for managing this complexity, as programs with merely $|C| > 10$ conditional instructions yield $2^{|C|} > 1024$ execution paths. This is because such methods operate at the incorrect granularity. Furthermore, traditional approaches such as RAII and reference counting, while offering systematic tracking mechanisms, operate at the same granularity. These methods merely elevate individual allocation management to a higher level of abstraction without reducing the inherent complexity. 
+
+\vspace{1em}
 
 We reduce this complexity by observing that instructions in I exhibit temporal dependencies that admit natural groupings, termed \textbf{scopes}. Scopes may be nested, creating hierarchical structure between allocation-deallocation pairs. These hierarchical structures cause spatial fragmentation, separating allocation and deallocation pairs in $I$ making verification of the bijective mapping error prone. By managing all allocations within a scope as a unified set, verification complexity reduces from exponential in $C$ to linear verification in the root scope. Since nested scope allocations belong to the root set, destroying the set eliminates all nested allocations, regardless of execution path.
 
