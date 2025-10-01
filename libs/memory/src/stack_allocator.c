@@ -215,7 +215,7 @@ void* anvil_memory_stack_allocator_absorb(StackAllocator* allocator, void* src, 
 
         size_t data_size = (*((size_t*)src + 1));
         size_t alignment = (*((size_t*)src + 2));
-        void*  dest      = anvil_memory_scratch_allocator_alloc(allocator, data_size, alignment);
+        void*  dest      = anvil_memory_stack_allocator_alloc(allocator, data_size, alignment);
 
         if (!dest) {
                 destroy_fn(&src);
