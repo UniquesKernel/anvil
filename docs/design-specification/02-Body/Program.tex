@@ -1,0 +1,45 @@
+\section{Program, a Definition From First Principle}
+\label{sec:Program-Definition}
+
+\begin{definition}{Program}{program}
+	Let a program $P$ be defined as a tuple $(\mathcal{M}, I)$, where $I$ is some finite ordered
+	sequence of instructions $(I_{n})_{n=0}^{N-1}$ for some $N \in \N$ and $\mathcal{M}$ is a 
+	finite ordered sequence of memory locations (addresses) $(M_i)_{i=0}^{M-1}$ for some $M \in \N$.
+\end{definition}
+
+\begin{definition}{Program Configuration}{program-configuration}
+	We introduce the notion of a configuration of $P$ defined as a pair 
+	$\langle\mathcal{V}, \pi\rangle$, where $$\mathcal{V} : \mathcal{M} \to \N$$ is a function
+	that maps each memory address to its stored value and $\pi\in\left[0,|I|\right)$ is a 
+	$\textbf{Program Counter}$, denoting the next instruction that should be executed. 
+	
+	\vspace{1em}
+	
+	Let $\mathcal{S}_P$ be the set of all possible program configurations.
+\end{definition}
+
+\begin{definition}{Instruction Semantics}{instruction-semantics}
+	Let $\mathcal{J}$ be the set of all instruction types (e.g., add, jump, load). For each instruction type $j \in \mathcal{J}$, define its semantics as a partial function $[j] : \mathcal{S}_P \rightharpoonup \mathcal{S}_P$ that maps a configuration to the next configuration after executing $j$. (Note: This function may depend on parameters of the instruction, such as memory addresses, which are part of the instruction encoding.)
+\end{definition}
+
+\begin{definition}{Transition Relation for a Program}{transition-relation}
+	For a program $P = (\mathcal{M}, I)$, the transition relation $\Rightarrow_P \subseteq \mathcal{S}_P \times \mathcal{S}_P$ is defined by:
+	$$\langle \mathcal{V}, \pi\rangle \Rightarrow_P \langle\mathcal{V}',\pi'\rangle \hspace{1em} \texttt{iff} \hspace{1em} [I_{\pi}](\langle\mathcal{V}, \pi\rangle) = \langle\mathcal{V}',\pi'\rangle,$$
+	
+	where $[I_\pi]$ is the semantic function of the instruction $I_\pi$.
+\end{definition}
+
+\begin{definition}{Atomic Instruction}{atomic-instruction}
+	An instruction $i \in I$ of program $P$ is \textbf{atomic} if its execution is represented by a single, indivisible application of the program's transition relation $\Rightarrow_P$.
+	
+	Formally, instruction $i$ is atomic if for any configuration $S = \langle \mathcal{V}, \pi \rangle$ where $I_\pi = i$, the transition $S \Rightarrow_P S'$ to a next configuration $S'$ represents the complete effect of executing $i$.
+\end{definition}
+
+\begin{definition}{Temporality}{temporality}
+	As per definitions \ref{def:program-configuration} and definition \ref{def:transition-relation}, we have 
+	introduced the concept of a configuration on $P$ and the concept of change
+	in a configuration. We introduce the notion of a \textbf{tick}, as a discrete
+	temporal event during which a single atomic instruction, see definition \ref{def:atomic-instruction}, is executed.
+\end{definition}
+
+\newpage

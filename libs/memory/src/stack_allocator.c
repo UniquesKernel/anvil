@@ -116,10 +116,11 @@ void* anvil_memory_stack_allocator_alloc(StackAllocator* const allocator, const 
                 return NULL;
         }
 
-        if (allocator->alloc_mode == LAZY && anvil_memory_commit(allocator, total_allocation) != ERR_SUCCESS) {
+        if (allocator->alloc_mode == LAZY) {
+                if (anvil_memory_commit(allocator, total_allocation) != ERR_SUCCESS) {
                         return NULL;
+                }
         }
-
         allocator->allocated += total_allocation;
         return (void*)aligned_addr;
 }
