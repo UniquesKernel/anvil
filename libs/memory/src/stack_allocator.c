@@ -17,14 +17,14 @@
  *
  * @note This structure is typically placed at the beginning of the allocated memory region.
  *
- * Fields           | Type   | Size (Bytes)  | Description
- * ---------------- | ------ | ------------- | -------------------------------------------------
- * base             | void*  | sizeof(void*) | Pointer to the start of the usable memory region
- * capacity         | size_t | sizeof(size_t)| Total capacity of the stack allocator in bytes
- * allocated        | size_t | sizeof(size_t)| Current number of bytes allocated from the stack allocator
- * alloc_mode       | size_t | sizeof(size_t)| Allocation mode (EAGER or LAZY)
- * stack_depth      | size_t | sizeof(size_t)| Current depth of the allocation stack
- * stack            | size_t[MAX_STACK_DEPTH]| sizeof(size_t) * MAX_STACK_DEPTH | Array storing saved allocation states for record/unwind operations
+ * Fields           | Type                   | Size (Bytes)                    | Description
+ * ---------------- | -----------------------| ------------------------------- | -------------------------------------------------
+ * base             | void*                  | sizeof(void*)                   | Pointer to the start of the usable memory region
+ * capacity         | size_t                 | sizeof(size_t)                  | Total capacity of the stack allocator in bytes
+ * allocated        | size_t                 | sizeof(size_t)                  | Current number of bytes allocated from the stack allocator
+ * alloc_mode       | size_t                 | sizeof(size_t)                  | Allocation mode (EAGER or LAZY)
+ * stack_depth      | size_t                 | sizeof(size_t)                  | Current depth of the allocation stack
+ * stack            | size_t[MAX_STACK_DEPTH]| sizeof(size_t) * MAX_STACK_DEPTH| Array storing saved allocation states for record/unwind operations
  */
 typedef struct stack_allocator_t {
         void*  base;
