@@ -24,6 +24,7 @@
  * base             | void*  | sizeof(void*) | Pointer to the start of the usable memory region
  * capacity         | size_t | sizeof(size_t)| Total capacity of the scratch allocator in bytes
  * allocated        | size_t | sizeof(size_t)| Current number of bytes allocated from the scratch allocator
+ * alloc_mode       | size_t | sizeof(size_t)| Allocation mode can be either LAZY or EAGER
  */
 typedef struct scratch_allocator_t {
         void*  base;
