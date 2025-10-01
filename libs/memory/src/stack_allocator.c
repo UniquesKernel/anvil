@@ -24,7 +24,7 @@
  * allocated        | size_t | sizeof(size_t)| Current number of bytes allocated from the stack allocator
  * alloc_mode       | size_t | sizeof(size_t)| Allocation mode (EAGER or LAZY)
  * stack_depth      | size_t | sizeof(size_t)| Current depth of the allocation stack
- * stack            | size_t[MAX_STACK_DEPTH] | sizeof(size_t) * MAX_STACK_DEPTH | Array storing saved allocation states for record/unwind operations
+ * stack            | size_t[MAX_STACK_DEPTH]| sizeof(size_t) * MAX_STACK_DEPTH | Array storing saved allocation states for record/unwind operations
  */
 typedef struct stack_allocator_t {
         void*  base;
