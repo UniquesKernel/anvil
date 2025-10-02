@@ -34,8 +34,12 @@ typedef struct stack_allocator_t {
 static_assert(sizeof(StackAllocator) == 552, "StackAllocator size must be 552 bytes");
 static_assert(alignof(StackAllocator) == alignof(void*), "StackAllocator alignment must match void* alignment");
 
-StackAllocator* anvil_memory_stack_allocator_create(const size_t capacity, const size_t alignment,
-                                                    const size_t alloc_mode) {
+namespace anvil {
+namespace memory {
+namespace stack_allocator {
+
+StackAllocator* create(const size_t capacity, const size_t alignment,
+                  const size_t alloc_mode) {
         INVARIANT_POSITIVE(capacity);
         INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "alignment was %zu", alignment);
         INVARIANT_RANGE(alignment, MIN_ALIGNMENT, MAX_ALIGNMENT);
@@ -74,7 +78,7 @@ StackAllocator* anvil_memory_stack_allocator_create(const size_t capacity, const
         return allocator;
 }
 
-Error anvil_memory_stack_allocator_destroy(StackAllocator** allocator) {
+Error destroy(StackAllocator** allocator) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_NOT_NULL(*allocator);
 
@@ -88,7 +92,7 @@ Error anvil_memory_stack_allocator_destroy(StackAllocator** allocator) {
         return ERR_SUCCESS;
 }
 
-Error anvil_memory_stack_allocator_reset(StackAllocator* const allocator) {
+Error reset(StackAllocator* const allocator) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_NOT_NULL(allocator->base);
 
@@ -99,8 +103,8 @@ Error anvil_memory_stack_allocator_reset(StackAllocator* const allocator) {
         return ERR_SUCCESS;
 }
 
-void* anvil_memory_stack_allocator_alloc(StackAllocator* const allocator, const size_t allocation_size,
-                                         const size_t alignment) {
+void* alloc(StackAllocator* const allocator, const size_t allocation_size,
+            const size_t alignment) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_POSITIVE(allocation_size);
         INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "alignment was %zu", alignment);
@@ -124,12 +128,12 @@ void* anvil_memory_stack_allocator_alloc(StackAllocator* const allocator, const 
         allocator->allocated += total_allocation;
         return (void*)aligned_addr;
 }
-void* anvil_memory_stack_allocator_copy(StackAllocator* const allocator, const void* const src, const size_t n_bytes) {
+void* copy(StackAllocator* const allocator, const void* const src, const size_t n_bytes) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_NOT_NULL(src);
         INVARIANT_POSITIVE(n_bytes);
 
-        void* dest = anvil_memory_stack_allocator_alloc(allocator, n_bytes, alignof(void*));
+        void* dest = alloc(allocator, n_bytes, alignof(void*));
 
         if (CHECK(dest, ERR_OUT_OF_MEMORY) != ERR_SUCCESS) {
                 return NULL;
@@ -141,15 +145,15 @@ void* anvil_memory_stack_allocator_copy(StackAllocator* const allocator, const v
         return dest;
 }
 
-void* anvil_memory_stack_allocator_move(StackAllocator* const allocator, void** src, const size_t n_bytes,
-                                        void (*free_func)(void*)) {
+void* move(StackAllocator* const allocator, void** src, const size_t n_bytes,
+           void (*free_func)(void*)) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_NOT_NULL(src);
         INVARIANT_NOT_NULL(*src);
         INVARIANT_NOT_NULL(free_func);
         INVARIANT_POSITIVE(n_bytes);
 
-        void* dest = anvil_memory_stack_allocator_alloc(allocator, n_bytes, alignof(void*));
+        void* dest = alloc(allocator, n_bytes, alignof(void*));
 
         if (CHECK(dest, ERR_OUT_OF_MEMORY) != ERR_SUCCESS) {
                 return NULL;
@@ -164,7 +168,7 @@ void* anvil_memory_stack_allocator_move(StackAllocator* const allocator, void** 
         return dest;
 }
 
-Error anvil_memory_stack_allocator_record(StackAllocator* const allocator) {
+Error record(StackAllocator* const allocator) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_NOT_NULL(allocator->base);
         INVARIANT_RANGE(allocator->stack_depth, 0, MAX_STACK_DEPTH - 1);
@@ -175,7 +179,7 @@ Error anvil_memory_stack_allocator_record(StackAllocator* const allocator) {
         return ERR_SUCCESS;
 }
 
-Error anvil_memory_stack_allocator_unwind(StackAllocator* const allocator) {
+Error unwind(StackAllocator* const allocator) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT(allocator->stack_depth > 0, INV_INVALID_STATE, "Cannot unwind from empty stack (stack_depth = %zu)",
                   allocator->stack_depth);
@@ -188,8 +192,8 @@ Error anvil_memory_stack_allocator_unwind(StackAllocator* const allocator) {
         return ERR_SUCCESS;
 }
 
-StackAllocator* anvil_memory_stack_allocator_transfer(StackAllocator* allocator, void* src, const size_t data_size,
-                                                      const size_t alignment) {
+StackAllocator* transfer(StackAllocator* allocator, void* src, const size_t data_size,
+                    const size_t alignment) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_NOT_NULL(src);
         INVARIANT_RANGE(data_size, 1, allocator->capacity);
@@ -205,7 +209,7 @@ StackAllocator* anvil_memory_stack_allocator_transfer(StackAllocator* allocator,
         return (StackAllocator*)transfer;
 }
 
-void* anvil_memory_stack_allocator_absorb(StackAllocator* allocator, void* src, Error (*destroy_fn)(void**)) {
+void* absorb(StackAllocator* allocator, void* src, Error (*destroy_fn)(void**)) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_NOT_NULL(src);
         INVARIANT_NOT_NULL(destroy_fn);
@@ -216,7 +220,7 @@ void* anvil_memory_stack_allocator_absorb(StackAllocator* allocator, void* src, 
 
         size_t data_size = (*((size_t*)src + 1));
         size_t alignment = (*((size_t*)src + 2));
-        void*  dest      = anvil_memory_stack_allocator_alloc(allocator, data_size, alignment);
+        void*  dest      = alloc(allocator, data_size, alignment);
 
         if (!dest) {
                 destroy_fn(&src);
@@ -229,3 +233,7 @@ void* anvil_memory_stack_allocator_absorb(StackAllocator* allocator, void* src, 
         destroy_fn(&src);
         return dest;
 }
+
+} // namespace stack
+} // namespace memory
+} // namespace anvil

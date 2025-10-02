@@ -15,14 +15,15 @@
  *       in a concurrent environment without proper synchronization.
  */
 
-#ifndef ANVIL_MEMORY_SCRATCH_ALLOCATOR_H
-#define ANVIL_MEMORY_SCRATCH_ALLOCATOR_H
-
+#pragma once
 #include "error.hpp"
 #include <stddef.h>
 
 typedef struct scratch_allocator_t ScratchAllocator;
 
+namespace anvil {
+namespace memory {
+namespace scratch_allocator {
 /**
  * @brief Creates a scratch allocator that manages a contiguous region of memory.
  *
@@ -40,7 +41,7 @@ typedef struct scratch_allocator_t ScratchAllocator;
  *
  * @return Pointer to a ScratchAllocator.
  */
-ScratchAllocator*                  anvil_memory_scratch_allocator_create(const size_t capacity, const size_t alignment);
+ScratchAllocator*                  create(const size_t capacity, const size_t alignment);
 
 /**
  * @brief Removes a mapping to a contiguous region of physical memory.
@@ -56,7 +57,7 @@ ScratchAllocator*                  anvil_memory_scratch_allocator_create(const s
  *
  * @return Error code, zero indicates success while other values indicate error.
  */
-Error                              anvil_memory_scratch_allocator_destroy(ScratchAllocator** allocator);
+Error                              destroy(ScratchAllocator** allocator);
 
 /**
  * @brief Establishes a contiguous sub-region of memory from an allocator's total contiguous region.
@@ -80,7 +81,7 @@ Error                              anvil_memory_scratch_allocator_destroy(Scratc
  * @note Memory usage uncertainty is reduced by making `allocation_size` a multiple of
  * `alignment`.
  */
-void* anvil_memory_scratch_allocator_alloc(ScratchAllocator* const allocator, const size_t allocation_size,
+void* alloc(ScratchAllocator* const allocator, const size_t allocation_size,
                                            const size_t alignment);
 
 /**
@@ -96,7 +97,7 @@ void* anvil_memory_scratch_allocator_alloc(ScratchAllocator* const allocator, co
  *
  * @return Error code, zero indicates success while other values indicate error.
  */
-Error anvil_memory_scratch_allocator_reset(ScratchAllocator* const allocator);
+Error reset(ScratchAllocator* const allocator);
 
 /**
  * @brief Copies data from one region outside the ScratchAllocator's managed region to a sub-region inside the ScratchAllocator's managed region.
@@ -117,7 +118,7 @@ Error anvil_memory_scratch_allocator_reset(ScratchAllocator* const allocator);
  *
  * @note This operation is non-destructive and does not affect the data stored in `src`.
  */
-void* anvil_memory_scratch_allocator_copy(ScratchAllocator* const allocator, const void* const src,
+void* copy(ScratchAllocator* const allocator, const void* const src,
                                           const size_t n_bytes);
 
 /**
@@ -143,7 +144,7 @@ void* anvil_memory_scratch_allocator_copy(ScratchAllocator* const allocator, con
  *
  * @note This operation is destructive as `src` is invalid after this operation.
  */
-void* anvil_memory_scratch_allocator_move(ScratchAllocator* const allocator, void** src, const size_t n_bytes,
+void* move(ScratchAllocator* const allocator, void** src, const size_t n_bytes,
                                           void (*free_func)(void*));
 /**
  * @brief Converts an allocator into a transferable data package that carries an
@@ -169,7 +170,7 @@ void* anvil_memory_scratch_allocator_move(ScratchAllocator* const allocator, voi
  *
  * @note Failing to absorb the allocator will lead to memory leaks.
  */
-ScratchAllocator* anvil_memory_scratch_allocator_transfer(ScratchAllocator* const ScratchAllocator, void* src,
+ScratchAllocator* transfer(ScratchAllocator* const ScratchAllocator, void* src,
                                               const size_t data_size, const size_t alignment);
 /**
  * @brief Extracts a return value from a source allocator package and destroys the source allocator.
@@ -190,6 +191,9 @@ ScratchAllocator* anvil_memory_scratch_allocator_transfer(ScratchAllocator* cons
  * @note The src allocator has been destroyed and must not be used after this
  *       function returns.
  */
-void* anvil_memory_scratch_allocator_absorb(ScratchAllocator* const ScratchAllocator, void* src,
+void* absorb(ScratchAllocator* const ScratchAllocator, void* src,
                                             Error (*destroy_fn)(void**));
-#endif // ANVIL_MEMORY_SCRATCH_ALLOCATOR_H
+
+} // namespace scratch
+} // namespace memory
+} // namespace anvil

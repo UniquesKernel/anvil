@@ -36,7 +36,11 @@ static_assert(sizeof(ScratchAllocator) == 32, "ScratchAllocator size must be 32 
 static_assert(alignof(ScratchAllocator) == alignof(void*), "ScratchAllocator alignment must match void* alignment");
 static_assert(sizeof(ScratchAllocator) > 3 * sizeof(size_t), "ScratchAllocator is too small for transfer protocol");
 
-ScratchAllocator* anvil_memory_scratch_allocator_create(const size_t capacity, const size_t alignment) {
+namespace anvil {
+namespace memory {
+namespace scratch_allocator {
+
+ScratchAllocator* create(const size_t capacity, const size_t alignment) {
         INVARIANT_POSITIVE(capacity);
         INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "alignment was %zu", alignment);
         INVARIANT_RANGE(alignment, MIN_ALIGNMENT, MAX_ALIGNMENT);
@@ -66,7 +70,7 @@ ScratchAllocator* anvil_memory_scratch_allocator_create(const size_t capacity, c
         return allocator;
 }
 
-Error anvil_memory_scratch_allocator_destroy(ScratchAllocator** allocator) {
+Error destroy(ScratchAllocator** allocator) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_NOT_NULL(*allocator);
 
@@ -81,8 +85,8 @@ Error anvil_memory_scratch_allocator_destroy(ScratchAllocator** allocator) {
         return ERR_SUCCESS;
 }
 
-void* anvil_memory_scratch_allocator_alloc(ScratchAllocator* const allocator, const size_t allocation_size,
-                                           const size_t alignment) {
+void* alloc(ScratchAllocator* const allocator, const size_t allocation_size,
+            const size_t alignment) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_POSITIVE(allocation_size);
         INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "alignment was %zu", alignment);
@@ -102,7 +106,7 @@ void* anvil_memory_scratch_allocator_alloc(ScratchAllocator* const allocator, co
         return (void*)aligned_addr;
 }
 
-Error anvil_memory_scratch_allocator_reset(ScratchAllocator* const allocator) {
+Error reset(ScratchAllocator* const allocator) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_NOT_NULL(allocator->base);
 
@@ -112,13 +116,13 @@ Error anvil_memory_scratch_allocator_reset(ScratchAllocator* const allocator) {
         return ERR_SUCCESS;
 }
 
-void* anvil_memory_scratch_allocator_copy(ScratchAllocator* const allocator, const void* const src,
-                                          const size_t n_bytes) {
+void* copy(ScratchAllocator* const allocator, const void* const src,
+           const size_t n_bytes) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_NOT_NULL(src);
         INVARIANT_POSITIVE(n_bytes);
 
-        void* dest = anvil_memory_scratch_allocator_alloc(allocator, n_bytes, alignof(void*));
+        void* dest = alloc(allocator, n_bytes, alignof(void*));
 
         if (CHECK(dest, ERR_OUT_OF_MEMORY) != ERR_SUCCESS) {
                 return NULL;
@@ -130,15 +134,15 @@ void* anvil_memory_scratch_allocator_copy(ScratchAllocator* const allocator, con
         return dest;
 }
 
-void* anvil_memory_scratch_allocator_move(ScratchAllocator* const allocator, void** src, const size_t n_bytes,
-                                          void (*free_func)(void*)) {
+void* move(ScratchAllocator* const allocator, void** src, const size_t n_bytes,
+           void (*free_func)(void*)) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_NOT_NULL(src);
         INVARIANT_NOT_NULL(*src);
         INVARIANT_NOT_NULL(free_func);
         INVARIANT_POSITIVE(n_bytes);
 
-        void* dest = anvil_memory_scratch_allocator_alloc(allocator, n_bytes, alignof(void*));
+        void* dest = alloc(allocator, n_bytes, alignof(void*));
 
         if (CHECK(dest, ERR_OUT_OF_MEMORY) != ERR_SUCCESS) {
                 return NULL;
@@ -153,7 +157,7 @@ void* anvil_memory_scratch_allocator_move(ScratchAllocator* const allocator, voi
         return dest;
 }
 
-ScratchAllocator* anvil_memory_scratch_allocator_transfer(ScratchAllocator* allocator, void* src, const size_t data_size, const size_t alignment) {
+ScratchAllocator* transfer(ScratchAllocator* allocator, void* src, const size_t data_size, const size_t alignment) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_NOT_NULL(src);
         INVARIANT_RANGE(data_size, 1, allocator->capacity);
@@ -168,7 +172,7 @@ ScratchAllocator* anvil_memory_scratch_allocator_transfer(ScratchAllocator* allo
         return (ScratchAllocator*)transfer;
 }
 
-void* anvil_memory_scratch_allocator_absorb(ScratchAllocator* allocator, void* src, Error(*destroy_fn)(void**)) {
+void* absorb(ScratchAllocator* allocator, void* src, Error(*destroy_fn)(void**)) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_NOT_NULL(src);
         INVARIANT_NOT_NULL(destroy_fn);
@@ -179,7 +183,7 @@ void* anvil_memory_scratch_allocator_absorb(ScratchAllocator* allocator, void* s
 
         size_t data_size = (*((size_t*) src + 1));
         size_t alignment = (*((size_t*) src + 2));
-        void* dest = anvil_memory_scratch_allocator_alloc(allocator, data_size, alignment);
+        void* dest = alloc(allocator, data_size, alignment);
         
         if (!dest) {
                 destroy_fn(&src);
@@ -192,3 +196,7 @@ void* anvil_memory_scratch_allocator_absorb(ScratchAllocator* allocator, void* s
         destroy_fn(&src);
         return dest;
 }
+
+} // namespace scratch
+} // namespace memory
+} // namespace anvil

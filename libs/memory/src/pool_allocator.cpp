@@ -15,8 +15,12 @@ typedef struct pool_allocator_t {
         ScratchAllocator* allocator;
 } PoolAllocator;
 
-PoolAllocator* anvil_memory_pool_allocator_create(const size_t object_size, const size_t object_count,
-                                                  const size_t alignment) {
+namespace anvil {
+namespace memory {
+namespace pool_allocator {
+
+PoolAllocator* create(const size_t object_size, const size_t object_count,
+                  const size_t alignment) {
         INVARIANT_POSITIVE(object_size);
         INVARIANT_POSITIVE(object_count);
         INVARIANT_RANGE(alignment, MIN_ALIGNMENT, MAX_ALIGNMENT);
@@ -43,9 +47,9 @@ PoolAllocator* anvil_memory_pool_allocator_create(const size_t object_size, cons
                 allocator->capacity = object_count;
                 allocator->size     = object_count;
                 allocator->allocator =
-                        anvil_memory_scratch_allocator_create((object_count + 1) * sizeof(uintptr_t), alignof(uintptr_t));
+                        anvil::memory::scratch_allocator::create((object_count + 1) * sizeof(uintptr_t), alignof(uintptr_t));
                 allocator->ring_buffer = (uintptr_t*)
-                        anvil_memory_scratch_allocator_alloc(allocator->allocator, (object_count + 1) * sizeof(uintptr_t),
+                        anvil::memory::scratch_allocator::alloc(allocator->allocator, (object_count + 1) * sizeof(uintptr_t),
                                                                                                  alignof(uintptr_t));
 
         for (int i = 0; i < allocator->capacity; ++i) {
@@ -56,3 +60,7 @@ PoolAllocator* anvil_memory_pool_allocator_create(const size_t object_size, cons
 
         return allocator;
 }
+
+} // namespace pool
+} // namespace memory
+} // namespace anvil
