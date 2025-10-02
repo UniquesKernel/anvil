@@ -1,7 +1,7 @@
 #ifndef ANVIL_MEMORY_POOL_ALLOCATOR_H
 #define ANVIL_MEMORY_POOL_ALLOCATOR_H
 
-#include "error.h"
+#include "error.hpp"
 #include <stddef.h>
 
 typedef struct pool_allocator_t PoolAllocator;

@@ -1,7 +1,9 @@
-#include "memory/pool_allocator.h"
-#include "internal/utility.h"
-#include "memory/constants.h"
-#include "memory/scratch_allocator.h"
+#include "memory/pool_allocator.hpp"
+#include "internal/utility.hpp"
+#include "memory/constants.hpp"
+#include "memory/scratch_allocator.hpp"
+#include "memory/error.hpp"
+#include "internal/memory_allocation.hpp"
 
 typedef struct pool_allocator_t {
         void*             base;
@@ -33,21 +35,21 @@ PoolAllocator* anvil_memory_pool_allocator_create(const size_t object_size, cons
             total_memory_needed - ((uintptr_t)allocator->base - (uintptr_t)allocator);
 
         if (actually_available_capacity < (object_count * object_size)) {
-                INVARIANT(anvil_memory_dealloc(allocator) == ERR_SUCCESS, ERR_MEMORY_DEALLOCATION,
+                INVARIANT(anvil_memory_dealloc(allocator) == ERR_SUCCESS, INV_INVALID_STATE,
                           "Failed to Deallocate memory");
                 return NULL;
         }
 
-        allocator->capacity = object_count;
-        allocator->size     = object_count;
-        allocator->allocator =
-            anvil_memory_scratch_allocator_create((object_count + 1) * object_size, alignof(uintptr_t));
-        allocator->ring_buffer =
-            anvil_memory_scratch_allocator_alloc(allocator->allocator, (object_count + 1) * object_size,
-                                                 alignof(uintptr_t));
+                allocator->capacity = object_count;
+                allocator->size     = object_count;
+                allocator->allocator =
+                        anvil_memory_scratch_allocator_create((object_count + 1) * sizeof(uintptr_t), alignof(uintptr_t));
+                allocator->ring_buffer = (uintptr_t*)
+                        anvil_memory_scratch_allocator_alloc(allocator->allocator, (object_count + 1) * sizeof(uintptr_t),
+                                                                                                 alignof(uintptr_t));
 
         for (int i = 0; i < allocator->capacity; ++i) {
-                allocator->ring_buffer[i] = ((uintptr_t*)allocator->base + (object_size * i));
+                allocator->ring_buffer[i] = (uintptr_t)allocator->base + (object_size * i);
         }
         allocator->head = 0;
         allocator->tail = 0;

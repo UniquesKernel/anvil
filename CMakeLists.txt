@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.22)
 
 project(Anvil VERSION 0.1.0 
-  LANGUAGES ASM C
-  DESCRIPTION "A C libary collection"
+  LANGUAGES ASM CXX
+  DESCRIPTION "A CPP libary collection"
 )
 
 option(BUILD_TESTING "Build Tests" ON)
@@ -12,8 +12,10 @@ include(CompilerStandards)
 
 enable_testing()
 
-find_package(Python3 COMPONENTS Interpreter REQUIRED)
+find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 message(STATUS "Using Python 3 Interpreter: ${Python3_EXECUTABLE}")
+message(STATUS "Python3 Include Dirs: ${Python3_INCLUDE_DIRS}")
+message(STATUS "Python3 Libraries: ${Python3_LIBRARIES}")
 
 add_subdirectory(libs/memory)
 

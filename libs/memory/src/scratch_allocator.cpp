@@ -1,8 +1,8 @@
-#include "memory/scratch_allocator.h"
-#include "internal/memory_allocation.h"
-#include "internal/utility.h"
-#include "memory/constants.h"
-#include "memory/error.h"
+#include "memory/scratch_allocator.hpp"
+#include "internal/memory_allocation.hpp"
+#include "internal/utility.hpp"
+#include "memory/constants.hpp"
+#include "memory/error.hpp"
 #include <stdalign.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -54,7 +54,7 @@ ScratchAllocator* anvil_memory_scratch_allocator_create(const size_t capacity, c
             total_memory_needed - ((uintptr_t)allocator->base - (uintptr_t)allocator);
 
         if (actually_available_capacity < capacity) {
-                INVARIANT(anvil_memory_dealloc(allocator) == ERR_SUCCESS, ERR_MEMORY_DEALLOCATION,
+                INVARIANT(anvil_memory_dealloc(allocator) == ERR_SUCCESS, INV_INVALID_STATE,
                           "Failed to Deallocate memory");
                 return NULL;
         }

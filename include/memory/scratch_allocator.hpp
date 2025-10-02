@@ -18,7 +18,7 @@
 #ifndef ANVIL_MEMORY_SCRATCH_ALLOCATOR_H
 #define ANVIL_MEMORY_SCRATCH_ALLOCATOR_H
 
-#include "error.h"
+#include "error.hpp"
 #include <stddef.h>
 
 typedef struct scratch_allocator_t ScratchAllocator;

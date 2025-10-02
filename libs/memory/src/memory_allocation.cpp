@@ -1,7 +1,7 @@
-#include "internal/memory_allocation.h"
-#include "internal/utility.h"
-#include "memory/constants.h"
-#include "memory/error.h"
+#include "internal/memory_allocation.hpp"
+#include "internal/utility.hpp"
+#include "memory/constants.hpp"
+#include "memory/error.hpp"
 #include "sys/mman.h"
 #include <stdbool.h>
 #include <unistd.h>

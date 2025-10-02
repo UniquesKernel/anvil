@@ -1,8 +1,8 @@
-#include "memory/stack_allocator.h"
-#include "internal/memory_allocation.h"
-#include "internal/utility.h"
-#include "memory/constants.h"
-#include "memory/error.h"
+#include "memory/stack_allocator.hpp"
+#include "internal/memory_allocation.hpp"
+#include "internal/utility.hpp"
+#include "memory/constants.hpp"
+#include "memory/error.hpp"
 #include <stddef.h>
 #include <string.h>
 
@@ -61,7 +61,7 @@ StackAllocator* anvil_memory_stack_allocator_create(const size_t capacity, const
             total_memory_needed - ((uintptr_t)allocator->base - (uintptr_t)allocator);
 
         if (actual_available_capacity < capacity) {
-                INVARIANT(anvil_memory_dealloc(allocator) == ERR_SUCCESS, ERR_MEMORY_DEALLOCATION,
+                INVARIANT(anvil_memory_dealloc(allocator) == ERR_SUCCESS, INV_INVALID_STATE,
                           "Failed to Deallocate memory");
                 return NULL;
         }

@@ -1,4 +1,4 @@
-#include "memory/error.h"
+#include "memory/error.hpp"
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>

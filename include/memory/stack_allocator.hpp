@@ -19,7 +19,7 @@
 #ifndef ANVIL_MEMORY_STACK_ALLOCATOR_H
 #define ANVIL_MEMORY_STACK_ALLOCATOR_H
 
-#include "error.h"
+#include "error.hpp"
 #include <stddef.h>
 
 typedef struct stack_allocator_t StackAllocator;
@@ -195,4 +195,33 @@ StackAllocator* anvil_memory_stack_allocator_transfer(StackAllocator* allocator,
  *       function returns.
  */
 void*           anvil_memory_stack_allocator_absorb(StackAllocator* allocator, void* src, Error (*destroy_fn)(void**));
+
+/**
+ * @brief Records the current allocation state for later unwinding
+ *
+ * @pre `allocator != NULL`.
+ * @pre `allocator->stack_depth < MAX_STACK_DEPTH`.
+ *
+ * @post The current allocation state is saved on the internal stack.
+ *
+ * @param[in] allocator     StackAllocator whose state should be recorded.
+ *
+ * @return Error code, zero indicates success while other values indicate error.
+ */
+Error anvil_memory_stack_allocator_record(StackAllocator* const allocator);
+
+/**
+ * @brief Unwinds allocations back to the last recorded state
+ *
+ * @pre `allocator != NULL`.
+ * @pre `allocator->stack_depth > 0`.
+ *
+ * @post Allocations made after the last record are invalidated.
+ * @post The allocator returns to the state at the time of the last record.
+ *
+ * @param[in] allocator     StackAllocator that should be unwound.
+ *
+ * @return Error code, zero indicates success while other values indicate error.
+ */
+Error anvil_memory_stack_allocator_unwind(StackAllocator* const allocator);
 #endif // ANVIL_MEMORY_STACK_ALLOCATOR_H

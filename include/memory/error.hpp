@@ -1,5 +1,5 @@
-#ifndef ANVIL_ERROR_H
-#define ANVIL_ERROR_H
+#ifndef ANVIL_ERROR_HPP
+#define ANVIL_ERROR_HPP
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -89,11 +89,34 @@ typedef enum { RUNTIME_ERRORS(X) } RuntimeError;
 
 typedef uint16_t Error;
 
-#define X(name, domain, code, msg) [name] = msg,
-static const char* const invariant_messages[] = {[ERR_SUCCESS] = "Success", INVARIANT_ERRORS(X)};
+//#define X(name, domain, code, msg) [name] = msg,
+//static const char* const invariant_messages[] = {[ERR_SUCCESS] = "Success", INVARIANT_ERRORS(X)};
 
-static const char* const runtime_messages[]   = {RUNTIME_ERRORS(X)};
-#undef X
+//static const char* const runtime_messages[]   = {RUNTIME_ERRORS(X)};
+//#undef X
+
+COLD_FUNC static const char* anvil_error_message(Error err) {
+        if (err == ERR_SUCCESS)
+                return "Success";
+
+        ErrorCode e = U16_TO_ERROR(err);
+        
+        if (e.severity == ERR_SEVERITY_FATAL) {
+                switch(err) {
+                        #define X(name, domain, code, msg) case name: return msg;
+                        INVARIANT_ERRORS(X)
+                        #undef X
+                        default: return "Unknown invariant error";
+                }
+        } else {
+                switch(err) {
+                        #define X(name, domain, code, msg) case name: return msg;
+                        RUNTIME_ERRORS(X)
+                        #undef X
+                        default: return "Unknown runtime error";
+                }
+        }
+}
 
 // Error context for rich diagnostics (stack-allocated)
 typedef struct error_context {
@@ -188,6 +211,7 @@ COLD_FUNC static uint8_t anvil_error_code(Error err) {
         return e.code;
 }
 
+/*
 COLD_FUNC static const char* anvil_error_message(Error err) {
         if (err == ERR_SUCCESS)
                 return "Success";
@@ -199,7 +223,7 @@ COLD_FUNC static const char* anvil_error_message(Error err) {
                 return runtime_messages[err];
         }
 }
-
+*/
 #ifdef ANVIL_ERROR_STATS
 typedef struct {
         uint64_t invariant_checks;
@@ -213,4 +237,4 @@ typedef struct {
 #define STAT_INC(field) ((void)0)
 #endif
 
-#endif // ANVIL_ERROR_H
+#endif // ANVIL_ERROR_HPP

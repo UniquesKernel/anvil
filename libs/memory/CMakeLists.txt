@@ -1,14 +1,11 @@
 set(MODULE_NAME memory)
 
 set(MODULE_SOURCE 
-    src/error.c
-    src/memory_allocation.c
-    src/scratch_allocator.c
-    src/stack_allocator.c
-    src/utility.c
-)
-
-set(MODULE_PUBLIC_HEADER 
+    src/error.cpp
+    src/memory_allocation.cpp
+    src/scratch_allocator.cpp
+    src/stack_allocator.cpp
+    src/utility.cpp
 )
 
 add_library(${MODULE_NAME} STATIC ${MODULE_SOURCE})
@@ -22,38 +19,68 @@ target_include_directories(${MODULE_NAME}
 )
 
 if(BUILD_TESTING)
+    # Find Python with Development component (required for pybind11)
+    find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+    
+    # Find pybind11
+    execute_process(
+        COMMAND ${Python3_EXECUTABLE} -c "import pybind11; print(pybind11.get_cmake_dir())"
+        OUTPUT_VARIABLE pybind11_DIR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+        RESULT_VARIABLE pybind11_FIND_RESULT
+    )
+    
+    if(pybind11_FIND_RESULT EQUAL 0)
+        message(STATUS "Found pybind11 at: ${pybind11_DIR}")
+        list(APPEND CMAKE_PREFIX_PATH ${pybind11_DIR})
+        find_package(pybind11 CONFIG REQUIRED)
+    else()
+        message(FATAL_ERROR "pybind11 not found. Install with: pip install pybind11")
+    endif()
 
-    add_library(${MODULE_NAME}_test_shared SHARED ${MODULE_SOURCE})
-
-    target_include_directories(${MODULE_NAME}_test_shared
-        PUBLIC
-            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+    # Create Python module using pybind11
+    pybind11_add_module(anvil_memory 
+        bindings/memory_bindings.cpp 
+        ${MODULE_SOURCE}
+    )
+    
+    target_include_directories(anvil_memory
         PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}/src>
+            ${CMAKE_SOURCE_DIR}/include
+            ${CMAKE_CURRENT_SOURCE_DIR}/src
     )
+    
+    # Link against Python libraries explicitly
+    target_link_libraries(anvil_memory PRIVATE Python3::Python)
+    
+    target_compile_options(anvil_memory PRIVATE -O0 -g)
 
-    set_target_properties(${MODULE_NAME}_test_shared PROPERTIES
-        C_VISIBILITY_PRESET default
-        VISIBILITY_INLINES_HIDDEN OFF
+    # Copy the module to the test directory for easy importing
+    add_custom_command(TARGET anvil_memory POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:anvil_memory>
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/
+        COMMENT "Copying anvil_memory module to tests directory"
     )
-
-    target_compile_options(${MODULE_NAME}_test_shared PRIVATE -fPIC -O0 -g)
 
     add_test(
         NAME ${MODULE_NAME}_pytest
         COMMAND ${Python3_EXECUTABLE} -m pytest --hypothesis-show-statistics "${CMAKE_CURRENT_SOURCE_DIR}/tests/"
-        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/tests"
     )
-    set_tests_properties(${MODULE_NAME}_pytest PROPERTIES ENVIRONMENT "LD_LIBRARY_PATH=${CMAKE_CURRENT_BINARY_DIR};PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tests")
+    
+    set_tests_properties(${MODULE_NAME}_pytest PROPERTIES 
+        ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tests"
+    )
 endif()
 
 install(TARGETS ${MODULE_NAME}
-    EXPORT ${PROJECT_NAME}-${MODULE_NAME}-targets # Make it part of an export set
+    EXPORT ${PROJECT_NAME}-${MODULE_NAME}-targets
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
-    # PUBLIC_HEADER DESTINATION include/${MODULE_NAME} # This is a more modern way
 )
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
-    DESTINATION include/${MODULE_NAME} # Install this module's headers into a namespaced dir
+
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/memory
+    DESTINATION include
     FILES_MATCHING PATTERN "*.h"
 )

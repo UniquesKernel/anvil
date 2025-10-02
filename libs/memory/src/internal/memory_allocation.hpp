@@ -23,7 +23,7 @@
 #ifndef ANVIL_MEMORY_ALLOCATION_H
 #define ANVIL_MEMORY_ALLOCATION_H
 
-#include "memory/error.h"
+#include "memory/error.hpp"
 #include <stddef.h>
 
 #define MALLOC              __attribute__((malloc))
