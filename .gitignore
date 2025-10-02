@@ -1,6 +1,5 @@
 # Artifacts
 venv/
-.vscode/
 build/
 .pytest_cache/
 __pycache__/
