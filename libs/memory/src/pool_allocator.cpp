@@ -61,6 +61,6 @@ PoolAllocator* create(const size_t object_size, const size_t object_count,
         return allocator;
 }
 
-} // namespace pool
+} // namespace pool_allocator
 } // namespace memory
 } // namespace anvil

@@ -87,12 +87,12 @@ PYBIND11_MODULE(anvil_memory, m) {
         "Reset scratch allocator");
     
     m.def("scratch_allocator_copy",
-        [](py::capsule allocator_cap, py::bytes data) -> py::object {
+        [](py::capsule allocator_cap, py::bytes data, size_t size) -> py::object {
             ScratchAllocator* alloc = static_cast<ScratchAllocator*>(allocator_cap);
             if (!alloc) return py::none();
             
             char* buffer = nullptr;
-            ssize_t length = 0;
+            ssize_t length = size;
             if (PYBIND11_BYTES_AS_STRING_AND_SIZE(data.ptr(), &buffer, &length) == -1) {
                 return py::none();
             }
@@ -101,8 +101,26 @@ PYBIND11_MODULE(anvil_memory, m) {
             if (!ptr) return py::none();
             return py::capsule(ptr, "memory");
         },
-        py::arg("allocator"), py::arg("data"),
+        py::arg("allocator"), py::arg("data"), py::arg("size"),
         "Copy data into scratch allocator");
+
+   m.def("scratch_allocator_move",
+    [](uintptr_t allocator_addr, uintptr_t src_addr, size_t n_bytes,
+        uintptr_t free_func_addr) -> py::object {
+        
+        ScratchAllocator* allocator = reinterpret_cast<ScratchAllocator*>(allocator_addr);
+        void** src = reinterpret_cast<void**>(src_addr);
+        void (*free_func)(void*) = reinterpret_cast<void(*)(void*)>(free_func_addr);
+        
+        void* result = anvil::memory::scratch_allocator::move(allocator, src, n_bytes, free_func);
+        if (!result) return py::none();
+        return py::capsule(result, "memory");
+    },
+    py::arg("allocator_addr"),
+    py::arg("src_addr"),
+    py::arg("n_bytes"),
+    py::arg("free_func_addr")
+);
 
     // ========== StackAllocator Functions ==========
     m.def("stack_allocator_create",

@@ -234,6 +234,6 @@ void* absorb(StackAllocator* allocator, void* src, Error (*destroy_fn)(void**)) 
         return dest;
 }
 
-} // namespace stack
+} // namespace stack_allocator
 } // namespace memory
 } // namespace anvil

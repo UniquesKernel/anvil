@@ -197,6 +197,6 @@ void* absorb(ScratchAllocator* allocator, void* src, Error(*destroy_fn)(void**))
         return dest;
 }
 
-} // namespace scratch
+} // namespace scratch_allocator
 } // namespace memory
 } // namespace anvil
