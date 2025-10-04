@@ -1,14 +1,16 @@
+"""Stateful Hypothesis tests validating the stack allocator bindings."""
+
 import anvil_memory as am
 import ctypes
 from ctypes import c_size_t, c_void_p
 import hypothesis
 from hypothesis.stateful import RuleBasedStateMachine, rule, precondition, invariant
 from hypothesis.strategies import integers, binary, sampled_from
-from typing import List, Dict
+from typing import Dict, List, Tuple
 
-"""
-Define C bindings for the standard C library
-"""
+AllocationRecord = Tuple[object, int, int, int]
+CopiedDataRecord = Tuple[bytes, int]
+RecordSnapshot = Tuple[int, int]
 libc = ctypes.CDLL("libc.so.6")
 libc.malloc.argtypes = [c_size_t]
 libc.malloc.restype = c_void_p
@@ -19,20 +21,25 @@ libc.memcmp.restype = ctypes.c_int
 
 @hypothesis.settings(max_examples=1000)
 class StackAllocatorModel(RuleBasedStateMachine):
+    """Hypothesis state machine that exercises stack allocator lifecycles and invariants."""
     def __init__(self):
+        """Initialize tracking structures for allocator lifetimes and allocation epochs."""
         super().__init__()
         self.allocator = None
-        self.allocations: List[tuple[object, int, int, int]] = []  # (address, size, alignment, epoch)
-        self.copied_data: Dict[int, tuple[bytes, int]] = {}  # address -> (original data, allocator_id)
+        self.allocations: List[AllocationRecord] = []
+        self.copied_data: Dict[int, CopiedDataRecord] = {}
         self.is_destroyed = True
         self.capacity = 0
         self.alloc_mode = am.EAGER
-        self.external_allocations: List[int] = []  # Track malloc'd pointers for cleanup
-        self.allocator_id = 0  # Track allocator lifecycle
+        self.external_allocations: List[int] = []
+        self.allocator_id = 0
         self.top_alignment = 0
-        self.allocation_epoch = 0  # Track allocation epochs to handle unwind properly
+        self.allocation_epoch = 0
+        self.top_ptr = None
+        self.stack: List[RecordSnapshot] = []
 
     def teardown(self):
+        """Release outstanding resources allocated during test execution."""
         if self.allocator is not None:
             am.stack_allocator_destroy(self.allocator)
         
@@ -46,7 +53,7 @@ class StackAllocatorModel(RuleBasedStateMachine):
         self.allocation_epoch = 0
 
     def _cleanup_stale_copied_data(self):
-        """Remove copied_data entries that don't belong to current allocator lifecycle"""
+        """Discard copied-data records originating from prior allocator lifecycles."""
         self.copied_data = {
             addr: (data, alloc_id) 
             for addr, (data, alloc_id) in self.copied_data.items() 
@@ -55,11 +62,12 @@ class StackAllocatorModel(RuleBasedStateMachine):
    
     @rule(
             exponent=integers(min_value=am.MIN_ALIGNMENT_EXPONENT, max_value=am.MAX_ALIGNMENT_EXPONENT),
-            capacity=integers(min_value=64, max_value=(1 << 20)),  # Increased minimum capacity
+            capacity=integers(min_value=64, max_value=(1 << 20)),
             alloc_mode=sampled_from([am.EAGER, am.LAZY])
     )
     @precondition(lambda self: self.is_destroyed == True)
     def create_stack_allocator(self, exponent: int, capacity: int, alloc_mode: int):
+        """Instantiate a stack allocator with the requested alignment, capacity, and mode."""
         alignment = 1 << exponent
 
         self.allocator = am.stack_allocator_create(capacity, alignment, alloc_mode)
@@ -70,12 +78,13 @@ class StackAllocatorModel(RuleBasedStateMachine):
         self.copied_data = {}
         self.allocations = []
         self.top_ptr = None 
-        self.allocation_epoch = 0  # Reset epoch for new allocator
-        self.stack: list[tuple[int, int]] = []  # Changed to store (total_allocated, allocation_count)
+        self.allocation_epoch = 0
+        self.stack = []
 
     @rule()
     @precondition(lambda self: self.is_destroyed == False)
     def destroy(self):
+        """Dispose of the active stack allocator and clear bookkeeping."""
         if self.allocator is not None:
             err = am.stack_allocator_destroy(self.allocator)
             self.allocator = None
@@ -94,35 +103,35 @@ class StackAllocatorModel(RuleBasedStateMachine):
     )
     @precondition(lambda self: self.is_destroyed == False)
     def alloc(self, alloc_size: int, exponent: int):
+        """Allocate scratch memory from the stack allocator and track the call epoch."""
         if self.allocator is not None:
             alignment = 1 << exponent
             ptr = am.stack_allocator_alloc(self.allocator, alloc_size, alignment)
 
             if ptr:
                 self.allocations.append((ptr, alloc_size, alignment, self.allocation_epoch))
-
-            # Check that if an unwind happened that the next allocation 
-            # Also aligns to the recorded offset.
             if ptr and self.top_ptr is not None:
-                expected_addr = align_up(self.top_ptr, alignment)  # Use current allocation's alignment
+                expected_addr = align_up(self.top_ptr, alignment)
                 assert am.ptr_to_int(ptr) == expected_addr, f"Expected {expected_addr}, got {am.ptr_to_int(ptr)}"
                 self.top_ptr = None
 
     @rule()
     @precondition(lambda self: self.is_destroyed == False)
     def allocator_reset(self):
+        """Reset allocator state and ensure the internal tracking is cleared."""
         if self.allocator is not None:
             err = am.stack_allocator_reset(self.allocator)
             self.allocations = []
             self.copied_data = {}
             self.stack = []
             self.top_ptr = None
-            self.allocation_epoch = 0  # Reset epoch on full reset
+            self.allocation_epoch = 0
             assert err == am.ERR_SUCCESS, f"Allocator reset failed with error code {err}"
 
     @rule(data=binary(min_size=1, max_size=999999))
     @precondition(lambda self: self.is_destroyed == False) 
     def copy_data(self, data: bytes):
+        """Copy external bytes into the allocator and verify the stored payload matches the source."""
         if self.allocator is not None:
             src_size = len(data)
             
@@ -136,27 +145,23 @@ class StackAllocatorModel(RuleBasedStateMachine):
                 assert copied_data == data, f"Data mismatch in copy: expected {data}, got {copied_data}"
                 
                 void_ptr_alignment = ctypes.sizeof(ctypes.c_void_p)
-                
-                # Defensive check: ensure we're not tracking duplicate addresses
                 existing_alloc = next((alloc for alloc in self.allocations if alloc[0] == dest_ptr), None)
                 assert existing_alloc is None, f"Address {am.ptr_to_int(dest_ptr)} already tracked in allocations"
                 
                 self.allocations.append((dest_ptr, src_size, void_ptr_alignment, self.allocation_epoch))
                 self.copied_data[am.ptr_to_int(dest_ptr)] = (data, self.allocator_id)
             
-            # After unwind, check if the new allocation is placed correctly
             if dest_ptr and self.top_ptr is not None:
                 void_ptr_alignment = ctypes.sizeof(ctypes.c_void_p)
-                # The allocator should place the new allocation at or after the expected aligned position
                 expected_min_addr = align_up(self.top_ptr, void_ptr_alignment)
                 assert am.ptr_to_int(dest_ptr) >= expected_min_addr, f"Address {am.ptr_to_int(dest_ptr)} comes before expected minimum {expected_min_addr}"
-                # Ensure proper alignment
                 assert am.ptr_to_int(dest_ptr) % void_ptr_alignment == 0, f"Address {am.ptr_to_int(dest_ptr)} not properly aligned to {void_ptr_alignment}"
                 self.top_ptr = None
 
     @rule(data=binary(min_size=1, max_size=999999))   
     @precondition(lambda self: self.is_destroyed == False)
     def move_data(self, data: bytes):
+        """Move external bytes into allocator storage while verifying ownership transfer semantics."""
         if self.allocator is not None:
             src_size = len(data)
             src_ptr = libc.malloc(src_size)
@@ -196,32 +201,26 @@ class StackAllocatorModel(RuleBasedStateMachine):
             
             void_ptr_alignment = ctypes.sizeof(ctypes.c_void_p)
             
-            # Defensive check: ensure we're not tracking duplicate addresses
             existing_alloc = next((alloc for alloc in self.allocations if alloc[0] == dest_ptr), None)
             assert existing_alloc is None, f"Address {am.ptr_to_int(dest_ptr)} already tracked in allocations"
             
             self.allocations.append((dest_ptr, src_size, void_ptr_alignment, self.allocation_epoch))
             self.copied_data[am.ptr_to_int(dest_ptr)] = (data, self.allocator_id)
         
-            # After unwind, check if the new allocation is placed correctly
             if dest_ptr and self.top_ptr is not None:
                 void_ptr_alignment = ctypes.sizeof(ctypes.c_void_p)
-                # The allocator should place the new allocation at or after the expected aligned position
                 expected_min_addr = align_up(self.top_ptr, void_ptr_alignment)
                 assert am.ptr_to_int(dest_ptr) >= expected_min_addr, f"Address {am.ptr_to_int(dest_ptr)} comes before expected minimum {expected_min_addr}"
-                # Ensure proper alignment
                 assert am.ptr_to_int(dest_ptr) % void_ptr_alignment == 0, f"Address {am.ptr_to_int(dest_ptr)} not properly aligned to {void_ptr_alignment}"
                 self.top_ptr = None
 
     @rule()   
     @precondition(lambda self: self.is_destroyed == False and 1 <= len(self.allocations) <= 50)
     def record(self):
+        """Capture the allocator's current allocation totals for later unwind verification."""
         am.stack_allocator_record(self.allocator)
-        # The C implementation saves the current 'allocated' byte offset, not address + size
-        # We need to track which allocations existed at this point
         current_allocation_count = len(self.allocations)
         if current_allocation_count > 0:
-            # Calculate the total allocated bytes up to this point
             first_addr = self.allocations[0][0]
             last_addr, last_size, _, _ = self.allocations[-1]
             total_allocated = (am.ptr_to_int(last_addr) + last_size) - am.ptr_to_int(first_addr)
@@ -232,37 +231,28 @@ class StackAllocatorModel(RuleBasedStateMachine):
     @rule()   
     @precondition(lambda self: self.is_destroyed == False and len(self.stack) > 0)
     def unwind(self):
+        """Restore allocator state to the most recent record and drop newer allocations."""
         am.stack_allocator_unwind(self.allocator)
-        
+
         _, allocation_count = self.stack.pop()
-        
-        # CRITICAL FIX: After unwind, only allocations up to the recorded point still exist
-        # Everything allocated after the record point is effectively "deallocated"
         self.allocations = self.allocations[:allocation_count]
-        
-        # Increment allocation epoch - this helps track that future allocations 
-        # are in a different "generation" and may not be contiguous with old ones
         self.allocation_epoch += 1
-        
-        # Clean up copied_data to only include data from remaining allocations
         remaining_addresses = {addr for addr, _, _, _ in self.allocations}
         self.copied_data = {
             addr: (data, alloc_id) 
             for addr, (data, alloc_id) in self.copied_data.items() 
             if addr in remaining_addresses and alloc_id == self.allocator_id
         }
-        
-        # Set top_ptr to the end of the last remaining allocation (if any)
         if self.allocations:
             last_addr, last_size, _, _ = self.allocations[-1]
             self.top_ptr = am.ptr_to_int(last_addr) + last_size
         else:
-            # If no allocations remain, next allocation will start from base
             self.top_ptr = None
 
     @invariant()
     @precondition(lambda self: self.is_destroyed == False and len(self.allocations) >= 1)
     def inv_no_alloc_overlap(self):
+        """Ensure individual allocations never overlap in address space."""
         for i, (address, size, _, _) in enumerate(self.allocations):
             for (address2, size2, _, _) in self.allocations[i+1:]:
                 addr1 = am.ptr_to_int(address)
@@ -273,15 +263,11 @@ class StackAllocatorModel(RuleBasedStateMachine):
     @invariant()
     @precondition(lambda self: self.is_destroyed == False and len(self.allocations) >= 2)
     def inv_allocations_are_contiguous(self):
-        """
-        Verify that allocations within the same epoch are contiguous.
-        After unwind operations, allocations may not be contiguous across epochs.
-        """
+        """Verify allocations in the same epoch remain contiguous despite unwind operations."""
         for i in range(len(self.allocations) - 1):
             current_addr, current_size, _, current_epoch = self.allocations[i]
             next_addr, _, next_alignment, next_epoch = self.allocations[i + 1]
             
-            # Only check contiguity within the same allocation epoch
             if current_epoch == next_epoch:
                 current_end = am.ptr_to_int(current_addr) + current_size
                 expected_next_start = align_up(current_end, next_alignment)
@@ -292,6 +278,7 @@ class StackAllocatorModel(RuleBasedStateMachine):
     @invariant()
     @precondition(lambda self: self.is_destroyed == False and len(self.allocations) > 0)
     def inv_allocations_properly_aligned(self):
+        """Confirm each allocation respects its requested alignment."""
         for address, _, alignment, _ in self.allocations:
             if am.ptr_to_int(address) % alignment != 0:
                 assert False, f"Address {address} not aligned to {alignment}"
@@ -299,6 +286,7 @@ class StackAllocatorModel(RuleBasedStateMachine):
     @invariant()
     @precondition(lambda self: self.is_destroyed == False and len(self.allocations) > 0)
     def inv_allocations_within_bounds(self):
+        """Check that total allocated bytes never exceed allocator capacity."""
         first_addr = self.allocations[0][0]
         last_addr, last_size, _, _ = self.allocations[-1]
         total_used = (am.ptr_to_int(last_addr) + last_size) - am.ptr_to_int(first_addr)
@@ -308,6 +296,7 @@ class StackAllocatorModel(RuleBasedStateMachine):
     @invariant()
     @precondition(lambda self: len(self.allocations) > 0)
     def inv_power_of_two_alignments(self):
+        """Assert that every allocation alignment is a power of two."""
         for _, _, alignment, _ in self.allocations:
             if alignment <= 0 or (alignment & (alignment - 1)) != 0:
                 assert False, f"Alignment {alignment} is not a power of 2"
@@ -315,6 +304,7 @@ class StackAllocatorModel(RuleBasedStateMachine):
     @invariant()
     @precondition(lambda self: len(self.allocations) > 0)
     def inv_positive_sizes(self):
+        """Guarantee that each allocation requests a strictly positive size."""
         for _, size, _, _ in self.allocations:
             if size <= 0:
                 assert False, f"Invalid allocation size: {size}"
@@ -322,11 +312,10 @@ class StackAllocatorModel(RuleBasedStateMachine):
     @invariant()
     @precondition(lambda self: self.is_destroyed == False)
     def inv_copied_data_integrity(self):
-        """Verify that copied/moved data maintains integrity"""
+        """Verify that copied or moved data remains byte-for-byte identical to its source."""
         self._cleanup_stale_copied_data()
         
         for address, (original_data, data_allocator_id) in self.copied_data.items():
-            # Double-check: only validate data from current allocator lifecycle
             if data_allocator_id != self.allocator_id:
                 continue
                 
@@ -346,16 +335,11 @@ class StackAllocatorModel(RuleBasedStateMachine):
     @invariant()
     @precondition(lambda self: self.is_destroyed == False and self.alloc_mode == am.LAZY and len(self.allocations) > 0)
     def inv_lazy_allocation_behavior(self):
-        """
-        For lazy allocators, we might want to add specific invariants about 
-        memory commitment behavior. This is a placeholder for future lazy-specific tests.
-        """
-        # This invariant could test that memory is only committed when actually accessed
-        # For now, it's just a placeholder that always passes
+        """Placeholder invariant surface for future lazy-allocation commitment checks."""
         pass
 
 def align_up(address: int, alignment: int): 
-    """Align address up to next alignment boundary"""
+    """Align an address up to the next alignment boundary."""
     remainder = address % alignment
     return address if remainder == 0 else address + (alignment - remainder)
 
