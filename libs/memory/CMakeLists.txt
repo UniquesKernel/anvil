@@ -63,15 +63,26 @@ if(BUILD_TESTING)
         COMMENT "Copying anvil_memory module to tests directory"
     )
 
-    add_test(
+    if (MEMCHECK)
+        message("${MEMORYCHECK_COMMAND} ${MEMORYCHECK_COMMAND_OPTIONS}")
+        add_test(
         NAME ${MODULE_NAME}_pytest
-        COMMAND ${Python3_EXECUTABLE} -m pytest --hypothesis-show-statistics "${CMAKE_CURRENT_SOURCE_DIR}/tests/"
+        COMMAND ${MEMORYCHECK_COMMAND} ${MEMORYCHECK_COMMAND_OPTIONS} ${Python3_EXECUTABLE} -m pytest --hypothesis-show-statistics "${CMAKE_CURRENT_SOURCE_DIR}/tests/"
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/tests"
-    )
-    
-    set_tests_properties(${MODULE_NAME}_pytest PROPERTIES 
-        ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tests"
-    )
+        )
+    else()
+        add_test(
+            NAME ${MODULE_NAME}_pytest
+            COMMAND ${Python3_EXECUTABLE} -m pytest -s -v --hypothesis-show-statistics "${CMAKE_CURRENT_SOURCE_DIR}/tests/"
+            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/tests"
+        )
+        set_tests_properties(${MODULE_NAME}_pytest PROPERTIES
+            ENVIRONMENT "HYPOTHESIS_MAX_EXAMPLES=1000;PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tests:${CMAKE_SOURCE_DIR}/libs"
+        )
+    endif()
+    #set_tests_properties(${MODULE_NAME}_pytest PROPERTIES 
+     #   ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tests"
+    #)
 endif()
 
 install(TARGETS ${MODULE_NAME}
@@ -84,3 +95,6 @@ install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/memory
     DESTINATION include
     FILES_MATCHING PATTERN "*.h"
 )
+
+
+

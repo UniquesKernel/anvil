@@ -19,7 +19,9 @@ libc.free.restype = None
 libc.memcmp.argtypes = [c_void_p, c_void_p, c_size_t]
 libc.memcmp.restype = ctypes.c_int
 
-@hypothesis.settings(max_examples=1000)
+@hypothesis.settings(stateful_step_count=10,  # Reduce steps per example
+    deadline=None,  # Disable per-test deadlines
+    suppress_health_check=[hypothesis.HealthCheck.too_slow])
 class ScratchAllocatorModel(RuleBasedStateMachine):
     """Hypothesis rule-based state machine exercising scratch allocator behavior."""
     def __init__(self):
