@@ -41,7 +41,7 @@ namespace scratch_allocator {
  *
  * @return Pointer to a ScratchAllocator.
  */
-ScratchAllocator*                  create(const size_t capacity, const size_t alignment);
+ScratchAllocator* create(const size_t capacity, const size_t alignment);
 
 /**
  * @brief Removes a mapping to a contiguous region of physical memory.
@@ -57,7 +57,7 @@ ScratchAllocator*                  create(const size_t capacity, const size_t al
  *
  * @return Error code, zero indicates success while other values indicate error.
  */
-Error                              destroy(ScratchAllocator** allocator);
+Error             destroy(ScratchAllocator** allocator);
 
 /**
  * @brief Establishes a contiguous sub-region of memory from an allocator's total contiguous region.
@@ -81,8 +81,7 @@ Error                              destroy(ScratchAllocator** allocator);
  * @note Memory usage uncertainty is reduced by making `allocation_size` a multiple of
  * `alignment`.
  */
-void* alloc(ScratchAllocator* const allocator, const size_t allocation_size,
-                                           const size_t alignment);
+void*             alloc(ScratchAllocator* const allocator, const size_t allocation_size, const size_t alignment);
 
 /**
  * @brief Re-initialize the state of a ScratchAllocator.
@@ -97,7 +96,7 @@ void* alloc(ScratchAllocator* const allocator, const size_t allocation_size,
  *
  * @return Error code, zero indicates success while other values indicate error.
  */
-Error reset(ScratchAllocator* const allocator);
+Error             reset(ScratchAllocator* const allocator);
 
 /**
  * @brief Copies data from one region outside the ScratchAllocator's managed region to a sub-region inside the ScratchAllocator's managed region.
@@ -118,8 +117,7 @@ Error reset(ScratchAllocator* const allocator);
  *
  * @note This operation is non-destructive and does not affect the data stored in `src`.
  */
-void* copy(ScratchAllocator* const allocator, const void* const src,
-                                          const size_t n_bytes);
+void*             copy(ScratchAllocator* const allocator, const void* const src, const size_t n_bytes);
 
 /**
  * @brief Moves data from one region outside the ScratchAllocator's managed region to a sub-region of the ScratchAllocator's managed region, then invalidates the outside region.
@@ -144,8 +142,7 @@ void* copy(ScratchAllocator* const allocator, const void* const src,
  *
  * @note This operation is destructive as `src` is invalid after this operation.
  */
-void* move(ScratchAllocator* const allocator, void** src, const size_t n_bytes,
-                                          void (*free_func)(void*));
+void*             move(ScratchAllocator* const allocator, void** src, const size_t n_bytes, void (*free_func)(void*));
 /**
  * @brief Converts an allocator into a transferable data package that carries an
  *        allocation sourced from the allocator itself.
@@ -170,8 +167,8 @@ void* move(ScratchAllocator* const allocator, void** src, const size_t n_bytes,
  *
  * @note Failing to absorb the allocator will lead to memory leaks.
  */
-ScratchAllocator* transfer(ScratchAllocator* const ScratchAllocator, void* src,
-                                              const size_t data_size, const size_t alignment);
+ScratchAllocator* transfer(ScratchAllocator* const ScratchAllocator, void* src, const size_t data_size,
+                           const size_t alignment);
 /**
  * @brief Extracts a return value from a source allocator package and destroys the source allocator.
  *
@@ -191,9 +188,8 @@ ScratchAllocator* transfer(ScratchAllocator* const ScratchAllocator, void* src,
  * @note The src allocator has been destroyed and must not be used after this
  *       function returns.
  */
-void* absorb(ScratchAllocator* const ScratchAllocator, void* src,
-                                            Error (*destroy_fn)(void**));
+void*             absorb(ScratchAllocator* const ScratchAllocator, void* src, Error (*destroy_fn)(void**));
 
-} // namespace scratch
+} // namespace scratch_allocator
 } // namespace memory
 } // namespace anvil

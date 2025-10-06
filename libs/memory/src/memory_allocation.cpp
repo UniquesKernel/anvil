@@ -47,7 +47,7 @@ MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_lazy(const size_t capacity, 
         total_size              = (total_size + (page_size - 1)) & ~(page_size - 1);
         void* base              = mmap(NULL, total_size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
-        if (CHECK(base != MAP_FAILED, ERR_OUT_OF_MEMORY)) {
+        if (base == MAP_FAILED) {
                 return NULL;
         }
 
@@ -79,7 +79,7 @@ MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_eager(const size_t capacity,
         total_size              = (total_size + (page_size - 1)) & ~(page_size - 1);
         void* base              = mmap(NULL, total_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
-        if (CHECK(base != MAP_FAILED, ERR_OUT_OF_MEMORY)) {
+        if (base == MAP_FAILED) {
                 return NULL;
         }
 

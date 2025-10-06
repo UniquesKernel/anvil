@@ -38,8 +38,7 @@ namespace anvil {
 namespace memory {
 namespace stack_allocator {
 
-StackAllocator* create(const size_t capacity, const size_t alignment,
-                  const size_t alloc_mode) {
+StackAllocator* create(const size_t capacity, const size_t alignment, const size_t alloc_mode) {
         INVARIANT_POSITIVE(capacity);
         INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "alignment was %zu", alignment);
         INVARIANT_RANGE(alignment, MIN_ALIGNMENT, MAX_ALIGNMENT);
@@ -103,8 +102,7 @@ Error reset(StackAllocator* const allocator) {
         return ERR_SUCCESS;
 }
 
-void* alloc(StackAllocator* const allocator, const size_t allocation_size,
-            const size_t alignment) {
+void* alloc(StackAllocator* const allocator, const size_t allocation_size, const size_t alignment) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_POSITIVE(allocation_size);
         INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "alignment was %zu", alignment);
@@ -145,8 +143,7 @@ void* copy(StackAllocator* const allocator, const void* const src, const size_t 
         return dest;
 }
 
-void* move(StackAllocator* const allocator, void** src, const size_t n_bytes,
-           void (*free_func)(void*)) {
+void* move(StackAllocator* const allocator, void** src, const size_t n_bytes, void (*free_func)(void*)) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_NOT_NULL(src);
         INVARIANT_NOT_NULL(*src);
@@ -192,8 +189,7 @@ Error unwind(StackAllocator* const allocator) {
         return ERR_SUCCESS;
 }
 
-StackAllocator* transfer(StackAllocator* allocator, void* src, const size_t data_size,
-                    const size_t alignment) {
+StackAllocator* transfer(StackAllocator* allocator, void* src, const size_t data_size, const size_t alignment) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_NOT_NULL(src);
         INVARIANT_RANGE(data_size, 1, allocator->capacity);

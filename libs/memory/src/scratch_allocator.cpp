@@ -85,8 +85,7 @@ Error destroy(ScratchAllocator** allocator) {
         return ERR_SUCCESS;
 }
 
-void* alloc(ScratchAllocator* const allocator, const size_t allocation_size,
-            const size_t alignment) {
+void* alloc(ScratchAllocator* const allocator, const size_t allocation_size, const size_t alignment) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_POSITIVE(allocation_size);
         INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "alignment was %zu", alignment);
@@ -116,8 +115,7 @@ Error reset(ScratchAllocator* const allocator) {
         return ERR_SUCCESS;
 }
 
-void* copy(ScratchAllocator* const allocator, const void* const src,
-           const size_t n_bytes) {
+void* copy(ScratchAllocator* const allocator, const void* const src, const size_t n_bytes) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_NOT_NULL(src);
         INVARIANT_POSITIVE(n_bytes);
@@ -134,8 +132,7 @@ void* copy(ScratchAllocator* const allocator, const void* const src,
         return dest;
 }
 
-void* move(ScratchAllocator* const allocator, void** src, const size_t n_bytes,
-           void (*free_func)(void*)) {
+void* move(ScratchAllocator* const allocator, void** src, const size_t n_bytes, void (*free_func)(void*)) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_NOT_NULL(src);
         INVARIANT_NOT_NULL(*src);
@@ -161,38 +158,39 @@ ScratchAllocator* transfer(ScratchAllocator* allocator, void* src, const size_t 
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_NOT_NULL(src);
         INVARIANT_RANGE(data_size, 1, allocator->capacity);
-        INVARIANT(is_power_of_two(alignment),INV_BAD_ALIGNMENT, "alignment was not a power two but was %zu", alignment);
+        INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "alignment was not a power two but was %zu",
+                  alignment);
 
-        void* transfer = (void*)allocator;
-        *(size_t*) transfer = TRANSFER_MAGIC;
-        *((size_t*) transfer + 1) = data_size;
-        *((size_t*) transfer + 2) = alignment;
+        void* transfer           = (void*)allocator;
+        *(size_t*)transfer       = TRANSFER_MAGIC;
+        *((size_t*)transfer + 1) = data_size;
+        *((size_t*)transfer + 2) = alignment;
         memcpy(((size_t*)transfer + 3), src, data_size);
 
         return (ScratchAllocator*)transfer;
 }
 
-void* absorb(ScratchAllocator* allocator, void* src, Error(*destroy_fn)(void**)) {
+void* absorb(ScratchAllocator* allocator, void* src, Error (*destroy_fn)(void**)) {
         INVARIANT_NOT_NULL(allocator);
         INVARIANT_NOT_NULL(src);
         INVARIANT_NOT_NULL(destroy_fn);
-        
-        if (*(size_t*) src != TRANSFER_MAGIC) {
+
+        if (*(size_t*)src != TRANSFER_MAGIC) {
                 return NULL;
         }
 
-        size_t data_size = (*((size_t*) src + 1));
-        size_t alignment = (*((size_t*) src + 2));
-        void* dest = alloc(allocator, data_size, alignment);
-        
+        size_t data_size = (*((size_t*)src + 1));
+        size_t alignment = (*((size_t*)src + 2));
+        void*  dest      = alloc(allocator, data_size, alignment);
+
         if (!dest) {
                 destroy_fn(&src);
                 return NULL;
         }
 
-        *(size_t*) src = 0x0;
+        *(size_t*)src = 0x0;
         memcpy(dest, ((size_t*)src + 3), data_size);
-        
+
         destroy_fn(&src);
         return dest;
 }

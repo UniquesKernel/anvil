@@ -87,33 +87,39 @@ typedef enum { ERR_SUCCESS = 0, INVARIANT_ERRORS(X) } InvariantError;
 typedef enum { RUNTIME_ERRORS(X) } RuntimeError;
 #undef X
 
-typedef uint16_t Error;
+typedef uint16_t             Error;
 
-//#define X(name, domain, code, msg) [name] = msg,
-//static const char* const invariant_messages[] = {[ERR_SUCCESS] = "Success", INVARIANT_ERRORS(X)};
+// #define X(name, domain, code, msg) [name] = msg,
+// static const char* const invariant_messages[] = {[ERR_SUCCESS] = "Success", INVARIANT_ERRORS(X)};
 
-//static const char* const runtime_messages[]   = {RUNTIME_ERRORS(X)};
-//#undef X
+// static const char* const runtime_messages[]   = {RUNTIME_ERRORS(X)};
+// #undef X
 
 COLD_FUNC static const char* anvil_error_message(Error err) {
         if (err == ERR_SUCCESS)
                 return "Success";
 
         ErrorCode e = U16_TO_ERROR(err);
-        
+
         if (e.severity == ERR_SEVERITY_FATAL) {
-                switch(err) {
-                        #define X(name, domain, code, msg) case name: return msg;
+                switch (err) {
+#define X(name, domain, code, msg)                                                                                     \
+        case name:                                                                                                     \
+                return msg;
                         INVARIANT_ERRORS(X)
-                        #undef X
-                        default: return "Unknown invariant error";
+#undef X
+                default:
+                        return "Unknown invariant error";
                 }
         } else {
-                switch(err) {
-                        #define X(name, domain, code, msg) case name: return msg;
+                switch (err) {
+#define X(name, domain, code, msg)                                                                                     \
+        case name:                                                                                                     \
+                return msg;
                         RUNTIME_ERRORS(X)
-                        #undef X
-                        default: return "Unknown runtime error";
+#undef X
+                default:
+                        return "Unknown runtime error";
                 }
         }
 }
