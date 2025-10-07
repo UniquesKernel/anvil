@@ -4,9 +4,9 @@
 #include "memory/constants.hpp"
 #include "memory/error.hpp"
 #include <cstdalign>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
-#include <cstdint>
 #include <cstring>
 
 namespace anvil::memory::scratch_allocator {

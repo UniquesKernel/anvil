@@ -80,7 +80,7 @@ Error             destroy(ScratchAllocator** allocator);
  * @note Memory usage uncertainty is reduced by making `allocation_size` a multiple of
  * `alignment`.
  */
-void*             alloc(ScratchAllocator* const allocator, const std::size_t allocation_size, const std::size_t alignment);
+void* alloc(ScratchAllocator* const allocator, const std::size_t allocation_size, const std::size_t alignment);
 
 /**
  * @brief Re-initialize the state of a ScratchAllocator.
@@ -95,7 +95,7 @@ void*             alloc(ScratchAllocator* const allocator, const std::size_t all
  *
  * @return Error code, zero indicates success while other values indicate error.
  */
-Error             reset(ScratchAllocator* const allocator);
+Error reset(ScratchAllocator* const allocator);
 
 /**
  * @brief Copies data from one region outside the ScratchAllocator's managed region to a sub-region inside the ScratchAllocator's managed region.
@@ -116,7 +116,7 @@ Error             reset(ScratchAllocator* const allocator);
  *
  * @note This operation is non-destructive and does not affect the data stored in `src`.
  */
-void*             copy(ScratchAllocator* const allocator, const void* const src, const std::size_t n_bytes);
+void* copy(ScratchAllocator* const allocator, const void* const src, const std::size_t n_bytes);
 
 /**
  * @brief Moves data from one region outside the ScratchAllocator's managed region to a sub-region of the ScratchAllocator's managed region, then invalidates the outside region.
@@ -141,7 +141,7 @@ void*             copy(ScratchAllocator* const allocator, const void* const src,
  *
  * @note This operation is destructive as `src` is invalid after this operation.
  */
-void*             move(ScratchAllocator* const allocator, void** src, const std::size_t n_bytes, void (*free_func)(void*));
+void* move(ScratchAllocator* const allocator, void** src, const std::size_t n_bytes, void (*free_func)(void*));
 /**
  * @brief Converts an allocator into a transferable data package that carries an
  *        allocation sourced from the allocator itself.
@@ -189,6 +189,6 @@ ScratchAllocator* transfer(ScratchAllocator* const ScratchAllocator, void* src, 
  */
 void*             absorb(ScratchAllocator* const ScratchAllocator, void* src, Error (*destroy_fn)(void**));
 
-} // namespace anvil::memory::scratch_allocator {
+} // namespace anvil::memory::scratch_allocator
 
 #endif // ANVIL_MEMORY_SCRATCH_ALLOCATOR_HPP
