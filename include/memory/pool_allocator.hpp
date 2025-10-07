@@ -4,9 +4,9 @@
 #include "error.hpp"
 #include <cstddef>
 
-typedef struct pool_allocator_t PoolAllocator;
 
 namespace anvil::memory::pool_allocator {
+struct PoolAllocator;
 
 PoolAllocator* anvil_memory_pool_allocator_create(const std::size_t object_size, const std::size_t object_count,
                                                   const std::size_t alignment);
