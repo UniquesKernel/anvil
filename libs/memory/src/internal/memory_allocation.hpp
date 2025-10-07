@@ -26,8 +26,6 @@
 #include "memory/error.hpp"
 #include <cstddef>
 
-using std::size_t;
-
 #define MALLOC              __attribute__((malloc))
 #define WARN_UNSURED_RESULT __attribute__((warn_unused_result))
 
@@ -117,6 +115,6 @@ WARN_UNSURED_RESULT Error        anvil_memory_dealloc(void* ptr);
  *
  * @note The compiler will express a warning if the return result is unused.
  */
-WARN_UNSURED_RESULT Error        anvil_memory_commit(void* ptr, const size_t commit_size);
+WARN_UNSURED_RESULT Error        anvil_memory_commit(void* ptr, const std::size_t commit_size);
 
 #endif // ANVIL_MEMORY_ALLOCATION_HPP

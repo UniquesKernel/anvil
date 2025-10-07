@@ -5,10 +5,6 @@
 #include <cstdint>
 #include <cstdio>
 
-using std::size_t;
-using std::uint16_t;
-using std::uint8_t;
-
 /**
  * @brief Attribute to automatically call a cleanup function when a variable goes out of scope.
  *

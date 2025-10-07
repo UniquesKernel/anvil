@@ -24,11 +24,7 @@
 typedef struct stack_allocator_t StackAllocator;
 
 // Namespaced C++ API (preferred)
-namespace anvil {
-namespace memory {
-namespace stack_allocator {
-
-using std::size_t;
+namespace anvil::memory::stack_allocator {
 
 /**
  * @brief Establishes a region of physical memory that is managed as a contiguous region.
@@ -48,7 +44,7 @@ using std::size_t;
  *
  * @return Pointer to a StackAllocator.
  */
-StackAllocator* create(const size_t capacity, const size_t alignment, const size_t alloc_mode);
+StackAllocator* create(const std::size_t capacity, const std::size_t alignment, const std::size_t alloc_mode);
 
 /**
  * @brief Removes a mapping to a contiguous region of physical memory.
@@ -88,7 +84,7 @@ Error           destroy(StackAllocator** allocator);
  * @note Uncertainty in allocator memory usage is improved by making `allocation_size` a multiple of
  * `alignment`.
  */
-void*           alloc(StackAllocator* const allocator, const size_t allocation_size, const size_t alignment);
+void*           alloc(StackAllocator* const allocator, const std::size_t allocation_size, const std::size_t alignment);
 
 /**
  * @brief Re-initialize the state of a StackAllocator.
@@ -124,7 +120,7 @@ Error           reset(StackAllocator* const allocator);
  *
  * @note This operation is non-destructive and does not affect the data stored in `src`.
  */
-void*           copy(StackAllocator* const allocator, const void* const src, const size_t n_bytes);
+void*           copy(StackAllocator* const allocator, const void* const src, const std::size_t n_bytes);
 
 /**
  * @brief Writes data from one region outside the StackAllocator's managed region to a sub-region of the StackAllocator's managed region, then it invalidates the outside region.
@@ -149,7 +145,7 @@ void*           copy(StackAllocator* const allocator, const void* const src, con
  *
  * @note This operation is destructive as `src` is invalid after this operation.
  */
-void*           move(StackAllocator* const allocator, void** src, const size_t n_bytes, void (*free_func)(void*));
+void*           move(StackAllocator* const allocator, void** src, const std::size_t n_bytes, void (*free_func)(void*));
 
 /**
  * @brief Converts an allocator into a transferable data package that carries an
@@ -175,7 +171,7 @@ void*           move(StackAllocator* const allocator, void** src, const size_t n
  *
  * @note Failing to absorb the allocator will lead to memory leaks.
  */
-StackAllocator* transfer(StackAllocator* allocator, void* src, const size_t data_size, const size_t alignment);
+StackAllocator* transfer(StackAllocator* allocator, void* src, const std::size_t data_size, const std::size_t alignment);
 
 /**
  * @brief Extracts a return value from a source allocator package and destroys the source allocator.
@@ -227,8 +223,6 @@ Error           record(StackAllocator* const allocator);
  */
 Error           unwind(StackAllocator* const allocator);
 
-} // namespace stack_allocator
-} // namespace memory
-} // namespace anvil
+} // namespace anvil::memory::stack_allocator
 
 #endif // ANVIL_MEMORY_STACK_ALLOCATOR_HPP
