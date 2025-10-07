@@ -15,15 +15,18 @@
  *       in a concurrent environment without proper synchronization.
  */
 
-#pragma once
+#ifndef ANVIL_MEMORY_SCRATCH_ALLOCATOR_HPP
+#define ANVIL_MEMORY_SCRATCH_ALLOCATOR_HPP
 #include "error.hpp"
-#include <stddef.h>
+#include <cstddef>
 
 typedef struct scratch_allocator_t ScratchAllocator;
 
 namespace anvil {
 namespace memory {
 namespace scratch_allocator {
+
+using std::size_t;
 /**
  * @brief Creates a scratch allocator that manages a contiguous region of memory.
  *
@@ -193,3 +196,5 @@ void*             absorb(ScratchAllocator* const ScratchAllocator, void* src, Er
 } // namespace scratch_allocator
 } // namespace memory
 } // namespace anvil
+
+#endif // ANVIL_MEMORY_SCRATCH_ALLOCATOR_HPP

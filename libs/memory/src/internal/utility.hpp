@@ -1,8 +1,10 @@
-#ifndef ANVIL_UTILITY_H
-#define ANVIL_UTILITY_H
+#ifndef ANVIL_UTILITY_HPP
+#define ANVIL_UTILITY_HPP
 
-#include <stddef.h>
+#include <cstddef>
+
+using std::size_t;
 
 bool __attribute__((pure)) is_power_of_two(const size_t x);
 
-#endif // ANVIL_UTILITY_H
+#endif // ANVIL_UTILITY_HPP

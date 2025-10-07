@@ -1,14 +1,16 @@
-#ifndef ANVIL_MEMORY_POOL_ALLOCATOR_H
-#define ANVIL_MEMORY_POOL_ALLOCATOR_H
+#ifndef ANVIL_MEMORY_POOL_ALLOCATOR_HPP
+#define ANVIL_MEMORY_POOL_ALLOCATOR_HPP
 
 #include "error.hpp"
-#include <stddef.h>
+#include <cstddef>
 
 typedef struct pool_allocator_t PoolAllocator;
 
 namespace anvil {
 namespace memory {
 namespace pool_allocator {
+
+using std::size_t;
 
 PoolAllocator* anvil_memory_pool_allocator_create(const size_t object_size, const size_t object_count,
                                                   const size_t alignment);
@@ -20,4 +22,4 @@ void*          anvil_memory_pool_allocator_alloc(PoolAllocator* const allocator)
 } // namespace memory
 } // namespace anvil
 
-#endif // ANVIL_MEMORY_POOL_ALLOCATOR_H
+#endif // ANVIL_MEMORY_POOL_ALLOCATOR_HPP

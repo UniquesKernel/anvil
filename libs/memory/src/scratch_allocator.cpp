@@ -3,10 +3,11 @@
 #include "internal/utility.hpp"
 #include "memory/constants.hpp"
 #include "memory/error.hpp"
-#include <stdalign.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdalign>
+#include <cstdio>
+#include <cstdlib>
+#include <cstdint>
+#include <cstring>
 
 /**
  * @brief Encapsulates metadata for a scratch allocator, storing information

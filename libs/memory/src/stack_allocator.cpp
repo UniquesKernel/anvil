@@ -3,8 +3,9 @@
 #include "internal/utility.hpp"
 #include "memory/constants.hpp"
 #include "memory/error.hpp"
-#include <stddef.h>
-#include <string.h>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
 
 /**
  * @brief Encapsulates metadata for a stack allocator, storing information
@@ -29,7 +30,7 @@ typedef struct stack_allocator_t {
         size_t allocated;
         size_t alloc_mode;
         size_t stack_depth;
-        size_t stack[MAX_STACK_DEPTH];
+        size_t stack[anvil::memory::MAX_STACK_DEPTH];
 } StackAllocator;
 static_assert(sizeof(StackAllocator) == 552, "StackAllocator size must be 552 bytes");
 static_assert(alignof(StackAllocator) == alignof(void*), "StackAllocator alignment must match void* alignment");

@@ -20,10 +20,10 @@ PYBIND11_MODULE(anvil_memory, m) {
         m.attr("ERR_MEMORY_WRITE_ERROR")       = static_cast<int>(ERR_MEMORY_WRITE_ERROR);
 
         // Constants
-        m.attr("EAGER")                        = static_cast<int>(EAGER);
-        m.attr("LAZY")                         = static_cast<int>(LAZY);
-        m.attr("MIN_ALIGNMENT")                = static_cast<int>(MIN_ALIGNMENT);
-        m.attr("MAX_ALIGNMENT")                = static_cast<int>(MAX_ALIGNMENT);
+        m.attr("EAGER")                        = static_cast<int>(anvil::memory::EAGER);
+        m.attr("LAZY")                         = static_cast<int>(anvil::memory::LAZY);
+        m.attr("MIN_ALIGNMENT")                = static_cast<int>(anvil::memory::MIN_ALIGNMENT);
+        m.attr("MAX_ALIGNMENT")                = static_cast<int>(anvil::memory::MAX_ALIGNMENT);
 
         // Exponent ranges for testing (since alignment = 1 << exponent)
         m.attr("MIN_ALIGNMENT_EXPONENT")       = 0;  // 1 << 0 = 1

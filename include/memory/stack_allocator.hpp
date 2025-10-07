@@ -16,9 +16,10 @@
  *       in a concurrent environment without proper synchronization.
  */
 
-#pragma once
+#ifndef ANVIL_MEMORY_STACK_ALLOCATOR_HPP
+#define ANVIL_MEMORY_STACK_ALLOCATOR_HPP
 #include "error.hpp"
-#include <stddef.h>
+#include <cstddef>
 
 typedef struct stack_allocator_t StackAllocator;
 
@@ -26,6 +27,8 @@ typedef struct stack_allocator_t StackAllocator;
 namespace anvil {
 namespace memory {
 namespace stack_allocator {
+
+using std::size_t;
 
 /**
  * @brief Establishes a region of physical memory that is managed as a contiguous region.
@@ -227,3 +230,5 @@ Error           unwind(StackAllocator* const allocator);
 } // namespace stack_allocator
 } // namespace memory
 } // namespace anvil
+
+#endif // ANVIL_MEMORY_STACK_ALLOCATOR_HPP

@@ -1,8 +1,8 @@
 #include "memory/error.hpp"
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
 
 #ifdef ANVIL_ERROR_STATS
 ErrorStats g_error_stats = {0};

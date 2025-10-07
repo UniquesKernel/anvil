@@ -3,7 +3,7 @@
 #include "memory/constants.hpp"
 #include "memory/error.hpp"
 #include "sys/mman.h"
-#include <stdbool.h>
+#include <cstdint>
 #include <unistd.h>
 
 /**
@@ -40,7 +40,7 @@ static_assert(alignof(Metadata) == alignof(void*), "Metadata should have the nat
 MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_lazy(const size_t capacity, const size_t alignment) {
         INVARIANT_POSITIVE(capacity);
         INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "%s = %zd", alignment, alignment);
-        INVARIANT_RANGE(alignment, MIN_ALIGNMENT, MAX_ALIGNMENT);
+        INVARIANT_RANGE(alignment, anvil::memory::MIN_ALIGNMENT, anvil::memory::MAX_ALIGNMENT);
 
         const size_t page_size  = (size_t)sysconf(_SC_PAGESIZE);
         size_t       total_size = capacity + sizeof(Metadata);
@@ -72,7 +72,7 @@ MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_lazy(const size_t capacity, 
 MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_eager(const size_t capacity, const size_t alignment) {
         INVARIANT_POSITIVE(capacity);
         INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "%s = %zd", alignment, alignment);
-        INVARIANT_RANGE(alignment, MIN_ALIGNMENT, MAX_ALIGNMENT);
+        INVARIANT_RANGE(alignment, anvil::memory::MIN_ALIGNMENT, anvil::memory::MAX_ALIGNMENT);
 
         const size_t page_size  = (size_t)sysconf(_SC_PAGESIZE);
         size_t       total_size = capacity + sizeof(Metadata) + page_size;
