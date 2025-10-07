@@ -20,9 +20,8 @@
 #include "error.hpp"
 #include <cstddef>
 
-typedef struct scratch_allocator_t ScratchAllocator;
-
 namespace anvil::memory::scratch_allocator {
+struct ScratchAllocator;
 
 /**
  * @brief Creates a scratch allocator that manages a contiguous region of memory.

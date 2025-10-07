@@ -50,7 +50,7 @@ PYBIND11_MODULE(anvil_memory, m) {
         m.def(
             "scratch_allocator_create",
             [](size_t capacity, size_t alignment) -> py::capsule {
-                    ScratchAllocator* alloc = anvil::memory::scratch_allocator::create(capacity, alignment);
+                    anvil::memory::scratch_allocator::ScratchAllocator* alloc = anvil::memory::scratch_allocator::create(capacity, alignment);
                     if (!alloc)
                             return py::capsule();
                     return py::capsule(alloc, "ScratchAllocator");
@@ -60,7 +60,7 @@ PYBIND11_MODULE(anvil_memory, m) {
         m.def(
             "scratch_allocator_destroy",
             [](py::capsule cap) -> int {
-                    ScratchAllocator* alloc = static_cast<ScratchAllocator*>(cap);
+                    anvil::memory::scratch_allocator::ScratchAllocator* alloc = static_cast<anvil::memory::scratch_allocator::ScratchAllocator*>(cap);
                     if (!alloc)
                             return -1;
                     return static_cast<int>(anvil::memory::scratch_allocator::destroy(&alloc));
@@ -70,7 +70,7 @@ PYBIND11_MODULE(anvil_memory, m) {
         m.def(
             "scratch_allocator_alloc",
             [](py::capsule allocator_cap, size_t size, size_t alignment) -> py::object {
-                    ScratchAllocator* alloc = static_cast<ScratchAllocator*>(allocator_cap);
+                    anvil::memory::scratch_allocator::ScratchAllocator* alloc = static_cast<anvil::memory::scratch_allocator::ScratchAllocator*>(allocator_cap);
                     if (!alloc)
                             return py::none();
 
@@ -84,7 +84,7 @@ PYBIND11_MODULE(anvil_memory, m) {
         m.def(
             "scratch_allocator_reset",
             [](py::capsule cap) -> int {
-                    ScratchAllocator* alloc = static_cast<ScratchAllocator*>(cap);
+                    anvil::memory::scratch_allocator::ScratchAllocator* alloc = static_cast<anvil::memory::scratch_allocator::ScratchAllocator*>(cap);
                     if (!alloc)
                             return -1;
                     return static_cast<int>(anvil::memory::scratch_allocator::reset(alloc));
@@ -94,7 +94,7 @@ PYBIND11_MODULE(anvil_memory, m) {
         m.def(
             "scratch_allocator_copy",
             [](py::capsule allocator_cap, py::bytes data, size_t size) -> py::object {
-                    ScratchAllocator* alloc = static_cast<ScratchAllocator*>(allocator_cap);
+                    anvil::memory::scratch_allocator::ScratchAllocator* alloc = static_cast<anvil::memory::scratch_allocator::ScratchAllocator*>(allocator_cap);
                     if (!alloc)
                             return py::none();
 
@@ -114,7 +114,7 @@ PYBIND11_MODULE(anvil_memory, m) {
         m.def(
             "scratch_allocator_move",
             [](uintptr_t allocator_addr, uintptr_t src_addr, size_t n_bytes, uintptr_t free_func_addr) -> py::object {
-                    ScratchAllocator* allocator           = reinterpret_cast<ScratchAllocator*>(allocator_addr);
+                    anvil::memory::scratch_allocator::ScratchAllocator* allocator           = reinterpret_cast<anvil::memory::scratch_allocator::ScratchAllocator*>(allocator_addr);
                     void**            src                 = reinterpret_cast<void**>(src_addr);
                     void              (*free_func)(void*) = reinterpret_cast<void (*)(void*)>(free_func_addr);
 
@@ -129,7 +129,7 @@ PYBIND11_MODULE(anvil_memory, m) {
         m.def(
             "stack_allocator_create",
             [](size_t capacity, size_t alignment, size_t alloc_mode) -> py::capsule {
-                    StackAllocator* alloc = anvil::memory::stack_allocator::create(capacity, alignment, alloc_mode);
+                    anvil::memory::stack_allocator::StackAllocator* alloc = anvil::memory::stack_allocator::create(capacity, alignment, alloc_mode);
                     if (!alloc)
                             return py::capsule();
                     return py::capsule(alloc, "StackAllocator");
@@ -139,7 +139,7 @@ PYBIND11_MODULE(anvil_memory, m) {
         m.def(
             "stack_allocator_destroy",
             [](py::capsule cap) -> int {
-                    StackAllocator* alloc = static_cast<StackAllocator*>(cap);
+                    anvil::memory::stack_allocator::StackAllocator* alloc = static_cast<anvil::memory::stack_allocator::StackAllocator*>(cap);
                     if (!alloc)
                             return -1;
                     return static_cast<int>(anvil::memory::stack_allocator::destroy(&alloc));
@@ -149,7 +149,7 @@ PYBIND11_MODULE(anvil_memory, m) {
         m.def(
             "stack_allocator_alloc",
             [](py::capsule allocator_cap, size_t size, size_t alignment) -> py::object {
-                    StackAllocator* alloc = static_cast<StackAllocator*>(allocator_cap);
+                    anvil::memory::stack_allocator::StackAllocator* alloc = static_cast<anvil::memory::stack_allocator::StackAllocator*>(allocator_cap);
                     if (!alloc)
                             return py::none();
 
@@ -163,7 +163,7 @@ PYBIND11_MODULE(anvil_memory, m) {
         m.def(
             "stack_allocator_reset",
             [](py::capsule cap) -> int {
-                    StackAllocator* alloc = static_cast<StackAllocator*>(cap);
+                    anvil::memory::stack_allocator::StackAllocator* alloc = static_cast<anvil::memory::stack_allocator::StackAllocator*>(cap);
                     if (!alloc)
                             return -1;
                     return static_cast<int>(anvil::memory::stack_allocator::reset(alloc));
@@ -173,7 +173,7 @@ PYBIND11_MODULE(anvil_memory, m) {
         m.def(
             "stack_allocator_copy",
             [](py::capsule allocator_cap, py::bytes data, size_t n_bytes) -> py::object {
-                    StackAllocator* alloc = static_cast<StackAllocator*>(allocator_cap);
+                    anvil::memory::stack_allocator::StackAllocator* alloc = static_cast<anvil::memory::stack_allocator::StackAllocator*>(allocator_cap);
                     if (!alloc)
                             return py::none();
 
@@ -193,7 +193,7 @@ PYBIND11_MODULE(anvil_memory, m) {
         m.def(
             "stack_allocator_move",
             [](uintptr_t allocator_addr, uintptr_t src_addr, size_t n_bytes, uintptr_t free_func_addr) -> py::object {
-                    StackAllocator* allocator           = reinterpret_cast<StackAllocator*>(allocator_addr);
+                    anvil::memory::stack_allocator::StackAllocator* allocator           = reinterpret_cast<anvil::memory::stack_allocator::StackAllocator*>(allocator_addr);
                     void**          src                 = reinterpret_cast<void**>(src_addr);
                     void            (*free_func)(void*) = reinterpret_cast<void (*)(void*)>(free_func_addr);
 
@@ -207,7 +207,7 @@ PYBIND11_MODULE(anvil_memory, m) {
         m.def(
             "stack_allocator_record",
             [](py::capsule cap) -> int {
-                    StackAllocator* alloc = static_cast<StackAllocator*>(cap);
+                    anvil::memory::stack_allocator::StackAllocator* alloc = static_cast<anvil::memory::stack_allocator::StackAllocator*>(cap);
                     if (!alloc)
                             return -1;
                     return static_cast<int>(anvil::memory::stack_allocator::record(alloc));
@@ -217,7 +217,7 @@ PYBIND11_MODULE(anvil_memory, m) {
         m.def(
             "stack_allocator_unwind",
             [](py::capsule cap) -> int {
-                    StackAllocator* alloc = static_cast<StackAllocator*>(cap);
+                    anvil::memory::stack_allocator::StackAllocator* alloc = static_cast<anvil::memory::stack_allocator::StackAllocator*>(cap);
                     if (!alloc)
                             return -1;
                     return static_cast<int>(anvil::memory::stack_allocator::unwind(alloc));

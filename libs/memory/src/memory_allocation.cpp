@@ -6,6 +6,8 @@
 #include <cstdint>
 #include <unistd.h>
 
+using std::size_t;
+
 /**
  * @brief Encapsulates metadata for an aligned memory block allocation, storing information
  *        about the memory mapping and allocation state.
@@ -27,13 +29,13 @@
  * capacity         | size_t | sizeof(size_t)| Current accessible memory capacity
  * page_count       | size_t | sizeof(size_t)| Number of pages in the current capacity
  */
-typedef struct metadata_t {
+typedef struct Metadata {
         void*  base;
         size_t page_size;
         size_t virtual_capacity;
         size_t capacity;
         size_t page_count;
-} Metadata;
+};
 static_assert(sizeof(Metadata) == 40, "Metadata should be 40 bytes (5 * 8 bytes on 64-bit systems)");
 static_assert(alignof(Metadata) == alignof(void*), "Metadata should have the natural alignment of a void pointer");
 

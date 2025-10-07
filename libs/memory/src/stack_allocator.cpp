@@ -7,6 +7,8 @@
 #include <cstdint>
 #include <cstring>
 
+namespace anvil::memory::stack_allocator {
+
 /**
  * @brief Encapsulates metadata for a stack allocator, storing information
  *        about the memory region and allocation state.
@@ -24,20 +26,16 @@
  * capacity         | size_t | sizeof(size_t)| Total capacity of the stack allocator in bytes
  * allocated        | size_t | sizeof(size_t)| Current number of bytes allocated from the stack allocator
  */
-typedef struct stack_allocator_t {
+struct StackAllocator {
         void*  base;
         size_t capacity;
         size_t allocated;
         size_t alloc_mode;
         size_t stack_depth;
         size_t stack[anvil::memory::MAX_STACK_DEPTH];
-} StackAllocator;
+};
 static_assert(sizeof(StackAllocator) == 552, "StackAllocator size must be 552 bytes");
 static_assert(alignof(StackAllocator) == alignof(void*), "StackAllocator alignment must match void* alignment");
-
-namespace anvil {
-namespace memory {
-namespace stack_allocator {
 
 StackAllocator* create(const size_t capacity, const size_t alignment, const size_t alloc_mode) {
         INVARIANT_POSITIVE(capacity);
@@ -231,6 +229,4 @@ void* absorb(StackAllocator* allocator, void* src, Error (*destroy_fn)(void**)) 
         return dest;
 }
 
-} // namespace stack_allocator
-} // namespace memory
-} // namespace anvil
+} // namespace anvil::memory::stack_allocator

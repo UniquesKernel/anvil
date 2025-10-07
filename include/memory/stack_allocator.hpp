@@ -21,10 +21,10 @@
 #include "error.hpp"
 #include <cstddef>
 
-typedef struct stack_allocator_t StackAllocator;
 
 // Namespaced C++ API (preferred)
 namespace anvil::memory::stack_allocator {
+struct StackAllocator;
 
 /**
  * @brief Establishes a region of physical memory that is managed as a contiguous region.

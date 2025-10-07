@@ -9,6 +9,8 @@
 #include <cstdint>
 #include <cstring>
 
+namespace anvil::memory::scratch_allocator {
+
 /**
  * @brief Encapsulates metadata for a scratch allocator, storing information
  *        about the memory region and allocation state.
@@ -27,19 +29,15 @@
  * allocated        | size_t | sizeof(size_t)| Current number of bytes allocated from the scratch allocator
  * alloc_mode       | size_t | sizeof(size_t)| Allocation mode can be either LAZY or EAGER
  */
-typedef struct scratch_allocator_t {
+struct ScratchAllocator {
         void*  base;
         size_t capacity;
         size_t allocated;
         size_t alloc_mode;
-} ScratchAllocator;
+};
 static_assert(sizeof(ScratchAllocator) == 32, "ScratchAllocator size must be 32 bytes");
 static_assert(alignof(ScratchAllocator) == alignof(void*), "ScratchAllocator alignment must match void* alignment");
 static_assert(sizeof(ScratchAllocator) > 3 * sizeof(size_t), "ScratchAllocator is too small for transfer protocol");
-
-namespace anvil {
-namespace memory {
-namespace scratch_allocator {
 
 ScratchAllocator* create(const size_t capacity, const size_t alignment) {
         INVARIANT_POSITIVE(capacity);
@@ -196,6 +194,4 @@ void* absorb(ScratchAllocator* allocator, void* src, Error (*destroy_fn)(void**)
         return dest;
 }
 
-} // namespace scratch_allocator
-} // namespace memory
-} // namespace anvil
+} // namespace anvil::memory::scratch_allocator

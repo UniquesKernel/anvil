@@ -5,7 +5,7 @@
 #include "memory/error.hpp"
 #include "memory/scratch_allocator.hpp"
 
-typedef struct pool_allocator_t {
+typedef struct PoolAllocator {
         void*             base;
         size_t            capacity;
         size_t            size;
@@ -13,7 +13,7 @@ typedef struct pool_allocator_t {
         size_t            head;
         size_t            tail;
         ScratchAllocator* allocator;
-} PoolAllocator;
+};
 
 namespace anvil {
 namespace memory {
