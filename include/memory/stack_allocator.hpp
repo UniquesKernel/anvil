@@ -1,5 +1,5 @@
 /**
- * @file stack_allocator.h
+ * @file stack_allocator.hpp
  * @brief Stack-based memory allocator interface for contiguous memory management
  *
  * This header defines a high-level interface for stack memory allocation using

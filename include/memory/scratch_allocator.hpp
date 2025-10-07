@@ -1,5 +1,5 @@
 /**
- * @file scratch_allocator.h
+ * @file scratch_allocator.hpp
  * @brief Linear scratch allocator interface for temporary memory allocation
  *
  * This header defines a high-level interface for scratch memory allocation using
