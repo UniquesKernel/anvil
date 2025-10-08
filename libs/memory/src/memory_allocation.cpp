@@ -29,7 +29,7 @@ using std::size_t;
  * capacity         | size_t | sizeof(size_t)| Current accessible memory capacity
  * page_count       | size_t | sizeof(size_t)| Number of pages in the current capacity
  */
-typedef struct Metadata {
+struct Metadata {
         void*  base;
         size_t page_size;
         size_t virtual_capacity;
@@ -58,17 +58,17 @@ MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_lazy(const size_t capacity, 
                 return NULL;
         }
 
-        uintptr_t addr             = (uintptr_t)base + sizeof(Metadata);
+        uintptr_t addr             = reinterpret_cast<uintptr_t>(base) + sizeof(Metadata);
         uintptr_t aligned_addr     = (addr + (alignment - 1)) & ~(alignment - 1);
 
-        Metadata* metadata         = (Metadata*)(aligned_addr - sizeof(Metadata));
+        Metadata* metadata         = reinterpret_cast<Metadata*>(aligned_addr - sizeof(Metadata));
         metadata->base             = base;
         metadata->virtual_capacity = total_size;
         metadata->capacity         = page_size;
         metadata->page_size        = page_size;
         metadata->page_count       = metadata->capacity >> __builtin_ctzl(page_size);
 
-        return (void*)aligned_addr;
+        return reinterpret_cast<void*>(aligned_addr);
 }
 
 MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_eager(const size_t capacity, const size_t alignment) {
@@ -85,10 +85,10 @@ MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_eager(const size_t capacity,
                 return NULL;
         }
 
-        uintptr_t addr             = (uintptr_t)base + sizeof(Metadata);
+        uintptr_t addr             = reinterpret_cast<uintptr_t>(base) + sizeof(Metadata);
         uintptr_t aligned_addr     = (addr + (alignment - 1)) & ~(alignment - 1);
 
-        Metadata* metadata         = (Metadata*)(aligned_addr - sizeof(Metadata));
+        Metadata* metadata         = reinterpret_cast<Metadata*>(aligned_addr - sizeof(Metadata));
         metadata->base             = base;
 
         /// NOTE: (UniquesKernel) since anvil_memory_dealloc relies on the virtual capacity for correct deallocation of
@@ -98,13 +98,13 @@ MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_eager(const size_t capacity,
         metadata->page_size        = page_size;
         metadata->page_count       = metadata->capacity >> __builtin_ctzl(page_size);
 
-        return (void*)aligned_addr;
+        return reinterpret_cast<void*>(aligned_addr);
 }
 
 WARN_UNSURED_RESULT Error anvil_memory_dealloc(void* ptr) {
         INVARIANT_NOT_NULL(ptr);
 
-        Metadata* metadata = (Metadata*)((uintptr_t)ptr - sizeof(Metadata));
+        Metadata* metadata = reinterpret_cast<Metadata*>(reinterpret_cast<uintptr_t>(ptr) - sizeof(Metadata));
 
         INVARIANT_NOT_NULL(metadata->base);
         INVARIANT_POSITIVE(metadata->virtual_capacity);
@@ -120,12 +120,12 @@ WARN_UNSURED_RESULT Error anvil_memory_commit(void* ptr, const size_t commit_siz
         INVARIANT_NOT_NULL(ptr);
         INVARIANT_POSITIVE(commit_size);
 
-        Metadata*    metadata     = (Metadata*)((uintptr_t)ptr - sizeof(Metadata));
+        Metadata*    metadata     = reinterpret_cast<Metadata*>(reinterpret_cast<uintptr_t>(ptr) - sizeof(Metadata));
         const size_t page_size    = metadata->page_size;
         const size_t _commit_size = (commit_size + (page_size - 1)) & ~(page_size - 1);
         /// NOTE: (UniquesKernel) TRY_CHECK will return early using the provided Error.
         TRY_CHECK(_commit_size <= metadata->virtual_capacity - metadata->capacity, ERR_OUT_OF_MEMORY);
-        TRY_CHECK(mprotect((void*)((uintptr_t)metadata->base + metadata->capacity), _commit_size,
+        TRY_CHECK(mprotect(reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(metadata->base) + metadata->capacity), _commit_size,
                            PROT_READ | PROT_WRITE) == 0,
                   ERR_MEMORY_PERMISSION_CHANGE);
 

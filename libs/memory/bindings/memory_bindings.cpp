@@ -1,6 +1,5 @@
 #include "memory/constants.hpp"
 #include "memory/error.hpp"
-#include "memory/pool_allocator.hpp"
 #include "memory/scratch_allocator.hpp"
 #include "memory/stack_allocator.hpp"
 #include <cstring>

@@ -27,15 +27,15 @@ PoolAllocator* create(const size_t object_size, const size_t object_count, const
                   alignment);
 
         const size_t   total_memory_needed = (object_count * object_size) + sizeof(PoolAllocator) + alignment - 1;
-        PoolAllocator* allocator           = (PoolAllocator*)anvil_memory_alloc_eager(total_memory_needed, alignment);
+        PoolAllocator* allocator           = static_cast<PoolAllocator*>(anvil_memory_alloc_eager(total_memory_needed, alignment));
 
         if (CHECK_NULL(allocator)) {
                 return NULL;
         }
 
-        allocator->base = (void*)((uintptr_t)allocator + sizeof(*allocator));
+        allocator->base = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(allocator) + sizeof(*allocator));
         const size_t actually_available_capacity =
-            total_memory_needed - ((uintptr_t)allocator->base - (uintptr_t)allocator);
+            total_memory_needed - (reinterpret_cast<uintptr_t>(allocator->base) - reinterpret_cast<uintptr_t>(allocator));
 
         if (actually_available_capacity < (object_count * object_size)) {
                 INVARIANT(anvil_memory_dealloc(allocator) == ERR_SUCCESS, INV_INVALID_STATE,
@@ -48,12 +48,12 @@ PoolAllocator* create(const size_t object_size, const size_t object_count, const
         allocator->allocator =
             anvil::memory::scratch_allocator::create((object_count + 1) * sizeof(uintptr_t), alignof(uintptr_t));
         allocator->ring_buffer =
-            (uintptr_t*)anvil::memory::scratch_allocator::alloc(allocator->allocator,
+            static_cast<uintptr_t*>(anvil::memory::scratch_allocator::alloc(allocator->allocator,
                                                                 (object_count + 1) * sizeof(uintptr_t),
-                                                                alignof(uintptr_t));
+                                                                alignof(uintptr_t)));
 
         for (int i = 0; i < allocator->capacity; ++i) {
-                allocator->ring_buffer[i] = (uintptr_t)allocator->base + (object_size * i);
+                allocator->ring_buffer[i] = reinterpret_cast<uintptr_t>(allocator->base) + (object_size * i);
         }
         allocator->head = 0;
         allocator->tail = 0;

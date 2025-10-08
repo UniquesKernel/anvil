@@ -4,6 +4,7 @@ function(set_compiler_options project_name)
     -Wformat-security
     -Werror=format-security
     -Wall
+    -Wold-style-cast
     -Wextra
     -Werror
     -Wpedantic
