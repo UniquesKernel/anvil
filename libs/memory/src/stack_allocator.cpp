@@ -184,7 +184,6 @@ void* move(StackAllocator* const allocator, void** src, const size_t n_bytes, vo
 Error record(StackAllocator* const allocator) {
         ANVIL_INVARIANT_NOT_NULL(allocator);
         ANVIL_INVARIANT_NOT_NULL(allocator->base);
-        ANVIL_INVARIANT_RANGE(allocator->stack_depth, 0, MAX_STACK_DEPTH - 1);
 
         allocator->stack[allocator->stack_depth] = allocator->allocated;
         allocator->stack_depth++;

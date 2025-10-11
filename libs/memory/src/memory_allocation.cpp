@@ -44,7 +44,7 @@ MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_lazy(const size_t capacity, 
         ANVIL_INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "%s = %zd", alignment, alignment);
         ANVIL_INVARIANT_RANGE(alignment, anvil::memory::MIN_ALIGNMENT, anvil::memory::MAX_ALIGNMENT);
 
-        const size_t page_size  = (size_t)sysconf(_SC_PAGESIZE);
+        const size_t page_size  = static_cast<size_t>(sysconf(_SC_PAGESIZE));
         size_t       total_size = capacity + sizeof(Metadata);
         total_size              = (total_size + (page_size - 1)) & ~(page_size - 1);
         void* base              = mmap(NULL, total_size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -52,6 +52,8 @@ MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_lazy(const size_t capacity, 
         if (base == MAP_FAILED) {
                 return NULL;
         }
+
+        madvise(base, total_size, MADV_HUGEPAGE);
 
         if (anvil::error::check(mprotect(base, page_size, PROT_READ | PROT_WRITE) == 0, ERR_MEMORY_PERMISSION_CHANGE) !=
             ERR_SUCCESS) {
@@ -77,7 +79,7 @@ MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_eager(const size_t capacity,
         ANVIL_INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "%s = %zd", alignment, alignment);
         ANVIL_INVARIANT_RANGE(alignment, anvil::memory::MIN_ALIGNMENT, anvil::memory::MAX_ALIGNMENT);
 
-        const size_t page_size  = (size_t)sysconf(_SC_PAGESIZE);
+        const size_t page_size  = static_cast<size_t>(sysconf(_SC_PAGESIZE));
         size_t       total_size = capacity + sizeof(Metadata) + page_size;
         total_size              = (total_size + (page_size - 1)) & ~(page_size - 1);
         void* base              = mmap(NULL, total_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -85,6 +87,8 @@ MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_eager(const size_t capacity,
         if (base == MAP_FAILED) {
                 return NULL;
         }
+
+        madvise(base, total_size, MADV_HUGEPAGE);
 
         uintptr_t addr             = reinterpret_cast<uintptr_t>(base) + sizeof(Metadata);
         uintptr_t aligned_addr     = (addr + (alignment - 1)) & ~(alignment - 1);

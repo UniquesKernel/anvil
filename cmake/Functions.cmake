@@ -1,5 +1,6 @@
 function(set_compiler_options project_name)
   set(COMPILER_FLAGS PRIVATE 
+    -Wattributes
     -Wformat
     -Wformat-security
     -Werror=format-security
@@ -11,6 +12,9 @@ function(set_compiler_options project_name)
     -Wconversion
     -Wshadow
     -O3
+    -flto
+    -fno-plt
+    -mavx2
   )
 
   if (UNIX)

@@ -9,6 +9,9 @@ set(MODULE_SOURCE
 )
 
 add_library(${MODULE_NAME} STATIC ${MODULE_SOURCE})
+include(${CMAKE_SOURCE_DIR}/cmake/Functions.cmake)
+
+set_compiler_options(${MODULE_NAME})
 
 target_include_directories(${MODULE_NAME}
     PUBLIC
@@ -54,7 +57,7 @@ if(BUILD_TESTING)
     # Link against Python libraries explicitly
     target_link_libraries(anvil_memory PRIVATE Python3::Python)
     
-    target_compile_options(anvil_memory PRIVATE -O0 -g)
+    target_compile_options(anvil_memory PRIVATE -O0 -g -mavx2)
 
     # Copy the module to the test directory for easy importing
     add_custom_command(TARGET anvil_memory POST_BUILD

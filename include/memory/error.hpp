@@ -35,7 +35,8 @@ enum class Domain : std::uint8_t {
 
 enum class Severity : std::uint8_t {
         Success = 0,
-        Error   = 2,
+        Warning = 1, // Add this if you want
+        Failure = 2, // Changed from "Error" to "Failure"
         Fatal   = 3,
 };
 
@@ -64,9 +65,9 @@ inline constexpr Error INV_BAD_ALIGNMENT                = make_error(Domain::Mem
 inline constexpr Error INV_INVALID_STATE                = make_error(Domain::State, Severity::Fatal, 0x01);
 inline constexpr Error INV_OUT_OF_RANGE                 = make_error(Domain::Value, Severity::Fatal, 0x01);
 inline constexpr Error INV_PRECONDITION                 = make_error(Domain::State, Severity::Fatal, 0x02);
-inline constexpr Error ERR_OUT_OF_MEMORY                = make_error(Domain::Memory, Severity::Error, 0x10);
-inline constexpr Error ERR_MEMORY_PERMISSION_CHANGE     = make_error(Domain::Memory, Severity::Error, 0x20);
-inline constexpr Error ERR_MEMORY_DEALLOCATION          = make_error(Domain::Memory, Severity::Error, 0x30);
+inline constexpr Error ERR_OUT_OF_MEMORY                = make_error(Domain::Memory, Severity::Failure, 0x10);
+inline constexpr Error ERR_MEMORY_PERMISSION_CHANGE     = make_error(Domain::Memory, Severity::Failure, 0x20);
+inline constexpr Error ERR_MEMORY_DEALLOCATION          = make_error(Domain::Memory, Severity::Failure, 0x30);
 
 inline constexpr std::array<Descriptor, 10> DESCRIPTORS = {
     Descriptor{ERR_SUCCESS, Domain::None, Severity::Success, "Success"},
@@ -76,10 +77,10 @@ inline constexpr std::array<Descriptor, 10> DESCRIPTORS = {
     Descriptor{INV_INVALID_STATE, Domain::State, Severity::Fatal, "Invalid state transition"},
     Descriptor{INV_OUT_OF_RANGE, Domain::Value, Severity::Fatal, "Value out of valid range"},
     Descriptor{INV_PRECONDITION, Domain::State, Severity::Fatal, "Precondition violation"},
-    Descriptor{ERR_OUT_OF_MEMORY, Domain::Memory, Severity::Error, "Memory allocation failed"},
-    Descriptor{ERR_MEMORY_PERMISSION_CHANGE, Domain::Memory, Severity::Error,
+    Descriptor{ERR_OUT_OF_MEMORY, Domain::Memory, Severity::Failure, "Memory allocation failed"},
+    Descriptor{ERR_MEMORY_PERMISSION_CHANGE, Domain::Memory, Severity::Failure,
                "Failed to change permissions on virutal and physical memory"},
-    Descriptor{ERR_MEMORY_DEALLOCATION, Domain::Memory, Severity::Error,
+    Descriptor{ERR_MEMORY_DEALLOCATION, Domain::Memory, Severity::Failure,
                "Failed to properly deallocate virtual or physical memory"}};
 
 constexpr Domain error_domain(Error err) noexcept {
@@ -111,7 +112,7 @@ inline const char* error_message(Error err) noexcept {
         switch (error_severity(err)) {
         case Severity::Fatal:
                 return "Unknown invariant error";
-        case Severity::Error:
+        case Severity::Failure:
                 return "Unknown runtime error";
         default:
                 return "Unknown error";
@@ -169,7 +170,7 @@ static inline constexpr ErrorDomain   ERR_DOMAIN_MEMORY  = ErrorDomain::Memory;
 static inline constexpr ErrorDomain   ERR_DOMAIN_STATE   = ErrorDomain::State;
 static inline constexpr ErrorDomain   ERR_DOMAIN_VALUE   = ErrorDomain::Value;
 
-static inline constexpr ErrorSeverity ERR_SEVERITY_ERROR = ErrorSeverity::Error;
+static inline constexpr ErrorSeverity ERR_SEVERITY_ERROR = ErrorSeverity::Failure;
 static inline constexpr ErrorSeverity ERR_SEVERITY_FATAL = ErrorSeverity::Fatal;
 
 static inline constexpr std::uint16_t ERR_DOMAIN_MAX     = 16;
