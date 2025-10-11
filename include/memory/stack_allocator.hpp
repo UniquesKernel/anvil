@@ -21,7 +21,6 @@
 #include "error.hpp"
 #include <cstddef>
 
-
 // Namespaced C++ API (preferred)
 namespace anvil::memory::stack_allocator {
 struct StackAllocator;
@@ -171,7 +170,8 @@ void*           move(StackAllocator* const allocator, void** src, const std::siz
  *
  * @note Failing to absorb the allocator will lead to memory leaks.
  */
-StackAllocator* transfer(StackAllocator* allocator, void* src, const std::size_t data_size, const std::size_t alignment);
+StackAllocator* transfer(StackAllocator* allocator, void* src, const std::size_t data_size,
+                         const std::size_t alignment);
 
 /**
  * @brief Extracts a return value from a source allocator package and destroys the source allocator.

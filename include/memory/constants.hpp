@@ -1,9 +1,9 @@
 #ifndef ANVIL_MEMORY_CONSTANTS_HPP
 #define ANVIL_MEMORY_CONSTANTS_HPP
 
+#include <cstdalign>
 #include <cstddef>
 #include <cstdint>
-#include <cstdalign>
 
 namespace anvil::memory {
 

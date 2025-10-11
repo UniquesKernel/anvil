@@ -53,8 +53,8 @@ MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_lazy(const size_t capacity, 
                 return NULL;
         }
 
-        if (anvil::error::check(mprotect(base, page_size, PROT_READ | PROT_WRITE) == 0,
-                                           ERR_MEMORY_PERMISSION_CHANGE) != ERR_SUCCESS) {
+        if (anvil::error::check(mprotect(base, page_size, PROT_READ | PROT_WRITE) == 0, ERR_MEMORY_PERMISSION_CHANGE) !=
+            ERR_SUCCESS) {
                 munmap(base, total_size);
                 return NULL;
         }
@@ -126,7 +126,8 @@ WARN_UNSURED_RESULT Error anvil_memory_commit(void* ptr, const size_t commit_siz
         const size_t _commit_size = (commit_size + (page_size - 1)) & ~(page_size - 1);
         /// NOTE: (UniquesKernel) ANVIL_TRY_CHECK will return early using the provided Error.
         ANVIL_TRY_CHECK(_commit_size <= metadata->virtual_capacity - metadata->capacity, ERR_OUT_OF_MEMORY);
-        ANVIL_TRY_CHECK(mprotect(reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(metadata->base) + metadata->capacity),
+        ANVIL_TRY_CHECK(mprotect(reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(metadata->base) +
+                                                         metadata->capacity),
                                  _commit_size, PROT_READ | PROT_WRITE) == 0,
                         ERR_MEMORY_PERMISSION_CHANGE);
 

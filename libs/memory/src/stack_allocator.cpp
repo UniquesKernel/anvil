@@ -42,11 +42,11 @@ namespace anvil::memory::stack_allocator {
  * @note On 64-bit systems: sizeof(StackAllocator) = 8 + 8 + 8 + 8 + 8 + (64 * 8) = 552 bytes
  */
 struct StackAllocator {
-        void*  base;        ///< Start of usable memory region
-        size_t capacity;    ///< Total usable capacity in bytes
-        size_t allocated;   ///< Current allocation watermark
-        size_t alloc_mode;  ///< EAGER or LAZY allocation mode
-        size_t stack_depth; ///< Current record/unwind stack depth
+        void*  base;                                  ///< Start of usable memory region
+        size_t capacity;                              ///< Total usable capacity in bytes
+        size_t allocated;                             ///< Current allocation watermark
+        size_t alloc_mode;                            ///< EAGER or LAZY allocation mode
+        size_t stack_depth;                           ///< Current record/unwind stack depth
         size_t stack[anvil::memory::MAX_STACK_DEPTH]; ///< Array of allocation checkpoints
 };
 static_assert(sizeof(StackAllocator) == 552, "StackAllocator size must be 552 bytes");
@@ -57,7 +57,7 @@ StackAllocator* create(const size_t capacity, const size_t alignment, const size
         ANVIL_INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "alignment was %zu", alignment);
         ANVIL_INVARIANT_RANGE(alignment, MIN_ALIGNMENT, MAX_ALIGNMENT);
         ANVIL_INVARIANT((alloc_mode == EAGER) || (alloc_mode == LAZY), INV_PRECONDITION,
-                  "allocation mode, not lazy nor eager, but was %zu", alloc_mode);
+                        "allocation mode, not lazy nor eager, but was %zu", alloc_mode);
 
         const size_t    total_memory_needed = capacity + sizeof(StackAllocator) + alignment - 1;
 
@@ -74,8 +74,8 @@ StackAllocator* create(const size_t capacity, const size_t alignment, const size
         }
 
         allocator->base = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(allocator) + sizeof(*allocator));
-        const size_t actual_available_capacity =
-            total_memory_needed - (reinterpret_cast<uintptr_t>(allocator->base) - reinterpret_cast<uintptr_t>(allocator));
+        const size_t actual_available_capacity = total_memory_needed - (reinterpret_cast<uintptr_t>(allocator->base) -
+                                                                        reinterpret_cast<uintptr_t>(allocator));
 
         if (actual_available_capacity < capacity) {
                 ANVIL_INVARIANT(anvil_memory_dealloc(allocator) == ERR_SUCCESS, INV_INVALID_STATE,
@@ -209,13 +209,13 @@ StackAllocator* transfer(StackAllocator* allocator, void* src, const size_t data
         ANVIL_INVARIANT_NOT_NULL(allocator);
         ANVIL_INVARIANT_NOT_NULL(src);
         ANVIL_INVARIANT_RANGE(data_size, 1, allocator->capacity);
-        ANVIL_INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT,
-                        "alignment was not a power two but was %zu", alignment);
+        ANVIL_INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "alignment was not a power two but was %zu",
+                        alignment);
 
-        void* transfer                                                                    = reinterpret_cast<void*>(allocator);
-        *reinterpret_cast<size_t*>(transfer)                                              = TRANSFER_MAGIC;
-        *reinterpret_cast<size_t*>(static_cast<char*>(transfer) + sizeof(size_t))        = data_size;
-        *reinterpret_cast<size_t*>(static_cast<char*>(transfer) + 2 * sizeof(size_t))    = alignment;
+        void* transfer                                                            = reinterpret_cast<void*>(allocator);
+        *reinterpret_cast<size_t*>(transfer)                                      = TRANSFER_MAGIC;
+        *reinterpret_cast<size_t*>(static_cast<char*>(transfer) + sizeof(size_t)) = data_size;
+        *reinterpret_cast<size_t*>(static_cast<char*>(transfer) + 2 * sizeof(size_t)) = alignment;
         memcpy(static_cast<char*>(transfer) + 3 * sizeof(size_t), src, data_size);
 
         return reinterpret_cast<StackAllocator*>(transfer);

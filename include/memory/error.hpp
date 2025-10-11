@@ -40,56 +40,47 @@ enum class Severity : std::uint8_t {
 };
 
 struct Descriptor {
-        Error     value;
-        Domain    domain;
-        Severity  severity;
+        Error       value;
+        Domain      domain;
+        Severity    severity;
         const char* message;
 };
 
-inline constexpr std::uint16_t DOMAIN_MASK  = 0x0F;
+inline constexpr std::uint16_t DOMAIN_MASK   = 0x0F;
 inline constexpr std::uint16_t SEVERITY_MASK = 0x0F;
 inline constexpr std::uint16_t CODE_MASK     = 0xFF;
 inline constexpr std::uint16_t DOMAIN_SHIFT  = 12;
 inline constexpr std::uint16_t CODE_SHIFT    = 4;
 
-constexpr Error make_error(Domain domain, Severity severity, std::uint8_t code) noexcept {
+constexpr Error                make_error(Domain domain, Severity severity, std::uint8_t code) noexcept {
         return (static_cast<Error>(domain) << DOMAIN_SHIFT) | (static_cast<Error>(code) << CODE_SHIFT) |
                static_cast<Error>(severity);
 }
 
-inline constexpr Error ERR_SUCCESS                  = 0;
-inline constexpr Error INV_NULL_POINTER             = make_error(Domain::Memory, Severity::Fatal, 0x01);
-inline constexpr Error INV_ZERO_SIZE                = make_error(Domain::Memory, Severity::Fatal, 0x02);
-inline constexpr Error INV_BAD_ALIGNMENT            = make_error(Domain::Memory, Severity::Fatal, 0x03);
-inline constexpr Error INV_INVALID_STATE            = make_error(Domain::State, Severity::Fatal, 0x01);
-inline constexpr Error INV_OUT_OF_RANGE             = make_error(Domain::Value, Severity::Fatal, 0x01);
-inline constexpr Error INV_PRECONDITION             = make_error(Domain::State, Severity::Fatal, 0x02);
-inline constexpr Error ERR_OUT_OF_MEMORY            = make_error(Domain::Memory, Severity::Error, 0x10);
-inline constexpr Error ERR_MEMORY_PERMISSION_CHANGE = make_error(Domain::Memory, Severity::Error, 0x20);
-inline constexpr Error ERR_MEMORY_DEALLOCATION      = make_error(Domain::Memory, Severity::Error, 0x30);
+inline constexpr Error ERR_SUCCESS                      = 0;
+inline constexpr Error INV_NULL_POINTER                 = make_error(Domain::Memory, Severity::Fatal, 0x01);
+inline constexpr Error INV_ZERO_SIZE                    = make_error(Domain::Memory, Severity::Fatal, 0x02);
+inline constexpr Error INV_BAD_ALIGNMENT                = make_error(Domain::Memory, Severity::Fatal, 0x03);
+inline constexpr Error INV_INVALID_STATE                = make_error(Domain::State, Severity::Fatal, 0x01);
+inline constexpr Error INV_OUT_OF_RANGE                 = make_error(Domain::Value, Severity::Fatal, 0x01);
+inline constexpr Error INV_PRECONDITION                 = make_error(Domain::State, Severity::Fatal, 0x02);
+inline constexpr Error ERR_OUT_OF_MEMORY                = make_error(Domain::Memory, Severity::Error, 0x10);
+inline constexpr Error ERR_MEMORY_PERMISSION_CHANGE     = make_error(Domain::Memory, Severity::Error, 0x20);
+inline constexpr Error ERR_MEMORY_DEALLOCATION          = make_error(Domain::Memory, Severity::Error, 0x30);
 
-inline constexpr std::array<Descriptor, 10> DESCRIPTORS = {Descriptor{ERR_SUCCESS, Domain::None, Severity::Success,
-                                                                       "Success"},
-                                                           Descriptor{INV_NULL_POINTER, Domain::Memory,
-                                                                       Severity::Fatal, "Null pointer violation"},
-                                                           Descriptor{INV_ZERO_SIZE, Domain::Memory, Severity::Fatal,
-                                                                       "Size must be positive"},
-                                                           Descriptor{INV_BAD_ALIGNMENT, Domain::Memory,
-                                                                       Severity::Fatal, "Alignment not power of two"},
-                                                           Descriptor{INV_INVALID_STATE, Domain::State, Severity::Fatal,
-                                                                       "Invalid state transition"},
-                                                           Descriptor{INV_OUT_OF_RANGE, Domain::Value, Severity::Fatal,
-                                                                       "Value out of valid range"},
-                                                           Descriptor{INV_PRECONDITION, Domain::State, Severity::Fatal,
-                                                                       "Precondition violation"},
-                                                           Descriptor{ERR_OUT_OF_MEMORY, Domain::Memory, Severity::Error,
-                                                                       "Memory allocation failed"},
-                                                           Descriptor{ERR_MEMORY_PERMISSION_CHANGE, Domain::Memory,
-                                                                       Severity::Error,
-                                                                       "Failed to change permissions on virutal and physical memory"},
-                                                           Descriptor{ERR_MEMORY_DEALLOCATION, Domain::Memory,
-                                                                       Severity::Error,
-                                                                       "Failed to properly deallocate virtual or physical memory"}};
+inline constexpr std::array<Descriptor, 10> DESCRIPTORS = {
+    Descriptor{ERR_SUCCESS, Domain::None, Severity::Success, "Success"},
+    Descriptor{INV_NULL_POINTER, Domain::Memory, Severity::Fatal, "Null pointer violation"},
+    Descriptor{INV_ZERO_SIZE, Domain::Memory, Severity::Fatal, "Size must be positive"},
+    Descriptor{INV_BAD_ALIGNMENT, Domain::Memory, Severity::Fatal, "Alignment not power of two"},
+    Descriptor{INV_INVALID_STATE, Domain::State, Severity::Fatal, "Invalid state transition"},
+    Descriptor{INV_OUT_OF_RANGE, Domain::Value, Severity::Fatal, "Value out of valid range"},
+    Descriptor{INV_PRECONDITION, Domain::State, Severity::Fatal, "Precondition violation"},
+    Descriptor{ERR_OUT_OF_MEMORY, Domain::Memory, Severity::Error, "Memory allocation failed"},
+    Descriptor{ERR_MEMORY_PERMISSION_CHANGE, Domain::Memory, Severity::Error,
+               "Failed to change permissions on virutal and physical memory"},
+    Descriptor{ERR_MEMORY_DEALLOCATION, Domain::Memory, Severity::Error,
+               "Failed to properly deallocate virtual or physical memory"}};
 
 constexpr Domain error_domain(Error err) noexcept {
         return static_cast<Domain>((err >> DOMAIN_SHIFT) & DOMAIN_MASK);
@@ -130,7 +121,7 @@ inline const char* error_message(Error err) noexcept {
 COLD_FUNC void __attribute__((noreturn)) abort_invariant(const char* expr, const char* file, int line, Error err,
                                                          const char* fmt, ...);
 
-[[nodiscard]] HOT_FUNC inline bool is_error(Error err) noexcept {
+[[nodiscard]] HOT_FUNC inline bool       is_error(Error err) noexcept {
         return UNLIKELY(err != ERR_SUCCESS);
 }
 
@@ -152,16 +143,15 @@ HOT_FUNC inline void invariant(const char* expr, const char* file, int line, Con
         return LIKELY(condition) ? ERR_SUCCESS : err;
 }
 
-template <typename Pointer>
-[[nodiscard]] HOT_FUNC inline Error check_not_null(Pointer* ptr) noexcept {
+template <typename Pointer> [[nodiscard]] HOT_FUNC inline Error check_not_null(Pointer* ptr) noexcept {
         return check(ptr != nullptr, ERR_OUT_OF_MEMORY);
 }
 
 } // namespace anvil::error
 
-using Error          = anvil::error::Error;
-using ErrorDomain    = anvil::error::Domain;
-using ErrorSeverity  = anvil::error::Severity;
+using Error           = anvil::error::Error;
+using ErrorDomain     = anvil::error::Domain;
+using ErrorSeverity   = anvil::error::Severity;
 using ErrorDescriptor = anvil::error::Descriptor;
 
 using anvil::error::ERR_MEMORY_DEALLOCATION;
@@ -175,14 +165,14 @@ using anvil::error::INV_OUT_OF_RANGE;
 using anvil::error::INV_PRECONDITION;
 using anvil::error::INV_ZERO_SIZE;
 
-static inline constexpr ErrorDomain ERR_DOMAIN_MEMORY = ErrorDomain::Memory;
-static inline constexpr ErrorDomain ERR_DOMAIN_STATE  = ErrorDomain::State;
-static inline constexpr ErrorDomain ERR_DOMAIN_VALUE  = ErrorDomain::Value;
+static inline constexpr ErrorDomain   ERR_DOMAIN_MEMORY  = ErrorDomain::Memory;
+static inline constexpr ErrorDomain   ERR_DOMAIN_STATE   = ErrorDomain::State;
+static inline constexpr ErrorDomain   ERR_DOMAIN_VALUE   = ErrorDomain::Value;
 
 static inline constexpr ErrorSeverity ERR_SEVERITY_ERROR = ErrorSeverity::Error;
 static inline constexpr ErrorSeverity ERR_SEVERITY_FATAL = ErrorSeverity::Fatal;
 
-static inline constexpr std::uint16_t ERR_DOMAIN_MAX = 16;
+static inline constexpr std::uint16_t ERR_DOMAIN_MAX     = 16;
 static_assert(static_cast<std::uint16_t>(ERR_DOMAIN_MAX) <= 16, "Domain count exceeds 4-bit limit");
 
 static inline constexpr ErrorDomain anvil_error_domain(Error err) noexcept {
@@ -206,19 +196,21 @@ COLD_FUNC static inline const char* anvil_error_message(Error err) noexcept {
         ::anvil::error::invariant(#expr, __FILE__, __LINE__, (expr), (err), ##__VA_ARGS__)
 
 #define ANVIL_INVARIANT_NOT_NULL(ptr)                                                                                  \
-        ::anvil::error::invariant(#ptr, __FILE__, __LINE__, (ptr) != nullptr, ::anvil::error::INV_NULL_POINTER, "%s", #ptr)
+        ::anvil::error::invariant(#ptr, __FILE__, __LINE__, (ptr) != nullptr, ::anvil::error::INV_NULL_POINTER, "%s",  \
+                                  #ptr)
 
 #define ANVIL_INVARIANT_POSITIVE(val)                                                                                  \
-        ::anvil::error::invariant(#val, __FILE__, __LINE__, (val) > 0, ::anvil::error::INV_ZERO_SIZE, "%s = %zu", #val,      \
-                                  static_cast<std::size_t>(val))
+        ::anvil::error::invariant(#val, __FILE__, __LINE__, (val) > 0, ::anvil::error::INV_ZERO_SIZE, "%s = %zu",      \
+                                  #val, static_cast<std::size_t>(val))
 
 #define ANVIL_INVARIANT_RANGE(val, min, max)                                                                           \
-        ::anvil::error::invariant(#val, __FILE__, __LINE__, ((val) >= (min) && (val) <= (max)),                         \
-                                  ::anvil::error::INV_OUT_OF_RANGE, "%s = %lld not in [%lld, %lld]", #val,              \
-                                  static_cast<long long>(val), static_cast<long long>(min), static_cast<long long>(max))
+        ::anvil::error::invariant(#val, __FILE__, __LINE__, ((val) >= (min) && (val) <= (max)),                        \
+                                  ::anvil::error::INV_OUT_OF_RANGE, "%s = %lld not in [%lld, %lld]", #val,             \
+                                  static_cast<long long>(val), static_cast<long long>(min),                            \
+                                  static_cast<long long>(max))
 
 // Error propagation helpers
-#define ANVIL_TRY(expr)                                                                                               \
+#define ANVIL_TRY(expr)                                                                                                \
         if (auto _anvil_err__ = (expr); ::anvil::error::is_error(_anvil_err__)) [[unlikely]] {                         \
                 return _anvil_err__;                                                                                   \
         }
