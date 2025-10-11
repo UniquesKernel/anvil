@@ -142,52 +142,6 @@ void* copy(ScratchAllocator* const allocator, const void* const src, const std::
  * @note This operation is destructive as `src` is invalid after this operation.
  */
 void* move(ScratchAllocator* const allocator, void** src, const std::size_t n_bytes, void (*free_func)(void*));
-/**
- * @brief Converts an allocator into a transferable data package that carries an
- *        allocation sourced from the allocator itself.
- *
- * @pre `allocator != NULL`.
- * @pre `src != NULL`.
- * @pre `1 <= data_size <= allocator_capacity`.
- * @pre `alignment` is a power of two.
- *
- * @post The allocator's memory represents a data package with layout:
- *       [magic_number | data_size | alignment | returned_allocation].
- *
- * @param[in] allocator The allocator to convert into a data package.
- * @param[in] src       The source allocation to store in the package.
- * @param[in] data_size The size (in bytes) of the allocation stored in the package.
- * @param[in] alignment The alignment of the data stored in the package.
- *
- * @return Pointer to the beginning of the data package.
- *
- * @note After conversion, the allocator must not be used for further allocations.
- *       It should only be returned and later absorbed by a different allocator.
- *
- * @note Failing to absorb the allocator will lead to memory leaks.
- */
-ScratchAllocator* transfer(ScratchAllocator* const ScratchAllocator, void* src, const std::size_t data_size,
-                           const std::size_t alignment);
-/**
- * @brief Extracts a return value from a source allocator package and destroys the source allocator.
- *
- * @pre allocator != NULL.
- * @pre src != NULL.
- * @pre destroy_fn != NULL.
- *
- * @post allocator owns the returned value taken from the src allocator.
- * @post src allocator is destroyed.
- *
- * @param[in] allocator  The allocator that takes ownership of the returned value.
- * @param[in] src        The source allocator package from which the return value is extracted.
- * @param[in] destroy_fn The appropriate destroy function to use for destroying the src allocator.
- *
- * @return Pointer to the value stored in src, now owned by allocator.
- *
- * @note The src allocator has been destroyed and must not be used after this
- *       function returns.
- */
-void*             absorb(ScratchAllocator* const ScratchAllocator, void* src, Error (*destroy_fn)(void**));
 
 } // namespace anvil::memory::scratch_allocator
 
