@@ -1,9 +1,11 @@
 #ifndef ANVIL_ERROR_HPP
 #define ANVIL_ERROR_HPP
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <utility>
 
 /**
  * @brief Attribute to automatically call a cleanup function when a variable goes out of scope.
@@ -20,226 +22,207 @@
 #define COLD_FUNC            __attribute__((cold, noinline))
 #define HOT_FUNC             __attribute__((hot, always_inline))
 
-typedef enum {
-        ERR_DOMAIN_NONE    = 0,
-        ERR_DOMAIN_MEMORY  = 1,
-        ERR_DOMAIN_IO      = 2,
-        ERR_DOMAIN_NETWORK = 3,
-        ERR_DOMAIN_STATE   = 4,
-        ERR_DOMAIN_VALUE   = 5,
-        ERR_DOMAIN_MAX     = 16
-} ErrorDomain;
-static_assert(ERR_DOMAIN_MAX <= 16, "Domain count exceeds 4-bit limit");
+namespace anvil::error {
 
-typedef enum {
-        ERR_SEVERITY_INFO    = 0,
-        ERR_SEVERITY_WARNING = 1,
-        ERR_SEVERITY_ERROR   = 2,
-        ERR_SEVERITY_FATAL   = 3 // Invariant violations
-} ErrorSeverity;
+using Error = std::uint16_t;
 
-typedef struct {
-        uint16_t severity : 2; // Severity level (0-3)
-        uint16_t reserved : 2; // Future use
-        uint16_t domain : 4;   // Error domain (0-15)
-        uint16_t code : 8;     // Error code within domain (0-255)
-} ErrorCode;
-static_assert(sizeof(ErrorCode) == 2, "Error Code is expected to be 2 bytes");
+enum class Domain : std::uint8_t {
+        None   = 0,
+        Memory = 1,
+        State  = 2,
+        Value  = 3,
+};
 
-// Convert to/from uint16_t for efficient passing
-#define ERROR_TO_U16(e) (*(uint16_t*)&(e))
-#define U16_TO_ERROR(u) (*(ErrorCode*)&(u))
+enum class Severity : std::uint8_t {
+        Success = 0,
+        Error   = 2,
+        Fatal   = 3,
+};
 
-// X-Macro definitions for invariant violations (fatal errors)
-#define INVARIANT_ERRORS(X)                                                                                            \
-        X(INV_NULL_POINTER, ERR_DOMAIN_MEMORY, 0x01, "Null pointer violation")                                         \
-        X(INV_ZERO_SIZE, ERR_DOMAIN_MEMORY, 0x02, "Size must be positive")                                             \
-        X(INV_BAD_ALIGNMENT, ERR_DOMAIN_MEMORY, 0x03, "Alignment not power of two")                                    \
-        X(INV_ALIGN_TOO_LARGE, ERR_DOMAIN_MEMORY, 0x04, "Alignment exceeds maximum")                                   \
-        X(INV_INVALID_STATE, ERR_DOMAIN_STATE, 0x01, "Invalid state transition")                                       \
-        X(INV_OUT_OF_RANGE, ERR_DOMAIN_VALUE, 0x01, "Value out of valid range")                                        \
-        X(INV_PRECONDITION, ERR_DOMAIN_STATE, 0x02, "Precondition violation")                                          \
-        X(INV_POSTCONDITION, ERR_DOMAIN_STATE, 0x03, "Postcondition violation")
+struct Descriptor {
+        Error     value;
+        Domain    domain;
+        Severity  severity;
+        const char* message;
+};
 
-// X-Macro definitions for runtime errors (recoverable)
-#define RUNTIME_ERRORS(X)                                                                                              \
-        X(ERR_OUT_OF_MEMORY, ERR_DOMAIN_MEMORY, 0x10, "Memory allocation failed")                                      \
-        X(ERR_MEMORY_PERMISSION_CHANGE, ERR_DOMAIN_MEMORY, 0x20,                                                       \
-          "Failed to change permissions on virutal and physical memory")                                               \
-        X(ERR_MEMORY_DEALLOCATION, ERR_DOMAIN_MEMORY, 0x30,                                                            \
-          "Failed to properly deallocate virtual or physical memory")                                                  \
-        X(ERR_MEMORY_WRITE_ERROR, ERR_DOMAIN_MEMORY, 0x40, "Failed to write to physical memory")                       \
-        X(ERR_FILE_NOT_FOUND, ERR_DOMAIN_IO, 0x01, "File not found")                                                   \
-        X(ERR_PERMISSION, ERR_DOMAIN_IO, 0x02, "Permission denied")                                                    \
-        X(ERR_NETWORK_DOWN, ERR_DOMAIN_NETWORK, 0x01, "Network unreachable")                                           \
-        X(ERR_TIMEOUT, ERR_DOMAIN_NETWORK, 0x02, "Operation timeout")                                                  \
-        X(ERR_BUSY, ERR_DOMAIN_STATE, 0x10, "Resource busy")                                                           \
-        X(ERR_NOT_INITIALIZED, ERR_DOMAIN_STATE, 0x11, "Not initialized")                                              \
-        X(ERR_STACK_DEPTH, ERR_DOMAIN_STATE, 0x12, "Stack depth exceeded")
+inline constexpr std::uint16_t DOMAIN_MASK  = 0x0F;
+inline constexpr std::uint16_t SEVERITY_MASK = 0x0F;
+inline constexpr std::uint16_t CODE_MASK     = 0xFF;
+inline constexpr std::uint16_t DOMAIN_SHIFT  = 12;
+inline constexpr std::uint16_t CODE_SHIFT    = 4;
 
-// Generate error code enum
-#define X(name, domain, code, msg) name = ((domain) << 12) | ((code) << 4) | ERR_SEVERITY_FATAL,
-typedef enum { ERR_SUCCESS = 0, INVARIANT_ERRORS(X) } InvariantError;
-#undef X
+constexpr Error make_error(Domain domain, Severity severity, std::uint8_t code) noexcept {
+        return (static_cast<Error>(domain) << DOMAIN_SHIFT) | (static_cast<Error>(code) << CODE_SHIFT) |
+               static_cast<Error>(severity);
+}
 
-#define X(name, domain, code, msg) name = ((domain) << 12) | ((code) << 4) | ERR_SEVERITY_ERROR,
-typedef enum { RUNTIME_ERRORS(X) } RuntimeError;
-#undef X
+inline constexpr Error ERR_SUCCESS                  = 0;
+inline constexpr Error INV_NULL_POINTER             = make_error(Domain::Memory, Severity::Fatal, 0x01);
+inline constexpr Error INV_ZERO_SIZE                = make_error(Domain::Memory, Severity::Fatal, 0x02);
+inline constexpr Error INV_BAD_ALIGNMENT            = make_error(Domain::Memory, Severity::Fatal, 0x03);
+inline constexpr Error INV_INVALID_STATE            = make_error(Domain::State, Severity::Fatal, 0x01);
+inline constexpr Error INV_OUT_OF_RANGE             = make_error(Domain::Value, Severity::Fatal, 0x01);
+inline constexpr Error INV_PRECONDITION             = make_error(Domain::State, Severity::Fatal, 0x02);
+inline constexpr Error ERR_OUT_OF_MEMORY            = make_error(Domain::Memory, Severity::Error, 0x10);
+inline constexpr Error ERR_MEMORY_PERMISSION_CHANGE = make_error(Domain::Memory, Severity::Error, 0x20);
+inline constexpr Error ERR_MEMORY_DEALLOCATION      = make_error(Domain::Memory, Severity::Error, 0x30);
 
-typedef uint16_t             Error;
+inline constexpr std::array<Descriptor, 10> DESCRIPTORS = {Descriptor{ERR_SUCCESS, Domain::None, Severity::Success,
+                                                                       "Success"},
+                                                           Descriptor{INV_NULL_POINTER, Domain::Memory,
+                                                                       Severity::Fatal, "Null pointer violation"},
+                                                           Descriptor{INV_ZERO_SIZE, Domain::Memory, Severity::Fatal,
+                                                                       "Size must be positive"},
+                                                           Descriptor{INV_BAD_ALIGNMENT, Domain::Memory,
+                                                                       Severity::Fatal, "Alignment not power of two"},
+                                                           Descriptor{INV_INVALID_STATE, Domain::State, Severity::Fatal,
+                                                                       "Invalid state transition"},
+                                                           Descriptor{INV_OUT_OF_RANGE, Domain::Value, Severity::Fatal,
+                                                                       "Value out of valid range"},
+                                                           Descriptor{INV_PRECONDITION, Domain::State, Severity::Fatal,
+                                                                       "Precondition violation"},
+                                                           Descriptor{ERR_OUT_OF_MEMORY, Domain::Memory, Severity::Error,
+                                                                       "Memory allocation failed"},
+                                                           Descriptor{ERR_MEMORY_PERMISSION_CHANGE, Domain::Memory,
+                                                                       Severity::Error,
+                                                                       "Failed to change permissions on virutal and physical memory"},
+                                                           Descriptor{ERR_MEMORY_DEALLOCATION, Domain::Memory,
+                                                                       Severity::Error,
+                                                                       "Failed to properly deallocate virtual or physical memory"}};
 
-// #define X(name, domain, code, msg) [name] = msg,
-// static const char* const invariant_messages[] = {[ERR_SUCCESS] = "Success", INVARIANT_ERRORS(X)};
+constexpr Domain error_domain(Error err) noexcept {
+        return static_cast<Domain>((err >> DOMAIN_SHIFT) & DOMAIN_MASK);
+}
 
-// static const char* const runtime_messages[]   = {RUNTIME_ERRORS(X)};
-// #undef X
+constexpr Severity error_severity(Error err) noexcept {
+        return static_cast<Severity>(err & SEVERITY_MASK);
+}
 
-COLD_FUNC static const char* anvil_error_message(Error err) {
-        if (err == ERR_SUCCESS)
-                return "Success";
+constexpr std::uint8_t error_code(Error err) noexcept {
+        return static_cast<std::uint8_t>((err >> CODE_SHIFT) & CODE_MASK);
+}
 
-        ErrorCode e = U16_TO_ERROR(err);
-
-        if (e.severity == ERR_SEVERITY_FATAL) {
-                switch (err) {
-#define X(name, domain, code, msg)                                                                                     \
-        case name:                                                                                                     \
-                return msg;
-                        INVARIANT_ERRORS(X)
-#undef X
-                default:
-                        return "Unknown invariant error";
+inline const Descriptor* find_descriptor(Error err) noexcept {
+        for (const auto& descriptor : DESCRIPTORS) {
+                if (descriptor.value == err) {
+                        return &descriptor;
                 }
-        } else {
-                switch (err) {
-#define X(name, domain, code, msg)                                                                                     \
-        case name:                                                                                                     \
-                return msg;
-                        RUNTIME_ERRORS(X)
-#undef X
-                default:
-                        return "Unknown runtime error";
-                }
+        }
+        return nullptr;
+}
+
+inline const char* error_message(Error err) noexcept {
+        if (const auto* descriptor = find_descriptor(err)) {
+                return descriptor->message;
+        }
+
+        switch (error_severity(err)) {
+        case Severity::Fatal:
+                return "Unknown invariant error";
+        case Severity::Error:
+                return "Unknown runtime error";
+        default:
+                return "Unknown error";
         }
 }
 
-// Error context for rich diagnostics (stack-allocated)
-typedef struct error_context {
-        Error                 error;
-        const char*           file;
-        int                   line;
-        const char*           expr;
-        struct error_context* parent;
-} ErrorContext;
+COLD_FUNC void __attribute__((noreturn)) abort_invariant(const char* expr, const char* file, int line, Error err,
+                                                         const char* fmt, ...);
 
-extern __thread ErrorContext*            g_error_context;
-
-// Core error handling functions
-COLD_FUNC void __attribute__((noreturn)) anvil_abort_invariant(const char* expr, const char* file, int line,
-                                                               InvariantError err, const char* fmt, ...);
-
-COLD_FUNC Error                          anvil_set_error(Error err, const char* file, int line);
-
-COLD_FUNC static Error                   anvil_get_last_error(void) {
-        return g_error_context ? g_error_context->error : ERR_SUCCESS;
-}
-
-HOT_FUNC static inline bool anvil_is_error(Error err) {
+[[nodiscard]] HOT_FUNC inline bool is_error(Error err) noexcept {
         return UNLIKELY(err != ERR_SUCCESS);
 }
 
-HOT_FUNC static inline bool anvil_is_fatal(Error err) {
-        ErrorCode e = U16_TO_ERROR(err);
-        return e.severity == ERR_SEVERITY_FATAL;
-}
-
-// Invariant checking macros (abort on failure)
-#define INVARIANT(expr, err, ...)                                                                                      \
-        do {                                                                                                           \
-                if (UNLIKELY(!(expr))) {                                                                               \
-                        anvil_abort_invariant(#expr, __FILE__, __LINE__, err, ##__VA_ARGS__);                          \
-                }                                                                                                      \
-        } while (0)
-
-// Common invariant checks with optimized messages
-#define INVARIANT_NOT_NULL(ptr) INVARIANT((ptr) != NULL, INV_NULL_POINTER, "%s", #ptr)
-
-#define INVARIANT_POSITIVE(val) INVARIANT((val) > 0, INV_ZERO_SIZE, "%s = %zd", #val, (size_t)(val))
-
-#define INVARIANT_RANGE(val, min, max)                                                                                 \
-        INVARIANT((val) >= (min) && (val) <= (max), INV_OUT_OF_RANGE, "%s = %d not in [%d, %d]", #val, (val), (min),   \
-                  (max))
-
-// Runtime error checking macros (graceful handling)
-#define CHECK(expr, err) (LIKELY(expr) ? ERR_SUCCESS : anvil_set_error(err, __FILE__, __LINE__))
-
-#define CHECK_NULL(ptr)  CHECK((ptr) != NULL, ERR_OUT_OF_MEMORY)
-
-#define TRY(expr)                                                                                                      \
-        do {                                                                                                           \
-                Error _err = (expr);                                                                                   \
-                if (UNLIKELY(anvil_is_error(_err))) {                                                                  \
-                        return _err;                                                                                   \
-                }                                                                                                      \
-        } while (0)
-
-#define TRY_CHECK(expr, err)                                                                                           \
-        do {                                                                                                           \
-                Error _err = CHECK(expr, err);                                                                         \
-                if (UNLIKELY(anvil_is_error(_err))) {                                                                  \
-                        return _err;                                                                                   \
-                }                                                                                                      \
-        } while (0)
-
-// Error context management
-#define WITH_ERROR_CONTEXT(ctx_name)                                                                                   \
-        ErrorContext ctx_name = {                                                                                      \
-            .error = ERR_SUCCESS, .file = __FILE__, .line = __LINE__, .expr = __func__, .parent = g_error_context};    \
-        ErrorContext* DEFER(anvil_restore_context) _saved_ctx = g_error_context;                                       \
-        g_error_context                                       = &ctx_name;
-
-static inline void anvil_restore_context(ErrorContext** ctx) {
-        if (CHECK(ctx && (*ctx), INV_NULL_POINTER) != ERR_SUCCESS) {
+template <typename Condition, typename... Args>
+HOT_FUNC inline void invariant(const char* expr, const char* file, int line, Condition&& condition, Error err,
+                               Args&&... args) {
+        if (LIKELY(static_cast<bool>(condition))) {
                 return;
         }
-        g_error_context = (*ctx);
-}
 
-// Error code analysis helpers
-COLD_FUNC static ErrorDomain anvil_error_domain(Error err) {
-        ErrorCode e = U16_TO_ERROR(err);
-        return (ErrorDomain)e.domain;
-}
-
-COLD_FUNC static uint8_t anvil_error_code(Error err) {
-        ErrorCode e = U16_TO_ERROR(err);
-        return e.code;
-}
-
-/*
-COLD_FUNC static const char* anvil_error_message(Error err) {
-        if (err == ERR_SUCCESS)
-                return "Success";
-
-        ErrorCode e = U16_TO_ERROR(err);
-        if (e.severity == ERR_SEVERITY_FATAL) {
-                return invariant_messages[err];
+        if constexpr (sizeof...(Args) == 0) {
+                abort_invariant(expr, file, line, err, nullptr);
         } else {
-                return runtime_messages[err];
+                abort_invariant(expr, file, line, err, std::forward<Args>(args)...);
         }
 }
-*/
-#ifdef ANVIL_ERROR_STATS
-typedef struct {
-        uint64_t invariant_checks;
-        uint64_t runtime_checks;
-        uint64_t errors_set;
-        uint64_t branch_hints_correct;
-} ErrorStats;
 
-#define STAT_INC(field) __atomic_add_fetch(&g_error_stats.field, 1, __ATOMIC_RELAXED)
-#else
-#define STAT_INC(field) ((void)0)
-#endif
+[[nodiscard]] HOT_FUNC inline Error check(bool condition, Error err) noexcept {
+        return LIKELY(condition) ? ERR_SUCCESS : err;
+}
+
+template <typename Pointer>
+[[nodiscard]] HOT_FUNC inline Error check_not_null(Pointer* ptr) noexcept {
+        return check(ptr != nullptr, ERR_OUT_OF_MEMORY);
+}
+
+} // namespace anvil::error
+
+using Error          = anvil::error::Error;
+using ErrorDomain    = anvil::error::Domain;
+using ErrorSeverity  = anvil::error::Severity;
+using ErrorDescriptor = anvil::error::Descriptor;
+
+using anvil::error::ERR_MEMORY_DEALLOCATION;
+using anvil::error::ERR_MEMORY_PERMISSION_CHANGE;
+using anvil::error::ERR_OUT_OF_MEMORY;
+using anvil::error::ERR_SUCCESS;
+using anvil::error::INV_BAD_ALIGNMENT;
+using anvil::error::INV_INVALID_STATE;
+using anvil::error::INV_NULL_POINTER;
+using anvil::error::INV_OUT_OF_RANGE;
+using anvil::error::INV_PRECONDITION;
+using anvil::error::INV_ZERO_SIZE;
+
+static inline constexpr ErrorDomain ERR_DOMAIN_MEMORY = ErrorDomain::Memory;
+static inline constexpr ErrorDomain ERR_DOMAIN_STATE  = ErrorDomain::State;
+static inline constexpr ErrorDomain ERR_DOMAIN_VALUE  = ErrorDomain::Value;
+
+static inline constexpr ErrorSeverity ERR_SEVERITY_ERROR = ErrorSeverity::Error;
+static inline constexpr ErrorSeverity ERR_SEVERITY_FATAL = ErrorSeverity::Fatal;
+
+static inline constexpr std::uint16_t ERR_DOMAIN_MAX = 16;
+static_assert(static_cast<std::uint16_t>(ERR_DOMAIN_MAX) <= 16, "Domain count exceeds 4-bit limit");
+
+static inline constexpr ErrorDomain anvil_error_domain(Error err) noexcept {
+        return anvil::error::error_domain(err);
+}
+
+static inline constexpr ErrorSeverity anvil_error_severity(Error err) noexcept {
+        return anvil::error::error_severity(err);
+}
+
+static inline constexpr std::uint8_t anvil_error_code(Error err) noexcept {
+        return anvil::error::error_code(err);
+}
+
+COLD_FUNC static inline const char* anvil_error_message(Error err) noexcept {
+        return anvil::error::error_message(err);
+}
+
+// Invariant checking wrappers (abort on failure)
+#define ANVIL_INVARIANT(expr, err, ...)                                                                                \
+        ::anvil::error::invariant(#expr, __FILE__, __LINE__, (expr), (err), ##__VA_ARGS__)
+
+#define ANVIL_INVARIANT_NOT_NULL(ptr)                                                                                  \
+        ::anvil::error::invariant(#ptr, __FILE__, __LINE__, (ptr) != nullptr, ::anvil::error::INV_NULL_POINTER, "%s", #ptr)
+
+#define ANVIL_INVARIANT_POSITIVE(val)                                                                                  \
+        ::anvil::error::invariant(#val, __FILE__, __LINE__, (val) > 0, ::anvil::error::INV_ZERO_SIZE, "%s = %zu", #val,      \
+                                  static_cast<std::size_t>(val))
+
+#define ANVIL_INVARIANT_RANGE(val, min, max)                                                                           \
+        ::anvil::error::invariant(#val, __FILE__, __LINE__, ((val) >= (min) && (val) <= (max)),                         \
+                                  ::anvil::error::INV_OUT_OF_RANGE, "%s = %lld not in [%lld, %lld]", #val,              \
+                                  static_cast<long long>(val), static_cast<long long>(min), static_cast<long long>(max))
+
+// Error propagation helpers
+#define ANVIL_TRY(expr)                                                                                               \
+        if (auto _anvil_err__ = (expr); ::anvil::error::is_error(_anvil_err__)) [[unlikely]] {                         \
+                return _anvil_err__;                                                                                   \
+        }
+
+#define ANVIL_TRY_CHECK(expr, err) ANVIL_TRY(::anvil::error::check((expr), (err)))
 
 #endif // ANVIL_ERROR_HPP

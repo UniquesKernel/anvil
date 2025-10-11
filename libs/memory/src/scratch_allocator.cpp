@@ -40,15 +40,15 @@ static_assert(alignof(ScratchAllocator) == alignof(void*), "ScratchAllocator ali
 static_assert(sizeof(ScratchAllocator) > 3 * sizeof(size_t), "ScratchAllocator is too small for transfer protocol");
 
 ScratchAllocator* create(const size_t capacity, const size_t alignment) {
-        INVARIANT_POSITIVE(capacity);
-        INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "alignment was %zu", alignment);
-        INVARIANT_RANGE(alignment, MIN_ALIGNMENT, MAX_ALIGNMENT);
+        ANVIL_INVARIANT_POSITIVE(capacity);
+        ANVIL_INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "alignment was %zu", alignment);
+        ANVIL_INVARIANT_RANGE(alignment, MIN_ALIGNMENT, MAX_ALIGNMENT);
 
         const size_t      total_memory_needed = capacity + sizeof(ScratchAllocator) + alignment - 1;
 
         ScratchAllocator* allocator = static_cast<ScratchAllocator*>(anvil_memory_alloc_eager(total_memory_needed, alignment));
 
-        if (CHECK_NULL(allocator)) {
+        if (!allocator) {
                 return NULL;
         }
 
@@ -57,8 +57,8 @@ ScratchAllocator* create(const size_t capacity, const size_t alignment) {
             total_memory_needed - (reinterpret_cast<uintptr_t>(allocator->base) - reinterpret_cast<uintptr_t>(allocator));
 
         if (actually_available_capacity < capacity) {
-                INVARIANT(anvil_memory_dealloc(allocator) == ERR_SUCCESS, INV_INVALID_STATE,
-                          "Failed to Deallocate memory");
+                ANVIL_INVARIANT(anvil_memory_dealloc(allocator) == ERR_SUCCESS, INV_INVALID_STATE,
+                                "Failed to Deallocate memory");
                 return NULL;
         }
 
@@ -70,25 +70,25 @@ ScratchAllocator* create(const size_t capacity, const size_t alignment) {
 }
 
 Error destroy(ScratchAllocator** allocator) {
-        INVARIANT_NOT_NULL(allocator);
-        INVARIANT_NOT_NULL(*allocator);
+        ANVIL_INVARIANT_NOT_NULL(allocator);
+        ANVIL_INVARIANT_NOT_NULL(*allocator);
 
         if (UNLIKELY(*reinterpret_cast<size_t*>(*allocator) == TRANSFER_MAGIC)) {
                 return ERR_SUCCESS;
         }
 
-        /// NOTE: (UniquesKernel) TRY will return early using the provided Error.
-        TRY(anvil_memory_dealloc(*allocator));
+        /// NOTE: (UniquesKernel) ANVIL_TRY will return early using the provided Error.
+        ANVIL_TRY(anvil_memory_dealloc(*allocator));
         *allocator = NULL;
 
         return ERR_SUCCESS;
 }
 
 void* alloc(ScratchAllocator* const allocator, const size_t allocation_size, const size_t alignment) {
-        INVARIANT_NOT_NULL(allocator);
-        INVARIANT_POSITIVE(allocation_size);
-        INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "alignment was %zu", alignment);
-        INVARIANT_RANGE(alignment, MIN_ALIGNMENT, MAX_ALIGNMENT);
+        ANVIL_INVARIANT_NOT_NULL(allocator);
+        ANVIL_INVARIANT_POSITIVE(allocation_size);
+        ANVIL_INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "alignment was %zu", alignment);
+        ANVIL_INVARIANT_RANGE(alignment, MIN_ALIGNMENT, MAX_ALIGNMENT);
 
         const uintptr_t current_addr     = reinterpret_cast<uintptr_t>(allocator->base) + allocator->allocated;
         const uintptr_t aligned_addr     = (current_addr + (alignment - 1)) & ~(alignment - 1);
@@ -105,8 +105,8 @@ void* alloc(ScratchAllocator* const allocator, const size_t allocation_size, con
 }
 
 Error reset(ScratchAllocator* const allocator) {
-        INVARIANT_NOT_NULL(allocator);
-        INVARIANT_NOT_NULL(allocator->base);
+        ANVIL_INVARIANT_NOT_NULL(allocator);
+        ANVIL_INVARIANT_NOT_NULL(allocator->base);
 
         memset(allocator->base, 0x0, allocator->allocated);
         allocator->allocated = 0;
@@ -115,37 +115,39 @@ Error reset(ScratchAllocator* const allocator) {
 }
 
 void* copy(ScratchAllocator* const allocator, const void* const src, const size_t n_bytes) {
-        INVARIANT_NOT_NULL(allocator);
-        INVARIANT_NOT_NULL(src);
-        INVARIANT_POSITIVE(n_bytes);
+        ANVIL_INVARIANT_NOT_NULL(allocator);
+        ANVIL_INVARIANT_NOT_NULL(src);
+        ANVIL_INVARIANT_POSITIVE(n_bytes);
 
         void* dest = alloc(allocator, n_bytes, alignof(void*));
 
-        if (CHECK(dest, ERR_OUT_OF_MEMORY) != ERR_SUCCESS) {
+        if (!dest) {
                 return NULL;
         }
         memcpy(dest, src, n_bytes);
 
-        INVARIANT(memcmp(dest, src, n_bytes) == 0, INV_INVALID_STATE, "Failed to copy memory to ScratchAllocator");
+        ANVIL_INVARIANT(memcmp(dest, src, n_bytes) == 0, INV_INVALID_STATE,
+                        "Failed to copy memory to ScratchAllocator");
 
         return dest;
 }
 
 void* move(ScratchAllocator* const allocator, void** src, const size_t n_bytes, void (*free_func)(void*)) {
-        INVARIANT_NOT_NULL(allocator);
-        INVARIANT_NOT_NULL(src);
-        INVARIANT_NOT_NULL(*src);
-        INVARIANT_NOT_NULL(free_func);
-        INVARIANT_POSITIVE(n_bytes);
+        ANVIL_INVARIANT_NOT_NULL(allocator);
+        ANVIL_INVARIANT_NOT_NULL(src);
+        ANVIL_INVARIANT_NOT_NULL(*src);
+        ANVIL_INVARIANT_NOT_NULL(free_func);
+        ANVIL_INVARIANT_POSITIVE(n_bytes);
 
         void* dest = alloc(allocator, n_bytes, alignof(void*));
 
-        if (CHECK(dest, ERR_OUT_OF_MEMORY) != ERR_SUCCESS) {
+        if (!dest) {
                 return NULL;
         }
         memcpy(dest, *src, n_bytes);
 
-        INVARIANT(memcmp(dest, *src, n_bytes) == 0, INV_INVALID_STATE, "Failed to move memory to ScratchAllocator");
+        ANVIL_INVARIANT(memcmp(dest, *src, n_bytes) == 0, INV_INVALID_STATE,
+                        "Failed to move memory to ScratchAllocator");
 
         free_func(*src);
         *src = NULL;
@@ -154,11 +156,11 @@ void* move(ScratchAllocator* const allocator, void** src, const size_t n_bytes, 
 }
 
 ScratchAllocator* transfer(ScratchAllocator* allocator, void* src, const size_t data_size, const size_t alignment) {
-        INVARIANT_NOT_NULL(allocator);
-        INVARIANT_NOT_NULL(src);
-        INVARIANT_RANGE(data_size, 1, allocator->capacity);
-        INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "alignment was not a power two but was %zu",
-                  alignment);
+        ANVIL_INVARIANT_NOT_NULL(allocator);
+        ANVIL_INVARIANT_NOT_NULL(src);
+        ANVIL_INVARIANT_RANGE(data_size, 1, allocator->capacity);
+        ANVIL_INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT,
+                        "alignment was not a power two but was %zu", alignment);
 
         void* transfer                                                            = reinterpret_cast<void*>(allocator);
         *reinterpret_cast<size_t*>(transfer)                                      = TRANSFER_MAGIC;
@@ -170,9 +172,9 @@ ScratchAllocator* transfer(ScratchAllocator* allocator, void* src, const size_t 
 }
 
 void* absorb(ScratchAllocator* allocator, void* src, Error (*destroy_fn)(void**)) {
-        INVARIANT_NOT_NULL(allocator);
-        INVARIANT_NOT_NULL(src);
-        INVARIANT_NOT_NULL(destroy_fn);
+        ANVIL_INVARIANT_NOT_NULL(allocator);
+        ANVIL_INVARIANT_NOT_NULL(src);
+        ANVIL_INVARIANT_NOT_NULL(destroy_fn);
 
         if (*reinterpret_cast<size_t*>(src) != TRANSFER_MAGIC) {
                 return NULL;

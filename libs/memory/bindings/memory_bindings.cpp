@@ -16,7 +16,6 @@ PYBIND11_MODULE(anvil_memory, m) {
         m.attr("ERR_OUT_OF_MEMORY")            = static_cast<int>(ERR_OUT_OF_MEMORY);
         m.attr("ERR_MEMORY_PERMISSION_CHANGE") = static_cast<int>(ERR_MEMORY_PERMISSION_CHANGE);
         m.attr("ERR_MEMORY_DEALLOCATION")      = static_cast<int>(ERR_MEMORY_DEALLOCATION);
-        m.attr("ERR_MEMORY_WRITE_ERROR")       = static_cast<int>(ERR_MEMORY_WRITE_ERROR);
 
         // Constants
         m.attr("EAGER")                        = static_cast<int>(anvil::memory::EAGER);
@@ -27,23 +26,6 @@ PYBIND11_MODULE(anvil_memory, m) {
         // Exponent ranges for testing (since alignment = 1 << exponent)
         m.attr("MIN_ALIGNMENT_EXPONENT")       = 0;  // 1 << 0 = 1
         m.attr("MAX_ALIGNMENT_EXPONENT")       = 11; // 1 << 11 = 2048
-
-        // Error domains
-        py::enum_<ErrorDomain>(m, "ErrorDomain")
-            .value("NONE", ERR_DOMAIN_NONE)
-            .value("MEMORY", ERR_DOMAIN_MEMORY)
-            .value("IO", ERR_DOMAIN_IO)
-            .value("NETWORK", ERR_DOMAIN_NETWORK)
-            .value("STATE", ERR_DOMAIN_STATE)
-            .value("VALUE", ERR_DOMAIN_VALUE)
-            .export_values();
-
-        py::enum_<ErrorSeverity>(m, "ErrorSeverity")
-            .value("INFO", ERR_SEVERITY_INFO)
-            .value("WARNING", ERR_SEVERITY_WARNING)
-            .value("ERROR", ERR_SEVERITY_ERROR)
-            .value("FATAL", ERR_SEVERITY_FATAL)
-            .export_values();
 
         // ========== ScratchAllocator Functions ==========
         m.def(
