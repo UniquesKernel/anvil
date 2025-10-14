@@ -12,7 +12,7 @@ using std::size_t;
  * @brief Encapsulates metadata for an aligned memory block allocation, storing information
  *        about the memory mapping and allocation state.
  *
- * @invariant base != NULL
+ * @invariant base != nullptr
  * @invariant page_size > 0
  * @invariant virtual_capacity > 0
  * @invariant capacity > 0
@@ -47,10 +47,10 @@ MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_lazy(const size_t capacity, 
         const size_t page_size  = static_cast<size_t>(sysconf(_SC_PAGESIZE));
         size_t       total_size = capacity + sizeof(Metadata);
         total_size              = (total_size + (page_size - 1)) & ~(page_size - 1);
-        void* base              = mmap(NULL, total_size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+        void* base              = mmap(nullptr, total_size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
         if (base == MAP_FAILED) {
-                return NULL;
+                return nullptr;
         }
 
         madvise(base, total_size, MADV_HUGEPAGE);
@@ -58,7 +58,7 @@ MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_lazy(const size_t capacity, 
         if (anvil::error::check(mprotect(base, page_size, PROT_READ | PROT_WRITE) == 0, ERR_MEMORY_PERMISSION_CHANGE) !=
             ERR_SUCCESS) {
                 munmap(base, total_size);
-                return NULL;
+                return nullptr;
         }
 
         uintptr_t addr             = reinterpret_cast<uintptr_t>(base) + sizeof(Metadata);
@@ -82,10 +82,10 @@ MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_eager(const size_t capacity,
         const size_t page_size  = static_cast<size_t>(sysconf(_SC_PAGESIZE));
         size_t       total_size = capacity + sizeof(Metadata) + page_size;
         total_size              = (total_size + (page_size - 1)) & ~(page_size - 1);
-        void* base              = mmap(NULL, total_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+        void* base              = mmap(nullptr, total_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
         if (base == MAP_FAILED) {
-                return NULL;
+                return nullptr;
         }
 
         madvise(base, total_size, MADV_HUGEPAGE);
@@ -115,8 +115,11 @@ WARN_UNSURED_RESULT Error anvil_memory_dealloc(void* ptr) {
         ANVIL_INVARIANT_POSITIVE(metadata->virtual_capacity);
         ANVIL_INVARIANT_POSITIVE(metadata->page_size);
 
-        /// NOTE: (UniquesKernel) ANVIL_TRY_CHECK will return early using the provided Error.
-        ANVIL_TRY_CHECK(munmap(metadata->base, metadata->virtual_capacity) == 0, ERR_MEMORY_DEALLOCATION);
+        const Error unmap_result =
+            ::anvil::error::check(munmap(metadata->base, metadata->virtual_capacity) == 0, ERR_MEMORY_DEALLOCATION);
+        if (::anvil::error::is_error(unmap_result)) [[unlikely]] {
+                return unmap_result;
+        }
 
         return ERR_SUCCESS;
 }
@@ -128,12 +131,18 @@ WARN_UNSURED_RESULT Error anvil_memory_commit(void* ptr, const size_t commit_siz
         Metadata*    metadata     = reinterpret_cast<Metadata*>(reinterpret_cast<uintptr_t>(ptr) - sizeof(Metadata));
         const size_t page_size    = metadata->page_size;
         const size_t _commit_size = (commit_size + (page_size - 1)) & ~(page_size - 1);
-        /// NOTE: (UniquesKernel) ANVIL_TRY_CHECK will return early using the provided Error.
-        ANVIL_TRY_CHECK(_commit_size <= metadata->virtual_capacity - metadata->capacity, ERR_OUT_OF_MEMORY);
-        ANVIL_TRY_CHECK(mprotect(reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(metadata->base) +
-                                                         metadata->capacity),
-                                 _commit_size, PROT_READ | PROT_WRITE) == 0,
-                        ERR_MEMORY_PERMISSION_CHANGE);
+        const Error capacity_result = ::anvil::error::check(
+            _commit_size <= metadata->virtual_capacity - metadata->capacity, ERR_OUT_OF_MEMORY);
+        if (::anvil::error::is_error(capacity_result)) [[unlikely]] {
+                return capacity_result;
+        }
+        const Error protect_result = ::anvil::error::check(
+            mprotect(reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(metadata->base) + metadata->capacity),
+                     _commit_size, PROT_READ | PROT_WRITE) == 0,
+            ERR_MEMORY_PERMISSION_CHANGE);
+        if (::anvil::error::is_error(protect_result)) [[unlikely]] {
+                return protect_result;
+        }
 
         metadata->capacity   += _commit_size;
         metadata->page_count  = metadata->capacity >> __builtin_ctzl(page_size);

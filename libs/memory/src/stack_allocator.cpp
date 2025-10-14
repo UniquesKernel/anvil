@@ -19,7 +19,7 @@ namespace anvil::memory::stack_allocator {
  *
  * Memory layout: [StackAllocator metadata][usable memory region]
  *
- * @invariant base != NULL (after successful initialization)
+ * @invariant base != nullptr (after successful initialization)
  * @invariant capacity > 0
  * @invariant 0 <= allocated <= capacity
  * @invariant 0 <= stack_depth <= MAX_STACK_DEPTH
@@ -61,7 +61,7 @@ StackAllocator* create(const size_t capacity, const size_t alignment, const size
 
         const size_t    total_memory_needed = capacity + sizeof(StackAllocator) + alignment - 1;
 
-        StackAllocator* allocator           = NULL;
+        StackAllocator* allocator           = nullptr;
 
         if (alloc_mode == EAGER) {
                 allocator = static_cast<StackAllocator*>(anvil_memory_alloc_eager(total_memory_needed, alignment));
@@ -70,7 +70,7 @@ StackAllocator* create(const size_t capacity, const size_t alignment, const size
         }
 
         if (!allocator) {
-                return NULL;
+                return nullptr;
         }
 
         allocator->base = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(allocator) + sizeof(*allocator));
@@ -80,7 +80,7 @@ StackAllocator* create(const size_t capacity, const size_t alignment, const size
         if (actual_available_capacity < capacity) {
                 ANVIL_INVARIANT(anvil_memory_dealloc(allocator) == ERR_SUCCESS, INV_INVALID_STATE,
                                 "Failed to Deallocate memory");
-                return NULL;
+                return nullptr;
         }
 
         allocator->capacity    = capacity;
@@ -95,12 +95,15 @@ Error destroy(StackAllocator** allocator) {
         ANVIL_INVARIANT_NOT_NULL(allocator);
         ANVIL_INVARIANT_NOT_NULL(*allocator);
 
-        if (UNLIKELY(*reinterpret_cast<size_t*>(*allocator) == TRANSFER_MAGIC)) {
+        if (*reinterpret_cast<size_t*>(*allocator) == TRANSFER_MAGIC) [[unlikely]] {
                 return ERR_SUCCESS;
         }
 
-        ANVIL_TRY(anvil_memory_dealloc(*allocator));
-        *allocator = NULL;
+        const Error dealloc_result = anvil_memory_dealloc(*allocator);
+        if (::anvil::error::is_error(dealloc_result)) [[unlikely]] {
+                return dealloc_result;
+        }
+        *allocator = nullptr;
 
         return ERR_SUCCESS;
 }
@@ -129,12 +132,12 @@ void* alloc(StackAllocator* const allocator, const size_t allocation_size, const
         const size_t    total_allocation = allocation_size + offset;
 
         if (total_allocation > allocator->capacity - allocator->allocated) {
-                return NULL;
+                return nullptr;
         }
 
         if (allocator->alloc_mode == LAZY) {
                 if (anvil_memory_commit(allocator, total_allocation) != ERR_SUCCESS) {
-                        return NULL;
+                                return nullptr;
                 }
         }
         allocator->allocated += total_allocation;
@@ -148,7 +151,7 @@ void* copy(StackAllocator* const allocator, const void* const src, const size_t 
         void* dest = alloc(allocator, n_bytes, alignof(void*));
 
         if (!dest) {
-                return NULL;
+                          return nullptr;
         }
         memcpy(dest, src, n_bytes);
 
@@ -168,7 +171,7 @@ void* move(StackAllocator* const allocator, void** src, const size_t n_bytes, vo
         void* dest = alloc(allocator, n_bytes, alignof(void*));
 
         if (!dest) {
-                return NULL;
+                          return nullptr;
         }
         memcpy(dest, *src, n_bytes);
 
@@ -176,7 +179,7 @@ void* move(StackAllocator* const allocator, void** src, const size_t n_bytes, vo
                         "Failed to move memory to ScratchAllocator");
 
         free_func(*src);
-        *src = NULL;
+        *src = nullptr;
 
         return dest;
 }

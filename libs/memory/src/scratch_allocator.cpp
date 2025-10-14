@@ -15,7 +15,7 @@ namespace anvil::memory::scratch_allocator {
  * @brief Encapsulates metadata for a scratch allocator, storing information
  *        about the memory region and allocation state.
  *
- * @invariant base != NULL
+* @invariant base != nullptr
  * @invariant capacity > 0
  * @invariant allocated >= 0
  * @invariant allocated <= capacity
@@ -50,7 +50,7 @@ ScratchAllocator* create(const size_t capacity, const size_t alignment) {
             static_cast<ScratchAllocator*>(anvil_memory_alloc_eager(total_memory_needed, alignment));
 
         if (!allocator) {
-                return NULL;
+                return nullptr;
         }
 
         allocator->base = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(allocator) + sizeof(*allocator));
@@ -60,7 +60,7 @@ ScratchAllocator* create(const size_t capacity, const size_t alignment) {
         if (actually_available_capacity < capacity) {
                 ANVIL_INVARIANT(anvil_memory_dealloc(allocator) == ERR_SUCCESS, INV_INVALID_STATE,
                                 "Failed to Deallocate memory");
-                return NULL;
+                return nullptr;
         }
 
         allocator->capacity   = capacity;
@@ -74,13 +74,15 @@ Error destroy(ScratchAllocator** allocator) {
         ANVIL_INVARIANT_NOT_NULL(allocator);
         ANVIL_INVARIANT_NOT_NULL(*allocator);
 
-        if (UNLIKELY(*reinterpret_cast<size_t*>(*allocator) == TRANSFER_MAGIC)) {
+        if (*reinterpret_cast<size_t*>(*allocator) == TRANSFER_MAGIC) [[unlikely]] {
                 return ERR_SUCCESS;
         }
 
-        /// NOTE: (UniquesKernel) ANVIL_TRY will return early using the provided Error.
-        ANVIL_TRY(anvil_memory_dealloc(*allocator));
-        *allocator = NULL;
+        const Error dealloc_result = anvil_memory_dealloc(*allocator);
+        if (::anvil::error::is_error(dealloc_result)) [[unlikely]] {
+                return dealloc_result;
+        }
+        *allocator = nullptr;
 
         return ERR_SUCCESS;
 }
@@ -98,7 +100,7 @@ void* alloc(ScratchAllocator* const allocator, const size_t allocation_size, con
         const size_t    total_allocation = allocation_size + offset;
 
         if (total_allocation > allocator->capacity - allocator->allocated) {
-                return NULL;
+                return nullptr;
         }
 
         allocator->allocated += total_allocation;
@@ -123,7 +125,7 @@ void* copy(ScratchAllocator* const allocator, const void* const src, const size_
         void* dest = alloc(allocator, n_bytes, alignof(void*));
 
         if (!dest) {
-                return NULL;
+                return nullptr;
         }
         memcpy(dest, src, n_bytes);
 
@@ -143,7 +145,7 @@ void* move(ScratchAllocator* const allocator, void** src, const size_t n_bytes, 
         void* dest = alloc(allocator, n_bytes, alignof(void*));
 
         if (!dest) {
-                return NULL;
+                return nullptr;
         }
         memcpy(dest, *src, n_bytes);
 
@@ -151,7 +153,7 @@ void* move(ScratchAllocator* const allocator, void** src, const size_t n_bytes, 
                         "Failed to move memory to ScratchAllocator");
 
         free_func(*src);
-        *src = NULL;
+        *src = nullptr;
 
         return dest;
 }

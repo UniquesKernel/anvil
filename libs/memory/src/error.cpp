@@ -8,7 +8,7 @@ namespace anvil::error {
 
 COLD_FUNC void abort_invariant(const char* expr, const char* file, int line, Error err, const char* fmt, ...) {
         // Get timestamp
-        time_t     now     = time(NULL);
+        time_t     now     = time(nullptr);
         struct tm* tm_info = localtime(&now);
         char       time_buf[20];
         strftime(time_buf, sizeof(time_buf), "%Y-%m-%d %H:%M:%S", tm_info);

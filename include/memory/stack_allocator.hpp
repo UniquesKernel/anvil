@@ -48,10 +48,10 @@ StackAllocator* create(const std::size_t capacity, const std::size_t alignment, 
 /**
  * @brief Removes a mapping to a contiguous region of physical memory.
  *
- * @pre `allocator != NULL`.
- * @pre `*allocator != NULL`.
- *
- * @post `*allocator == NULL`
+ * @pre `allocator != nullptr`.
+ * @pre `*allocator != nullptr`.
+
+ * @post `*allocator == nullptr`
  * @post The system has released all allocated memory back to the OS.
  * @post All outstanding allocations are invalid.
  *
@@ -64,7 +64,7 @@ Error           destroy(StackAllocator** allocator);
 /**
  * @brief Establishes a contiguous sub-region of memory from an allocator's total contiguous region.
  *
- * @pre `allocator != NULL`.
+ * @pre `allocator != nullptr`.
  * @pre `allocation_size > 0`.
  * @pre `alignment` is a power of two.
  * @pre `MIN_ALIGNMENT <= alignment <= MAX_ALIGNMENT`.
@@ -88,8 +88,8 @@ void*           alloc(StackAllocator* const allocator, const std::size_t allocat
 /**
  * @brief Re-initialize the state of a StackAllocator.
  *
- * @pre `allocator != NULL`.
- * @pre `allocator->base != NULL`.
+ * @pre `allocator != nullptr`.
+ * @pre `allocator->base != nullptr`.
  *
  * @post All previous allocations from this allocator become invalid.
  * @post `allocator` has identical state to its initialization state from `anvil_memory_stack_allocator_create`.
@@ -103,8 +103,8 @@ Error           reset(StackAllocator* const allocator);
 /**
  * @brief Writes data from one region outside the StackAllocator's managed region to a sub-region inside the StackAllocator's managed region.
  *
- * @pre `allocator != NULL`.
- * @pre `src != NULL`.
+ * @pre `allocator != nullptr`.
+ * @pre `src != nullptr`.
  * @pre `n_bytes > 0`.
  *
  * @post StackAllocator's capacity shrinks by `n_bytes` bytes with worst case being `n_bytes + page size - 1` amount of bytes.
@@ -124,16 +124,16 @@ void*           copy(StackAllocator* const allocator, const void* const src, con
 /**
  * @brief Writes data from one region outside the StackAllocator's managed region to a sub-region of the StackAllocator's managed region, then it invalidates the outside region.
  *
- * @pre `allocator != NULL`.
- * @pre `src != NULL`.
- * @pre `*src != NULL`.
- * @pre `free_func != NULL`.
+ * @pre `allocator != nullptr`.
+ * @pre `src != nullptr`.
+ * @pre `*src != nullptr`.
+ * @pre `free_func != nullptr`.
  * @pre `n_bytes > 0`.
  *
  * @post StackAllocator's capacity shrinks by `n_bytes` bytes with worst case being `n_bytes + page size - 1` amount of bytes.
  * @post The returned memory region contains `n_bytes` amount of data from `src`.
  * @post The returned memory region is aligned to `alignof(void*)`.
- * @post `*src == NULL`.
+ * @post `*src == nullptr`.
  *
  * @param[in] allocator     StackAllocator to whose region the outside data should be written.
  * @param[in,out] src       The outside memory region from where the data should be retrieved.
@@ -149,7 +149,7 @@ void*           move(StackAllocator* const allocator, void** src, const std::siz
 /**
  * @brief Records the current allocation state for later unwinding
  *
- * @pre `allocator != NULL`.
+ * @pre `allocator != nullptr`.
  * @pre `allocator->stack_depth < MAX_STACK_DEPTH`.
  *
  * @post The current allocation state is saved on the internal stack.
@@ -163,7 +163,7 @@ Error           record(StackAllocator* const allocator);
 /**
  * @brief Unwinds allocations back to the last recorded state
  *
- * @pre `allocator != NULL`.
+ * @pre `allocator != nullptr`.
  * @pre `allocator->stack_depth > 0`.
  *
  * @post Allocations made after the last record are invalidated.

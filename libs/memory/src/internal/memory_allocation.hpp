@@ -86,7 +86,7 @@ MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_eager(const size_t capacity,
  * operation terminates both the virtual address space reservation and any
  * committed physical memory bindings.
  *
- * @pre ptr != NULL
+ * @pre ptr != nullptr
  * @pre ptr must reference memory allocated by anvil_memory_alloc_lazy or anvil_memory_alloc_eager
  *
  * @param[out] ptr       Address denoting the commencement of the memory region
@@ -103,7 +103,7 @@ WARN_UNSURED_RESULT Error        anvil_memory_dealloc(void* ptr);
  * This operation establishes read and write permission to an extension of the already
  * established mapping between virtual and physical memory resources.
  *
- * @pre ptr != NULL
+ * @pre ptr != nullptr
  * @pre ptr must reference memory allocated with anvil_memory_alloc_lazy or anvil_memory_alloc_eager
  * @pre commit_size must be positive and non zero
  *

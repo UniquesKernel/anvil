@@ -14,10 +14,6 @@
  */
 #define DEFER(clean_up_func) __attribute__((cleanup(clean_up_func)))
 
-// Convinient Branch Prediction Hints
-#define UNLIKELY(x)          __builtin_expect(!!(x), 0)
-#define LIKELY(x)            __builtin_expect(!!(x), 1)
-
 // Cold Path optimization for error_handlers
 #define COLD_FUNC            __attribute__((cold, noinline))
 #define HOT_FUNC             __attribute__((hot, always_inline))
@@ -35,8 +31,8 @@ enum class Domain : std::uint8_t {
 
 enum class Severity : std::uint8_t {
         Success = 0,
-        Warning = 1, // Add this if you want
-        Failure = 2, // Changed from "Error" to "Failure"
+        Warning = 1,
+        Failure = 2,
         Fatal   = 3,
 };
 
@@ -123,13 +119,16 @@ COLD_FUNC void __attribute__((noreturn)) abort_invariant(const char* expr, const
                                                          const char* fmt, ...);
 
 [[nodiscard]] HOT_FUNC inline bool       is_error(Error err) noexcept {
-        return UNLIKELY(err != ERR_SUCCESS);
+        if (err != ERR_SUCCESS) [[unlikely]] {
+                return true;
+        }
+        return false;
 }
 
 template <typename Condition, typename... Args>
 HOT_FUNC inline void invariant(const char* expr, const char* file, int line, Condition&& condition, Error err,
                                Args&&... args) {
-        if (LIKELY(static_cast<bool>(condition))) {
+        if (static_cast<bool>(condition)) [[likely]] {
                 return;
         }
 
@@ -141,7 +140,10 @@ HOT_FUNC inline void invariant(const char* expr, const char* file, int line, Con
 }
 
 [[nodiscard]] HOT_FUNC inline Error check(bool condition, Error err) noexcept {
-        return LIKELY(condition) ? ERR_SUCCESS : err;
+        if (condition) [[likely]] {
+                return ERR_SUCCESS;
+        }
+        return err;
 }
 
 template <typename Pointer> [[nodiscard]] HOT_FUNC inline Error check_not_null(Pointer* ptr) noexcept {
@@ -209,13 +211,5 @@ COLD_FUNC static inline const char* anvil_error_message(Error err) noexcept {
                                   ::anvil::error::INV_OUT_OF_RANGE, "%s = %lld not in [%lld, %lld]", #val,             \
                                   static_cast<long long>(val), static_cast<long long>(min),                            \
                                   static_cast<long long>(max))
-
-// Error propagation helpers
-#define ANVIL_TRY(expr)                                                                                                \
-        if (auto _anvil_err__ = (expr); ::anvil::error::is_error(_anvil_err__)) [[unlikely]] {                         \
-                return _anvil_err__;                                                                                   \
-        }
-
-#define ANVIL_TRY_CHECK(expr, err) ANVIL_TRY(::anvil::error::check((expr), (err)))
 
 #endif // ANVIL_ERROR_HPP

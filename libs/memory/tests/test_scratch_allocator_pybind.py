@@ -169,7 +169,7 @@ class ScratchAllocatorModel(RuleBasedStateMachine):
             assert moved_data == data, f"Data mismatch in move: expected {data}, got {moved_data}"
             
             assert src_holder.value is None or src_holder.value == 0, (
-                "Source pointer should be NULL after move"
+                "Source pointer should be nullptr after move"
             )
             
             if src_ptr in self.external_allocations:
