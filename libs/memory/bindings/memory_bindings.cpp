@@ -18,14 +18,14 @@ PYBIND11_MODULE(anvil_memory, m) {
         m.attr("ERR_MEMORY_DEALLOCATION")      = static_cast<int>(ERR_MEMORY_DEALLOCATION);
 
         // Constants
-        m.attr("EAGER")                        = static_cast<int>(anvil::memory::EAGER);
-        m.attr("LAZY")                         = static_cast<int>(anvil::memory::LAZY);
-        m.attr("MIN_ALIGNMENT")                = static_cast<int>(anvil::memory::MIN_ALIGNMENT);
-        m.attr("MAX_ALIGNMENT")                = static_cast<int>(anvil::memory::MAX_ALIGNMENT);
+        m.attr("EAGER")                  = py::int_(static_cast<std::size_t>(anvil::memory::AllocationStrategy::Eager));
+        m.attr("LAZY")                   = py::int_(static_cast<std::size_t>(anvil::memory::AllocationStrategy::Lazy));
+        m.attr("MIN_ALIGNMENT")          = static_cast<int>(anvil::memory::MIN_ALIGNMENT);
+        m.attr("MAX_ALIGNMENT")          = static_cast<int>(anvil::memory::MAX_ALIGNMENT);
 
         // Exponent ranges for testing (since alignment = 1 << exponent)
-        m.attr("MIN_ALIGNMENT_EXPONENT")       = 0;  // 1 << 0 = 1
-        m.attr("MAX_ALIGNMENT_EXPONENT")       = 11; // 1 << 11 = 2048
+        m.attr("MIN_ALIGNMENT_EXPONENT") = 0;  // 1 << 0 = 1
+        m.attr("MAX_ALIGNMENT_EXPONENT") = 11; // 1 << 11 = 2048
 
         // ========== ScratchAllocator Functions ==========
         m.def(
@@ -116,8 +116,9 @@ PYBIND11_MODULE(anvil_memory, m) {
         m.def(
             "stack_allocator_create",
             [](size_t capacity, size_t alignment, size_t alloc_mode) -> py::capsule {
+                    const auto mode = static_cast<anvil::memory::AllocationStrategy>(alloc_mode);
                     anvil::memory::stack_allocator::StackAllocator* alloc =
-                        anvil::memory::stack_allocator::create(capacity, alignment, alloc_mode);
+                        anvil::memory::stack_allocator::create(capacity, alignment, mode);
                     if (!alloc)
                             return py::capsule();
                     return py::capsule(alloc, "StackAllocator");

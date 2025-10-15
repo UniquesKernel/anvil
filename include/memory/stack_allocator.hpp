@@ -18,6 +18,7 @@
 
 #ifndef ANVIL_MEMORY_STACK_ALLOCATOR_HPP
 #define ANVIL_MEMORY_STACK_ALLOCATOR_HPP
+#include "constants.hpp"
 #include "error.hpp"
 #include <cstddef>
 
@@ -39,12 +40,12 @@ struct StackAllocator;
  *
  * @param[in] capacity      The amount of physical memory to allocate.
  * @param[in] alignment     The alignment of all memory allocated from the StackAllocator.
- * @param[in] alloc_mode    The allocation mode for the StackAllocator.
+ * @param[in] strategy      The allocation strategy for the StackAllocator.
  *
  * @return Pointer to a StackAllocator.
  */
 [[nodiscard]] StackAllocator* create(const std::size_t capacity, const std::size_t alignment,
-									 const std::size_t alloc_mode);
+                                     const AllocationStrategy strategy);
 
 /**
  * @brief Removes a mapping to a contiguous region of physical memory.
@@ -60,7 +61,7 @@ struct StackAllocator;
  *
  * @return Error code, zero indicates success while other values indicate error.
  */
-[[nodiscard]] Error destroy(StackAllocator** allocator);
+[[nodiscard]] Error           destroy(StackAllocator** allocator);
 
 /**
  * @brief Establishes a contiguous sub-region of memory from an allocator's total contiguous region.
@@ -84,8 +85,8 @@ struct StackAllocator;
  * @note Uncertainty in allocator memory usage is improved by making `allocation_size` a multiple of
  * `alignment`.
  */
-[[nodiscard]] void*
-alloc(StackAllocator* const allocator, const std::size_t allocation_size, const std::size_t alignment);
+[[nodiscard]] void*           alloc(StackAllocator* const allocator, const std::size_t allocation_size,
+                                    const std::size_t alignment);
 
 /**
  * @brief Re-initialize the state of a StackAllocator.
@@ -100,7 +101,7 @@ alloc(StackAllocator* const allocator, const std::size_t allocation_size, const 
  *
  * @return Error code, zero indicates success while other values indicate error.
  */
-[[nodiscard]] Error reset(StackAllocator* const allocator);
+[[nodiscard]] Error           reset(StackAllocator* const allocator);
 
 /**
  * @brief Writes data from one region outside the StackAllocator's managed region to a sub-region inside the StackAllocator's managed region.
@@ -121,7 +122,7 @@ alloc(StackAllocator* const allocator, const std::size_t allocation_size, const 
  *
  * @note This operation is non-destructive and does not affect the data stored in `src`.
  */
-[[nodiscard]] void* copy(StackAllocator* const allocator, const void* const src, const std::size_t n_bytes);
+[[nodiscard]] void*           copy(StackAllocator* const allocator, const void* const src, const std::size_t n_bytes);
 
 /**
  * @brief Writes data from one region outside the StackAllocator's managed region to a sub-region of the StackAllocator's managed region, then it invalidates the outside region.
@@ -146,8 +147,8 @@ alloc(StackAllocator* const allocator, const std::size_t allocation_size, const 
  *
  * @note This operation is destructive as `src` is invalid after this operation.
  */
-[[nodiscard]] void* move(StackAllocator* const allocator, void** src, const std::size_t n_bytes,
-						 void (*free_func)(void*));
+[[nodiscard]] void*           move(StackAllocator* const allocator, void** src, const std::size_t n_bytes,
+                                   void (*free_func)(void*));
 
 /**
  * @brief Records the current allocation state for later unwinding
@@ -161,7 +162,7 @@ alloc(StackAllocator* const allocator, const std::size_t allocation_size, const 
  *
  * @return Error code, zero indicates success while other values indicate error.
  */
-[[nodiscard]] Error record(StackAllocator* const allocator);
+[[nodiscard]] Error           record(StackAllocator* const allocator);
 
 /**
  * @brief Unwinds allocations back to the last recorded state
@@ -176,7 +177,7 @@ alloc(StackAllocator* const allocator, const std::size_t allocation_size, const 
  *
  * @return Error code, zero indicates success while other values indicate error.
  */
-[[nodiscard]] Error unwind(StackAllocator* const allocator);
+[[nodiscard]] Error           unwind(StackAllocator* const allocator);
 
 } // namespace anvil::memory::stack_allocator
 

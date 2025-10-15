@@ -15,25 +15,25 @@ namespace anvil::memory::scratch_allocator {
  * @brief Encapsulates metadata for a scratch allocator, storing information
  *        about the memory region and allocation state.
  *
-* @invariant base != nullptr
+ * @invariant base != nullptr
  * @invariant capacity > 0
  * @invariant allocated >= 0
  * @invariant allocated <= capacity
  *
  * @note This structure is typically placed at the beginning of the allocated memory region.
  *
- * Fields           | Type   | Size (Bytes)  | Description
- * ---------------- | ------ | ------------- | -------------------------------------------------
- * base             | void*  | sizeof(void*) | Pointer to the start of the usable memory region
- * capacity         | size_t | sizeof(size_t)| Total capacity of the scratch allocator in bytes
- * allocated        | size_t | sizeof(size_t)| Current number of bytes allocated from the scratch allocator
- * alloc_mode       | size_t | sizeof(size_t)| Allocation mode can be either LAZY or EAGER
+ * Field               | Type               | Size (Bytes)   | Description
+ * ------------------- | ------------------ | -------------- | -----------------------------------------------
+ * base                | void*              | sizeof(void*)  | Pointer to the start of the usable memory region
+ * capacity            | size_t             | sizeof(size_t) | Total capacity of the scratch allocator in bytes
+ * allocated           | size_t             | sizeof(size_t) | Current number of bytes allocated from the scratch allocator
+ * allocation_strategy | AllocationStrategy | sizeof(size_t) | Allocation strategy (lazy virtual / eager physical)
  */
 struct ScratchAllocator {
-        void*  base;
-        size_t capacity;
-        size_t allocated;
-        size_t alloc_mode;
+        void*              base;
+        size_t             capacity;
+        size_t             allocated;
+        AllocationStrategy allocation_strategy;
 };
 static_assert(sizeof(ScratchAllocator) == 32, "ScratchAllocator size must be 32 bytes");
 static_assert(alignof(ScratchAllocator) == alignof(void*), "ScratchAllocator alignment must match void* alignment");
@@ -63,9 +63,9 @@ ScratchAllocator* create(const size_t capacity, const size_t alignment) {
                 return nullptr;
         }
 
-        allocator->capacity   = capacity;
-        allocator->allocated  = 0;
-        allocator->alloc_mode = EAGER;
+        allocator->capacity            = capacity;
+        allocator->allocated           = 0;
+        allocator->allocation_strategy = AllocationStrategy::Eager;
 
         return allocator;
 }

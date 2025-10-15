@@ -7,12 +7,12 @@
 
 #if defined(__clang__) || defined(__GNUC__)
 #define ANVIL_ATTR_CLEANUP(func) [[gnu::cleanup(func)]]
-#define ANVIL_ATTR_COLD [[gnu::cold]]
-#define ANVIL_ATTR_HOT [[gnu::hot]]
+#define ANVIL_ATTR_COLD          [[gnu::cold]]
+#define ANVIL_ATTR_HOT           [[gnu::hot]]
 #define ANVIL_ATTR_ALWAYS_INLINE [[gnu::always_inline]]
-#define ANVIL_ATTR_NOINLINE [[gnu::noinline]]
-#define ANVIL_ATTR_ALLOCATOR [[gnu::malloc]]
-#define ANVIL_ATTR_PURE [[gnu::pure]]
+#define ANVIL_ATTR_NOINLINE      [[gnu::noinline]]
+#define ANVIL_ATTR_ALLOCATOR     [[gnu::malloc]]
+#define ANVIL_ATTR_PURE          [[gnu::pure]]
 #else
 #define ANVIL_ATTR_CLEANUP(func)
 #define ANVIL_ATTR_COLD
@@ -29,8 +29,11 @@
 
 namespace anvil::memory {
 
-inline constexpr std::size_t EAGER           = 1 << 0;
-inline constexpr std::size_t LAZY            = 1 << 1;
+enum class AllocationStrategy : std::size_t {
+        Eager = 1u << 0,
+        Lazy  = 1u << 1,
+};
+
 inline constexpr std::size_t MAX_ALIGNMENT   = 1 << 11; // alignment is capped at half a page.
 inline constexpr std::size_t MIN_ALIGNMENT   = 1;
 inline constexpr std::size_t MAX_STACK_DEPTH = 64;

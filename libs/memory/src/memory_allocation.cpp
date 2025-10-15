@@ -131,15 +131,16 @@ Error anvil_memory_commit(void* ptr, const size_t commit_size) {
         Metadata*    metadata     = reinterpret_cast<Metadata*>(reinterpret_cast<uintptr_t>(ptr) - sizeof(Metadata));
         const size_t page_size    = metadata->page_size;
         const size_t _commit_size = (commit_size + (page_size - 1)) & ~(page_size - 1);
-        const Error capacity_result = ::anvil::error::check(
-            _commit_size <= metadata->virtual_capacity - metadata->capacity, ERR_OUT_OF_MEMORY);
+        const Error  capacity_result =
+            ::anvil::error::check(_commit_size <= metadata->virtual_capacity - metadata->capacity, ERR_OUT_OF_MEMORY);
         if (::anvil::error::is_error(capacity_result)) [[unlikely]] {
                 return capacity_result;
         }
-        const Error protect_result = ::anvil::error::check(
-            mprotect(reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(metadata->base) + metadata->capacity),
-                     _commit_size, PROT_READ | PROT_WRITE) == 0,
-            ERR_MEMORY_PERMISSION_CHANGE);
+        const Error protect_result =
+            ::anvil::error::check(mprotect(reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(metadata->base) +
+                                                                   metadata->capacity),
+                                           _commit_size, PROT_READ | PROT_WRITE) == 0,
+                                  ERR_MEMORY_PERMISSION_CHANGE);
         if (::anvil::error::is_error(protect_result)) [[unlikely]] {
                 return protect_result;
         }

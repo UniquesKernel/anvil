@@ -23,47 +23,49 @@ namespace anvil::memory::stack_allocator {
  * @invariant capacity > 0
  * @invariant 0 <= allocated <= capacity
  * @invariant 0 <= stack_depth <= MAX_STACK_DEPTH
- * @invariant alloc_mode == EAGER || alloc_mode == LAZY
+ * @invariant allocation_strategy == AllocationStrategy::Eager || allocation_strategy == AllocationStrategy::Lazy
  * @invariant For all i < stack_depth: stack[i] <= allocated
  *
  * @note This is the internal definition. The public API uses an opaque forward declaration.
  * @note The structure is placed at the beginning of the allocated memory region.
  * @note Total memory footprint is sizeof(StackAllocator) + capacity bytes.
  *
- * Field           | Type     | Size (Bytes)         | Description
- * --------------- | -------- | -------------------- | --------------------------------------------------------
- * base            | void*    | sizeof(void*)        | Pointer to the start of the usable memory region
- * capacity        | size_t   | sizeof(size_t)       | Total capacity of usable memory in bytes
- * allocated       | size_t   | sizeof(size_t)       | Current number of bytes allocated (allocation watermark)
- * alloc_mode      | size_t   | sizeof(size_t)       | Allocation strategy: EAGER (physical) or LAZY (virtual)
- * stack_depth     | size_t   | sizeof(size_t)       | Current depth of the record/unwind stack
- * stack           | size_t[] | MAX_STACK_DEPTH * 8  | Stack of allocation markers for record/unwind operations
+ * Field               | Type               | Size (Bytes)      | Description
+ * ------------------- | ------------------ | ----------------- | --------------------------------------------------------
+ * base                | void*              | sizeof(void*)     | Pointer to the start of the usable memory region
+ * capacity            | size_t             | sizeof(size_t)    | Total capacity of usable memory in bytes
+ * allocated           | size_t             | sizeof(size_t)    | Current number of bytes allocated (allocation watermark)
+ * allocation_strategy | AllocationStrategy | sizeof(size_t)    | Allocation strategy (eager physical / lazy virtual)
+ * stack_depth         | size_t             | sizeof(size_t)    | Current depth of the record/unwind stack
+ * stack               | size_t[]           | MAX_STACK_DEPTH*8 | Stack of allocation markers for record/unwind operations
  *
  * @note On 64-bit systems: sizeof(StackAllocator) = 8 + 8 + 8 + 8 + 8 + (64 * 8) = 552 bytes
  */
 struct StackAllocator {
-        void*  base;                                  ///< Start of usable memory region
-        size_t capacity;                              ///< Total usable capacity in bytes
-        size_t allocated;                             ///< Current allocation watermark
-        size_t alloc_mode;                            ///< EAGER or LAZY allocation mode
-        size_t stack_depth;                           ///< Current record/unwind stack depth
-        size_t stack[anvil::memory::MAX_STACK_DEPTH]; ///< Array of allocation checkpoints
+        void*              base;                                  ///< Start of usable memory region
+        size_t             capacity;                              ///< Total usable capacity in bytes
+        size_t             allocated;                             ///< Current allocation watermark
+        AllocationStrategy allocation_strategy;                   ///< Allocation strategy (eager or lazy provisioning)
+        size_t             stack_depth;                           ///< Current record/unwind stack depth
+        size_t             stack[anvil::memory::MAX_STACK_DEPTH]; ///< Array of allocation checkpoints
 };
+static_assert(sizeof(AllocationStrategy) == sizeof(std::size_t), "AllocationStrategy must match size_t size");
 static_assert(sizeof(StackAllocator) == 552, "StackAllocator size must be 552 bytes");
 static_assert(alignof(StackAllocator) == alignof(void*), "StackAllocator alignment must match void* alignment");
 
-StackAllocator* create(const size_t capacity, const size_t alignment, const size_t alloc_mode) {
+StackAllocator* create(const size_t capacity, const size_t alignment, const AllocationStrategy strategy) {
         ANVIL_INVARIANT_POSITIVE(capacity);
         ANVIL_INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "alignment was %zu", alignment);
         ANVIL_INVARIANT_RANGE(alignment, MIN_ALIGNMENT, MAX_ALIGNMENT);
-        ANVIL_INVARIANT((alloc_mode == EAGER) || (alloc_mode == LAZY), INV_PRECONDITION,
-                        "allocation mode, not lazy nor eager, but was %zu", alloc_mode);
+        ANVIL_INVARIANT((strategy == AllocationStrategy::Eager) || (strategy == AllocationStrategy::Lazy),
+                        INV_PRECONDITION, "allocation strategy, not lazy nor eager, but was %zu",
+                        static_cast<std::size_t>(strategy));
 
         const size_t    total_memory_needed = capacity + sizeof(StackAllocator) + alignment - 1;
 
         StackAllocator* allocator           = nullptr;
 
-        if (alloc_mode == EAGER) {
+        if (strategy == AllocationStrategy::Eager) {
                 allocator = static_cast<StackAllocator*>(anvil_memory_alloc_eager(total_memory_needed, alignment));
         } else {
                 allocator = static_cast<StackAllocator*>(anvil_memory_alloc_lazy(total_memory_needed, alignment));
@@ -83,10 +85,10 @@ StackAllocator* create(const size_t capacity, const size_t alignment, const size
                 return nullptr;
         }
 
-        allocator->capacity    = capacity;
-        allocator->allocated   = 0;
-        allocator->alloc_mode  = alloc_mode;
-        allocator->stack_depth = 0;
+        allocator->capacity            = capacity;
+        allocator->allocated           = 0;
+        allocator->allocation_strategy = strategy;
+        allocator->stack_depth         = 0;
 
         return allocator;
 }
@@ -135,9 +137,9 @@ void* alloc(StackAllocator* const allocator, const size_t allocation_size, const
                 return nullptr;
         }
 
-        if (allocator->alloc_mode == LAZY) {
+        if (allocator->allocation_strategy == AllocationStrategy::Lazy) {
                 if (anvil_memory_commit(allocator, total_allocation) != ERR_SUCCESS) {
-                                return nullptr;
+                        return nullptr;
                 }
         }
         allocator->allocated += total_allocation;
@@ -151,7 +153,7 @@ void* copy(StackAllocator* const allocator, const void* const src, const size_t 
         void* dest = alloc(allocator, n_bytes, alignof(void*));
 
         if (!dest) {
-                          return nullptr;
+                return nullptr;
         }
         memcpy(dest, src, n_bytes);
 
@@ -171,7 +173,7 @@ void* move(StackAllocator* const allocator, void** src, const size_t n_bytes, vo
         void* dest = alloc(allocator, n_bytes, alignof(void*));
 
         if (!dest) {
-                          return nullptr;
+                return nullptr;
         }
         memcpy(dest, *src, n_bytes);
 
