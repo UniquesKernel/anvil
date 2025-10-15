@@ -6,7 +6,8 @@
 
 namespace anvil::error {
 
-COLD_FUNC void abort_invariant(const char* expr, const char* file, int line, Error err, const char* fmt, ...) {
+[[noreturn]] ANVIL_ATTR_COLD ANVIL_ATTR_NOINLINE void abort_invariant(const char* expr, const char* file, int line,
+                                                                      Error err, const char* fmt, ...) {
         // Get timestamp
         time_t     now     = time(nullptr);
         struct tm* tm_info = localtime(&now);

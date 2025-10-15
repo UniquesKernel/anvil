@@ -26,9 +26,6 @@
 #include "memory/error.hpp"
 #include <cstddef>
 
-#define MALLOC              __attribute__((malloc))
-#define WARN_UNSURED_RESULT __attribute__((warn_unused_result))
-
 /**
  * @brief Allocation of virtual memory pages within the computational model
  *
@@ -52,7 +49,7 @@
  *
  * @note The compiler will express a warning if the return result is unused.
  */
-MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_lazy(const size_t capacity, const size_t alignment);
+[[nodiscard]] ANVIL_ATTR_ALLOCATOR void* anvil_memory_alloc_lazy(const size_t capacity, const size_t alignment);
 
 /**
  * @brief Allocation of physical memory
@@ -75,7 +72,7 @@ MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_lazy(const size_t capacity, 
  *
  * @note The compiler will express a warning if the return result is unused.
  */
-MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_eager(const size_t capacity, const size_t alignment);
+[[nodiscard]] ANVIL_ATTR_ALLOCATOR void* anvil_memory_alloc_eager(const size_t capacity, const size_t alignment);
 
 /**
  * @brief Reclamation of memory resources to the computational environment
@@ -95,7 +92,7 @@ MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_eager(const size_t capacity,
  *
  * @note The compiler will express a warning if the return result is unused.
  */
-WARN_UNSURED_RESULT Error        anvil_memory_dealloc(void* ptr);
+[[nodiscard]] Error anvil_memory_dealloc(void* ptr);
 
 /**
  * @brief On demand commital of memory resources from virtual memory to physical memory
@@ -115,6 +112,6 @@ WARN_UNSURED_RESULT Error        anvil_memory_dealloc(void* ptr);
  *
  * @note The compiler will express a warning if the return result is unused.
  */
-WARN_UNSURED_RESULT Error        anvil_memory_commit(void* ptr, const std::size_t commit_size);
+[[nodiscard]] Error anvil_memory_commit(void* ptr, const std::size_t commit_size);
 
 #endif // ANVIL_MEMORY_ALLOCATION_HPP

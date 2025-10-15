@@ -43,7 +43,8 @@ struct StackAllocator;
  *
  * @return Pointer to a StackAllocator.
  */
-StackAllocator* create(const std::size_t capacity, const std::size_t alignment, const std::size_t alloc_mode);
+[[nodiscard]] StackAllocator* create(const std::size_t capacity, const std::size_t alignment,
+									 const std::size_t alloc_mode);
 
 /**
  * @brief Removes a mapping to a contiguous region of physical memory.
@@ -59,7 +60,7 @@ StackAllocator* create(const std::size_t capacity, const std::size_t alignment, 
  *
  * @return Error code, zero indicates success while other values indicate error.
  */
-Error           destroy(StackAllocator** allocator);
+[[nodiscard]] Error destroy(StackAllocator** allocator);
 
 /**
  * @brief Establishes a contiguous sub-region of memory from an allocator's total contiguous region.
@@ -83,7 +84,8 @@ Error           destroy(StackAllocator** allocator);
  * @note Uncertainty in allocator memory usage is improved by making `allocation_size` a multiple of
  * `alignment`.
  */
-void*           alloc(StackAllocator* const allocator, const std::size_t allocation_size, const std::size_t alignment);
+[[nodiscard]] void*
+alloc(StackAllocator* const allocator, const std::size_t allocation_size, const std::size_t alignment);
 
 /**
  * @brief Re-initialize the state of a StackAllocator.
@@ -98,7 +100,7 @@ void*           alloc(StackAllocator* const allocator, const std::size_t allocat
  *
  * @return Error code, zero indicates success while other values indicate error.
  */
-Error           reset(StackAllocator* const allocator);
+[[nodiscard]] Error reset(StackAllocator* const allocator);
 
 /**
  * @brief Writes data from one region outside the StackAllocator's managed region to a sub-region inside the StackAllocator's managed region.
@@ -119,7 +121,7 @@ Error           reset(StackAllocator* const allocator);
  *
  * @note This operation is non-destructive and does not affect the data stored in `src`.
  */
-void*           copy(StackAllocator* const allocator, const void* const src, const std::size_t n_bytes);
+[[nodiscard]] void* copy(StackAllocator* const allocator, const void* const src, const std::size_t n_bytes);
 
 /**
  * @brief Writes data from one region outside the StackAllocator's managed region to a sub-region of the StackAllocator's managed region, then it invalidates the outside region.
@@ -144,7 +146,8 @@ void*           copy(StackAllocator* const allocator, const void* const src, con
  *
  * @note This operation is destructive as `src` is invalid after this operation.
  */
-void*           move(StackAllocator* const allocator, void** src, const std::size_t n_bytes, void (*free_func)(void*));
+[[nodiscard]] void* move(StackAllocator* const allocator, void** src, const std::size_t n_bytes,
+						 void (*free_func)(void*));
 
 /**
  * @brief Records the current allocation state for later unwinding
@@ -158,7 +161,7 @@ void*           move(StackAllocator* const allocator, void** src, const std::siz
  *
  * @return Error code, zero indicates success while other values indicate error.
  */
-Error           record(StackAllocator* const allocator);
+[[nodiscard]] Error record(StackAllocator* const allocator);
 
 /**
  * @brief Unwinds allocations back to the last recorded state
@@ -173,7 +176,7 @@ Error           record(StackAllocator* const allocator);
  *
  * @return Error code, zero indicates success while other values indicate error.
  */
-Error           unwind(StackAllocator* const allocator);
+[[nodiscard]] Error unwind(StackAllocator* const allocator);
 
 } // namespace anvil::memory::stack_allocator
 

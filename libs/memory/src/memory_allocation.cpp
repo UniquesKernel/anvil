@@ -39,7 +39,7 @@ struct Metadata {
 static_assert(sizeof(Metadata) == 40, "Metadata should be 40 bytes (5 * 8 bytes on 64-bit systems)");
 static_assert(alignof(Metadata) == alignof(void*), "Metadata should have the natural alignment of a void pointer");
 
-MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_lazy(const size_t capacity, const size_t alignment) {
+ANVIL_ATTR_ALLOCATOR void* anvil_memory_alloc_lazy(const size_t capacity, const size_t alignment) {
         ANVIL_INVARIANT_POSITIVE(capacity);
         ANVIL_INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "%s = %zd", alignment, alignment);
         ANVIL_INVARIANT_RANGE(alignment, anvil::memory::MIN_ALIGNMENT, anvil::memory::MAX_ALIGNMENT);
@@ -74,7 +74,7 @@ MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_lazy(const size_t capacity, 
         return reinterpret_cast<void*>(aligned_addr);
 }
 
-MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_eager(const size_t capacity, const size_t alignment) {
+ANVIL_ATTR_ALLOCATOR void* anvil_memory_alloc_eager(const size_t capacity, const size_t alignment) {
         ANVIL_INVARIANT_POSITIVE(capacity);
         ANVIL_INVARIANT(is_power_of_two(alignment), INV_BAD_ALIGNMENT, "%s = %zd", alignment, alignment);
         ANVIL_INVARIANT_RANGE(alignment, anvil::memory::MIN_ALIGNMENT, anvil::memory::MAX_ALIGNMENT);
@@ -106,7 +106,7 @@ MALLOC WARN_UNSURED_RESULT void* anvil_memory_alloc_eager(const size_t capacity,
         return reinterpret_cast<void*>(aligned_addr);
 }
 
-WARN_UNSURED_RESULT Error anvil_memory_dealloc(void* ptr) {
+Error anvil_memory_dealloc(void* ptr) {
         ANVIL_INVARIANT_NOT_NULL(ptr);
 
         Metadata* metadata = reinterpret_cast<Metadata*>(reinterpret_cast<uintptr_t>(ptr) - sizeof(Metadata));
@@ -124,7 +124,7 @@ WARN_UNSURED_RESULT Error anvil_memory_dealloc(void* ptr) {
         return ERR_SUCCESS;
 }
 
-WARN_UNSURED_RESULT Error anvil_memory_commit(void* ptr, const size_t commit_size) {
+Error anvil_memory_commit(void* ptr, const size_t commit_size) {
         ANVIL_INVARIANT_NOT_NULL(ptr);
         ANVIL_INVARIANT_POSITIVE(commit_size);
 

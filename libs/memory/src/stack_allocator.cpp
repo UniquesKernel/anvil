@@ -184,9 +184,14 @@ void* move(StackAllocator* const allocator, void** src, const size_t n_bytes, vo
         return dest;
 }
 
+[[nodiscard]]
 Error record(StackAllocator* const allocator) {
         ANVIL_INVARIANT_NOT_NULL(allocator);
         ANVIL_INVARIANT_NOT_NULL(allocator->base);
+
+        if (allocator->stack_depth == MAX_STACK_DEPTH - 1) {
+                return ERR_STACK_OVERFLOW;
+        }
 
         allocator->stack[allocator->stack_depth] = allocator->allocated;
         allocator->stack_depth++;

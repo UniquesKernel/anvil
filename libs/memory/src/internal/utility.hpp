@@ -2,7 +2,8 @@
 #define ANVIL_UTILITY_HPP
 
 #include <cstddef>
+#include "memory/constants.hpp"
 
-bool __attribute__((pure)) is_power_of_two(const std::size_t x);
+ANVIL_ATTR_PURE bool is_power_of_two(const std::size_t x);
 
 #endif // ANVIL_UTILITY_HPP

@@ -5,6 +5,28 @@
 #include <cstddef>
 #include <cstdint>
 
+#if defined(__clang__) || defined(__GNUC__)
+#define ANVIL_ATTR_CLEANUP(func) [[gnu::cleanup(func)]]
+#define ANVIL_ATTR_COLD [[gnu::cold]]
+#define ANVIL_ATTR_HOT [[gnu::hot]]
+#define ANVIL_ATTR_ALWAYS_INLINE [[gnu::always_inline]]
+#define ANVIL_ATTR_NOINLINE [[gnu::noinline]]
+#define ANVIL_ATTR_ALLOCATOR [[gnu::malloc]]
+#define ANVIL_ATTR_PURE [[gnu::pure]]
+#else
+#define ANVIL_ATTR_CLEANUP(func)
+#define ANVIL_ATTR_COLD
+#define ANVIL_ATTR_HOT
+#define ANVIL_ATTR_ALWAYS_INLINE
+#define ANVIL_ATTR_NOINLINE
+#define ANVIL_ATTR_ALLOCATOR
+#define ANVIL_ATTR_PURE
+#endif
+
+#ifndef DEFER
+#define DEFER(clean_up_func) ANVIL_ATTR_CLEANUP(clean_up_func)
+#endif
+
 namespace anvil::memory {
 
 inline constexpr std::size_t EAGER           = 1 << 0;

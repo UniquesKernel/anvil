@@ -40,7 +40,7 @@ struct ScratchAllocator;
  *
  * @return Pointer to a ScratchAllocator.
  */
-ScratchAllocator* create(const std::size_t capacity, const std::size_t alignment);
+[[nodiscard]] ScratchAllocator* create(const std::size_t capacity, const std::size_t alignment);
 
 /**
  * @brief Removes a mapping to a contiguous region of physical memory.
@@ -56,7 +56,7 @@ ScratchAllocator* create(const std::size_t capacity, const std::size_t alignment
  *
  * @return Error code, zero indicates success while other values indicate error.
  */
-Error             destroy(ScratchAllocator** allocator);
+[[nodiscard]] Error destroy(ScratchAllocator** allocator);
 
 /**
  * @brief Establishes a contiguous sub-region of memory from an allocator's total contiguous region.
@@ -80,7 +80,8 @@ Error             destroy(ScratchAllocator** allocator);
  * @note Memory usage uncertainty is reduced by making `allocation_size` a multiple of
  * `alignment`.
  */
-void* alloc(ScratchAllocator* const allocator, const std::size_t allocation_size, const std::size_t alignment);
+[[nodiscard]] void* alloc(ScratchAllocator* const allocator, const std::size_t allocation_size,
+						  const std::size_t alignment);
 
 /**
  * @brief Re-initialize the state of a ScratchAllocator.
@@ -95,7 +96,7 @@ void* alloc(ScratchAllocator* const allocator, const std::size_t allocation_size
  *
  * @return Error code, zero indicates success while other values indicate error.
  */
-Error reset(ScratchAllocator* const allocator);
+[[nodiscard]] Error reset(ScratchAllocator* const allocator);
 
 /**
  * @brief Copies data from one region outside the ScratchAllocator's managed region to a sub-region inside the ScratchAllocator's managed region.
@@ -116,7 +117,7 @@ Error reset(ScratchAllocator* const allocator);
  *
  * @note This operation is non-destructive and does not affect the data stored in `src`.
  */
-void* copy(ScratchAllocator* const allocator, const void* const src, const std::size_t n_bytes);
+[[nodiscard]] void* copy(ScratchAllocator* const allocator, const void* const src, const std::size_t n_bytes);
 
 /**
  * @brief Moves data from one region outside the ScratchAllocator's managed region to a sub-region of the ScratchAllocator's managed region, then invalidates the outside region.
@@ -141,7 +142,8 @@ void* copy(ScratchAllocator* const allocator, const void* const src, const std::
  *
  * @note This operation is destructive as `src` is invalid after this operation.
  */
-void* move(ScratchAllocator* const allocator, void** src, const std::size_t n_bytes, void (*free_func)(void*));
+[[nodiscard]] void* move(ScratchAllocator* const allocator, void** src, const std::size_t n_bytes,
+						 void (*free_func)(void*));
 
 } // namespace anvil::memory::scratch_allocator
 

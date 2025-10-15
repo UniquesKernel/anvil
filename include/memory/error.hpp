@@ -6,17 +6,8 @@
 #include <cstdint>
 #include <cstdio>
 #include <utility>
-
-/**
- * @brief Attribute to automatically call a cleanup function when a variable goes out of scope.
- *
- * @param clean_up_func The function to call for cleanup when the variable goes out of scope.
- */
-#define DEFER(clean_up_func) __attribute__((cleanup(clean_up_func)))
-
-// Cold Path optimization for error_handlers
-#define COLD_FUNC            __attribute__((cold, noinline))
-#define HOT_FUNC             __attribute__((hot, always_inline))
+#include <format>
+#include "constants.hpp"
 
 namespace anvil::error {
 
@@ -64,8 +55,9 @@ inline constexpr Error INV_PRECONDITION                 = make_error(Domain::Sta
 inline constexpr Error ERR_OUT_OF_MEMORY                = make_error(Domain::Memory, Severity::Failure, 0x10);
 inline constexpr Error ERR_MEMORY_PERMISSION_CHANGE     = make_error(Domain::Memory, Severity::Failure, 0x20);
 inline constexpr Error ERR_MEMORY_DEALLOCATION          = make_error(Domain::Memory, Severity::Failure, 0x30);
+inline constexpr Error ERR_STACK_OVERFLOW               = make_error(Domain::Memory, Severity::Failure, 0x40);
 
-inline constexpr std::array<Descriptor, 10> DESCRIPTORS = {
+inline constexpr std::array<Descriptor, 11> DESCRIPTORS = {
     Descriptor{ERR_SUCCESS, Domain::None, Severity::Success, "Success"},
     Descriptor{INV_NULL_POINTER, Domain::Memory, Severity::Fatal, "Null pointer violation"},
     Descriptor{INV_ZERO_SIZE, Domain::Memory, Severity::Fatal, "Size must be positive"},
@@ -77,7 +69,8 @@ inline constexpr std::array<Descriptor, 10> DESCRIPTORS = {
     Descriptor{ERR_MEMORY_PERMISSION_CHANGE, Domain::Memory, Severity::Failure,
                "Failed to change permissions on virutal and physical memory"},
     Descriptor{ERR_MEMORY_DEALLOCATION, Domain::Memory, Severity::Failure,
-               "Failed to properly deallocate virtual or physical memory"}};
+               "Failed to properly deallocate virtual or physical memory"},
+    Descriptor{ERR_STACK_OVERFLOW, Domain::Memory, Severity::Failure, "Stack exeeded it's maximum depth of 64"}};
 
 constexpr Domain error_domain(Error err) noexcept {
         return static_cast<Domain>((err >> DOMAIN_SHIFT) & DOMAIN_MASK);
@@ -115,10 +108,10 @@ inline const char* error_message(Error err) noexcept {
         }
 }
 
-COLD_FUNC void __attribute__((noreturn)) abort_invariant(const char* expr, const char* file, int line, Error err,
-                                                         const char* fmt, ...);
+[[noreturn]] ANVIL_ATTR_COLD ANVIL_ATTR_NOINLINE void abort_invariant(const char* expr, const char* file, int line,
+                                                                      Error err, const char* fmt, ...);
 
-[[nodiscard]] HOT_FUNC inline bool       is_error(Error err) noexcept {
+[[nodiscard]] ANVIL_ATTR_HOT ANVIL_ATTR_ALWAYS_INLINE inline bool is_error(Error err) noexcept {
         if (err != ERR_SUCCESS) [[unlikely]] {
                 return true;
         }
@@ -126,8 +119,8 @@ COLD_FUNC void __attribute__((noreturn)) abort_invariant(const char* expr, const
 }
 
 template <typename Condition, typename... Args>
-HOT_FUNC inline void invariant(const char* expr, const char* file, int line, Condition&& condition, Error err,
-                               Args&&... args) {
+ANVIL_ATTR_HOT ANVIL_ATTR_ALWAYS_INLINE inline void invariant(const char* expr, const char* file, int line,
+                                                             Condition&& condition, Error err, Args&&... args) {
         if (static_cast<bool>(condition)) [[likely]] {
                 return;
         }
@@ -139,14 +132,15 @@ HOT_FUNC inline void invariant(const char* expr, const char* file, int line, Con
         }
 }
 
-[[nodiscard]] HOT_FUNC inline Error check(bool condition, Error err) noexcept {
+[[nodiscard]] ANVIL_ATTR_HOT ANVIL_ATTR_ALWAYS_INLINE inline Error check(bool condition, Error err) noexcept {
         if (condition) [[likely]] {
                 return ERR_SUCCESS;
         }
         return err;
 }
 
-template <typename Pointer> [[nodiscard]] HOT_FUNC inline Error check_not_null(Pointer* ptr) noexcept {
+template <typename Pointer>
+[[nodiscard]] ANVIL_ATTR_HOT ANVIL_ATTR_ALWAYS_INLINE inline Error check_not_null(Pointer* ptr) noexcept {
         return check(ptr != nullptr, ERR_OUT_OF_MEMORY);
 }
 
@@ -160,6 +154,7 @@ using ErrorDescriptor = anvil::error::Descriptor;
 using anvil::error::ERR_MEMORY_DEALLOCATION;
 using anvil::error::ERR_MEMORY_PERMISSION_CHANGE;
 using anvil::error::ERR_OUT_OF_MEMORY;
+using anvil::error::ERR_STACK_OVERFLOW;
 using anvil::error::ERR_SUCCESS;
 using anvil::error::INV_BAD_ALIGNMENT;
 using anvil::error::INV_INVALID_STATE;
@@ -190,7 +185,7 @@ static inline constexpr std::uint8_t anvil_error_code(Error err) noexcept {
         return anvil::error::error_code(err);
 }
 
-COLD_FUNC static inline const char* anvil_error_message(Error err) noexcept {
+ANVIL_ATTR_COLD ANVIL_ATTR_NOINLINE static inline const char* anvil_error_message(Error err) noexcept {
         return anvil::error::error_message(err);
 }
 
