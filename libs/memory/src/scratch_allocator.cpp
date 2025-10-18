@@ -26,8 +26,9 @@ namespace anvil::memory::scratch_allocator {
  * ------------------- | ------------------ | -------------- | -----------------------------------------------
  * base                | void*              | sizeof(void*)  | Pointer to the start of the usable memory region
  * capacity            | size_t             | sizeof(size_t) | Total capacity of the scratch allocator in bytes
- * allocated           | size_t             | sizeof(size_t) | Current number of bytes allocated from the scratch allocator
- * allocation_strategy | AllocationStrategy | sizeof(size_t) | Allocation strategy (lazy virtual / eager physical)
+ * allocated           | size_t             | sizeof(size_t) | Current number of bytes allocated from the scratch
+ * allocator allocation_strategy | AllocationStrategy | sizeof(size_t) | Allocation strategy (lazy virtual / eager
+ * physical)
  */
 struct ScratchAllocator {
         void*              base;

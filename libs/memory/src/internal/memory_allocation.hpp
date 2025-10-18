@@ -92,7 +92,7 @@
  *
  * @note The compiler will express a warning if the return result is unused.
  */
-[[nodiscard]] Error anvil_memory_dealloc(void* ptr);
+[[nodiscard]] Error                      anvil_memory_dealloc(void* ptr);
 
 /**
  * @brief On demand commital of memory resources from virtual memory to physical memory
@@ -112,6 +112,6 @@
  *
  * @note The compiler will express a warning if the return result is unused.
  */
-[[nodiscard]] Error anvil_memory_commit(void* ptr, const std::size_t commit_size);
+[[nodiscard]] Error                      anvil_memory_commit(void* ptr, const std::size_t commit_size);
 
 #endif // ANVIL_MEMORY_ALLOCATION_HPP

@@ -56,7 +56,7 @@ struct ScratchAllocator;
  *
  * @return Error code, zero indicates success while other values indicate error.
  */
-[[nodiscard]] Error destroy(ScratchAllocator** allocator);
+[[nodiscard]] Error             destroy(ScratchAllocator** allocator);
 
 /**
  * @brief Establishes a contiguous sub-region of memory from an allocator's total contiguous region.
@@ -80,8 +80,8 @@ struct ScratchAllocator;
  * @note Memory usage uncertainty is reduced by making `allocation_size` a multiple of
  * `alignment`.
  */
-[[nodiscard]] void* alloc(ScratchAllocator* const allocator, const std::size_t allocation_size,
-						  const std::size_t alignment);
+[[nodiscard]] void*             alloc(ScratchAllocator* const allocator, const std::size_t allocation_size,
+                                      const std::size_t alignment);
 
 /**
  * @brief Re-initialize the state of a ScratchAllocator.
@@ -96,7 +96,7 @@ struct ScratchAllocator;
  *
  * @return Error code, zero indicates success while other values indicate error.
  */
-[[nodiscard]] Error reset(ScratchAllocator* const allocator);
+[[nodiscard]] Error             reset(ScratchAllocator* const allocator);
 
 /**
  * @brief Copies data from one region outside the ScratchAllocator's managed region to a sub-region inside the ScratchAllocator's managed region.
@@ -143,7 +143,7 @@ struct ScratchAllocator;
  * @note This operation is destructive as `src` is invalid after this operation.
  */
 [[nodiscard]] void* move(ScratchAllocator* const allocator, void** src, const std::size_t n_bytes,
-						 void (*free_func)(void*));
+                         void (*free_func)(void*));
 
 } // namespace anvil::memory::scratch_allocator
 

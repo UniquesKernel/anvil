@@ -31,13 +31,14 @@ namespace anvil::memory::stack_allocator {
  * @note Total memory footprint is sizeof(StackAllocator) + capacity bytes.
  *
  * Field               | Type               | Size (Bytes)      | Description
- * ------------------- | ------------------ | ----------------- | --------------------------------------------------------
- * base                | void*              | sizeof(void*)     | Pointer to the start of the usable memory region
- * capacity            | size_t             | sizeof(size_t)    | Total capacity of usable memory in bytes
- * allocated           | size_t             | sizeof(size_t)    | Current number of bytes allocated (allocation watermark)
- * allocation_strategy | AllocationStrategy | sizeof(size_t)    | Allocation strategy (eager physical / lazy virtual)
- * stack_depth         | size_t             | sizeof(size_t)    | Current depth of the record/unwind stack
- * stack               | size_t[]           | MAX_STACK_DEPTH*8 | Stack of allocation markers for record/unwind operations
+ * ------------------- | ------------------ | ----------------- |
+ * -------------------------------------------------------- base                | void*              | sizeof(void*) |
+ * Pointer to the start of the usable memory region capacity            | size_t             | sizeof(size_t)    | Total
+ * capacity of usable memory in bytes allocated           | size_t             | sizeof(size_t)    | Current number of
+ * bytes allocated (allocation watermark) allocation_strategy | AllocationStrategy | sizeof(size_t)    | Allocation
+ * strategy (eager physical / lazy virtual) stack_depth         | size_t             | sizeof(size_t)    | Current depth
+ * of the record/unwind stack stack               | size_t[]           | MAX_STACK_DEPTH*8 | Stack of allocation markers
+ * for record/unwind operations
  *
  * @note On 64-bit systems: sizeof(StackAllocator) = 8 + 8 + 8 + 8 + 8 + (64 * 8) = 552 bytes
  */

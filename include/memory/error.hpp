@@ -1,13 +1,13 @@
 #ifndef ANVIL_ERROR_HPP
 #define ANVIL_ERROR_HPP
 
+#include "constants.hpp"
 #include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
-#include <utility>
 #include <format>
-#include "constants.hpp"
+#include <utility>
 
 namespace anvil::error {
 
@@ -120,7 +120,7 @@ inline const char* error_message(Error err) noexcept {
 
 template <typename Condition, typename... Args>
 ANVIL_ATTR_HOT ANVIL_ATTR_ALWAYS_INLINE inline void invariant(const char* expr, const char* file, int line,
-                                                             Condition&& condition, Error err, Args&&... args) {
+                                                              Condition&& condition, Error err, Args&&... args) {
         if (static_cast<bool>(condition)) [[likely]] {
                 return;
         }
@@ -189,7 +189,6 @@ ANVIL_ATTR_COLD ANVIL_ATTR_NOINLINE static inline const char* anvil_error_messag
         return anvil::error::error_message(err);
 }
 
-// Invariant checking wrappers (abort on failure)
 #define ANVIL_INVARIANT(expr, err, ...)                                                                                \
         ::anvil::error::invariant(#expr, __FILE__, __LINE__, (expr), (err), ##__VA_ARGS__)
 
