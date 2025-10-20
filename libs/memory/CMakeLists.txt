@@ -1,5 +1,6 @@
-set(MODULE_NAME memory)
+# =================== Variables ==========================
 
+set(MODULE_NAME memory)
 set(MODULE_SOURCE 
     src/error.cpp
     src/memory_allocation.cpp
@@ -7,12 +8,14 @@ set(MODULE_SOURCE
     src/stack_allocator.cpp
     src/utility.cpp
 )
+set(BENCHMARK_MODULE_SOURCE
+    ${MODULE_SOURCE}
+    benchmarking/scratch_allocator_benchmark.cpp
+)
 
-add_library(${MODULE_NAME} STATIC ${MODULE_SOURCE})
-include(${CMAKE_SOURCE_DIR}/cmake/Functions.cmake)
+# ================== Build Targets ========================
 
-set_compiler_options(${MODULE_NAME})
-
+add_library(${MODULE_NAME} STATIC ${MODULE_SOURCE}) # Release Target
 target_include_directories(${MODULE_NAME}
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
@@ -20,6 +23,23 @@ target_include_directories(${MODULE_NAME}
     PRIVATE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
 )
+
+add_executable(${MODULE_NAME}_benchmark ${BENCHMARK_MODULE_SOURCE}) # Benchmark executable
+target_include_directories(${MODULE_NAME}_benchmark  PRIVATE ${CMAKE_SOURCE_DIR}/include)
+set(BENCHMARK_OUTPUT_DIR ${CMAKE_BINARY_DIR}/benchmarks)
+file(MAKE_DIRECTORY ${BENCHMARK_OUTPUT_DIR})
+set_target_properties(${MODULE_NAME}_benchmark PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${BENCHMARK_OUTPUT_DIR}
+)
+add_test(NAME ${MODULE_NAME}_benchmark_run
+         COMMAND ${MODULE_NAME}_benchmark --runs 10 --iters 20000 --strict)
+
+# =================== Set Compiler Options ===================
+
+include(${CMAKE_SOURCE_DIR}/cmake/Functions.cmake)
+set_compiler_options(${MODULE_NAME})
+set_compiler_options(${MODULE_NAME}_benchmark)
+target_compile_options(memory_benchmark PRIVATE -Wno-old-style-cast -Wno-shadow -Wno-unused-result)
 
 if(BUILD_TESTING)
     # Find Python with Development component (required for pybind11)
@@ -83,9 +103,8 @@ if(BUILD_TESTING)
             ENVIRONMENT "HYPOTHESIS_MAX_EXAMPLES=1000;PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tests:${CMAKE_SOURCE_DIR}/libs"
         )
     endif()
-    #set_tests_properties(${MODULE_NAME}_pytest PROPERTIES 
-     #   ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tests"
-    #)
+
+
 endif()
 
 install(TARGETS ${MODULE_NAME}

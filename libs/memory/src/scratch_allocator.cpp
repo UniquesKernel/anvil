@@ -38,7 +38,6 @@ struct ScratchAllocator {
 };
 static_assert(sizeof(ScratchAllocator) == 32, "ScratchAllocator size must be 32 bytes");
 static_assert(alignof(ScratchAllocator) == alignof(void*), "ScratchAllocator alignment must match void* alignment");
-static_assert(sizeof(ScratchAllocator) > 3 * sizeof(size_t), "ScratchAllocator is too small for transfer protocol");
 
 ScratchAllocator* create(const size_t capacity, const size_t alignment) {
         ANVIL_INVARIANT_POSITIVE(capacity);
@@ -75,10 +74,6 @@ Error destroy(ScratchAllocator** allocator) {
         ANVIL_INVARIANT_NOT_NULL(allocator);
         ANVIL_INVARIANT_NOT_NULL(*allocator);
 
-        if (*reinterpret_cast<size_t*>(*allocator) == TRANSFER_MAGIC) [[unlikely]] {
-                return ERR_SUCCESS;
-        }
-
         const Error dealloc_result = anvil_memory_dealloc(*allocator);
         if (::anvil::error::is_error(dealloc_result)) [[unlikely]] {
                 return dealloc_result;
@@ -112,7 +107,7 @@ Error reset(ScratchAllocator* const allocator) {
         ANVIL_INVARIANT_NOT_NULL(allocator);
         ANVIL_INVARIANT_NOT_NULL(allocator->base);
 
-        memset(allocator->base, 0x0, allocator->allocated);
+        //memset(allocator->base, 0x0, allocator->allocated);
         allocator->allocated = 0;
 
         return ERR_SUCCESS;

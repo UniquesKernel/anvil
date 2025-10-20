@@ -98,10 +98,6 @@ Error destroy(StackAllocator** allocator) {
         ANVIL_INVARIANT_NOT_NULL(allocator);
         ANVIL_INVARIANT_NOT_NULL(*allocator);
 
-        if (*reinterpret_cast<size_t*>(*allocator) == TRANSFER_MAGIC) [[unlikely]] {
-                return ERR_SUCCESS;
-        }
-
         const Error dealloc_result = anvil_memory_dealloc(*allocator);
         if (::anvil::error::is_error(dealloc_result)) [[unlikely]] {
                 return dealloc_result;
@@ -115,7 +111,7 @@ Error reset(StackAllocator* const allocator) {
         ANVIL_INVARIANT_NOT_NULL(allocator);
         ANVIL_INVARIANT_NOT_NULL(allocator->base);
 
-        memset(allocator->base, 0x0, allocator->allocated);
+        //memset(allocator->base, 0x0, allocator->allocated);
         allocator->allocated   = 0;
         allocator->stack_depth = 0;
 
