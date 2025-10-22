@@ -3,7 +3,6 @@
 #include "memory/constants.hpp"
 #include "memory/error.hpp"
 #include "sys/mman.h"
-#include <cstdint>
 #include <unistd.h>
 
 using std::size_t;

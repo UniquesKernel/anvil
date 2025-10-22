@@ -3,9 +3,7 @@
 #include "internal/utility.hpp"
 #include "memory/constants.hpp"
 #include "memory/error.hpp"
-#include <cstddef>
-#include <cstdint>
-#include <cstring>
+
 
 namespace anvil::memory::stack_allocator {
 
@@ -141,46 +139,6 @@ void* alloc(StackAllocator* const allocator, const size_t allocation_size, const
         }
         allocator->allocated += total_allocation;
         return reinterpret_cast<void*>(aligned_addr);
-}
-void* copy(StackAllocator* const allocator, const void* const src, const size_t n_bytes) {
-        ANVIL_INVARIANT_NOT_NULL(allocator);
-        ANVIL_INVARIANT_NOT_NULL(src);
-        ANVIL_INVARIANT_POSITIVE(n_bytes);
-
-        void* dest = alloc(allocator, n_bytes, alignof(void*));
-
-        if (!dest) {
-                return nullptr;
-        }
-        memcpy(dest, src, n_bytes);
-
-        ANVIL_INVARIANT(memcmp(dest, src, n_bytes) == 0, INV_INVALID_STATE,
-                        "Failed to copy memory to ScratchAllocator");
-
-        return dest;
-}
-
-void* move(StackAllocator* const allocator, void** src, const size_t n_bytes, void (*free_func)(void*)) {
-        ANVIL_INVARIANT_NOT_NULL(allocator);
-        ANVIL_INVARIANT_NOT_NULL(src);
-        ANVIL_INVARIANT_NOT_NULL(*src);
-        ANVIL_INVARIANT_NOT_NULL(free_func);
-        ANVIL_INVARIANT_POSITIVE(n_bytes);
-
-        void* dest = alloc(allocator, n_bytes, alignof(void*));
-
-        if (!dest) {
-                return nullptr;
-        }
-        memcpy(dest, *src, n_bytes);
-
-        ANVIL_INVARIANT(memcmp(dest, *src, n_bytes) == 0, INV_INVALID_STATE,
-                        "Failed to move memory to ScratchAllocator");
-
-        free_func(*src);
-        *src = nullptr;
-
-        return dest;
 }
 
 [[nodiscard]]

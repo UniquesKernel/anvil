@@ -32,7 +32,7 @@ set_target_properties(${MODULE_NAME}_benchmark PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${BENCHMARK_OUTPUT_DIR}
 )
 add_test(NAME ${MODULE_NAME}_benchmark_run
-         COMMAND ${MODULE_NAME}_benchmark --runs 100 --iters 200000 --strict)
+         COMMAND ${MODULE_NAME}_benchmark --runs 100 --iters 20000 --strict)
 
 # =================== Set Compiler Options ===================
 

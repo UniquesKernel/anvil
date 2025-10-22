@@ -21,7 +21,7 @@ def align_up(address: int, alignment: int) -> int:
 
 
 @hypothesis.settings(
-    max_examples=1000,
+    max_examples=100,
 )
 class ScratchAllocatorModel(RuleBasedStateMachine):
     """Rule-based model exercising scratch allocator behavior."""

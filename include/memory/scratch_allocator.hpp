@@ -18,7 +18,6 @@
 #ifndef ANVIL_MEMORY_SCRATCH_ALLOCATOR_HPP
 #define ANVIL_MEMORY_SCRATCH_ALLOCATOR_HPP
 #include "error.hpp"
-#include <cstddef>
 
 namespace anvil::memory::scratch_allocator {
 struct ScratchAllocator;
@@ -97,53 +96,6 @@ struct ScratchAllocator;
  * @return Error code, zero indicates success while other values indicate error.
  */
 [[nodiscard]] Error             reset(ScratchAllocator* const allocator);
-
-/**
- * @brief Copies data from one region outside the ScratchAllocator's managed region to a sub-region inside the ScratchAllocator's managed region.
- *
- * @pre `allocator != nullptr`.
- * @pre `src != nullptr`.
- * @pre `n_bytes > 0`.
- *
- * @post ScratchAllocator's capacity shrinks by `n_bytes` bytes with worst case being `n_bytes + page size - 1` amount of bytes.
- * @post The returned memory region contains `n_bytes` amount of data from `src`.
- * @post The returned memory region is aligned to `alignof(void*)`.
- *
- * @param[in] allocator     ScratchAllocator into whose region the outside data should be written.
- * @param[in] src           The outside memory region from where the data should be retrieved.
- * @param[in] n_bytes       The amount of bytes to be read from `src` and written to the allocator's sub-region.
- *
- * @return Pointer to sub-region of `allocator` containing `n_bytes` bytes copied from `src`.
- *
- * @note This operation is non-destructive and does not affect the data stored in `src`.
- */
-[[nodiscard]] void* copy(ScratchAllocator* const allocator, const void* const src, const std::size_t n_bytes);
-
-/**
- * @brief Moves data from one region outside the ScratchAllocator's managed region to a sub-region of the ScratchAllocator's managed region, then invalidates the outside region.
- *
- * @pre `allocator != nullptr`.
- * @pre `src != nullptr`.
- * @pre `*src != nullptr`.
- * @pre `free_func != nullptr`.
- * @pre `n_bytes > 0`.
- *
- * @post ScratchAllocator's capacity shrinks by `n_bytes` bytes with worst case being `n_bytes + page size - 1` amount of bytes.
- * @post The returned memory region contains `n_bytes` amount of data from `src`.
- * @post The returned memory region is aligned to `alignof(void*)`.
- * @post `*src == nullptr`.
- *
- * @param[in] allocator     ScratchAllocator into whose region the outside data should be written.
- * @param[in,out] src       The outside memory region from where the data should be retrieved.
- * @param[in] n_bytes       The amount of bytes to be read from `src` and written to the allocator's sub-region.
- * @param[in] free_func     Pointer to the appropriate function that should be used to free the `src` pointer.
- *
- * @return Pointer to sub-region of `allocator` containing `n_bytes` bytes copied from `src`.
- *
- * @note This operation is destructive as `src` is invalid after this operation.
- */
-[[nodiscard]] void* move(ScratchAllocator* const allocator, void** src, const std::size_t n_bytes,
-                         void (*free_func)(void*));
 
 } // namespace anvil::memory::scratch_allocator
 

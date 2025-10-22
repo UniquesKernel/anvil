@@ -24,7 +24,6 @@
 #define ANVIL_MEMORY_ALLOCATION_HPP
 
 #include "memory/error.hpp"
-#include <cstddef>
 
 /**
  * @brief Allocation of virtual memory pages within the computational model

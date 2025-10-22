@@ -2,12 +2,7 @@
 #define ANVIL_ERROR_HPP
 
 #include "constants.hpp"
-#include <array>
-#include <cstddef>
-#include <cstdint>
-#include <cstdio>
 #include <format>
-#include <utility>
 
 namespace anvil::error {
 

@@ -1,8 +1,6 @@
 #ifndef ANVIL_MEMORY_CONSTANTS_HPP
 #define ANVIL_MEMORY_CONSTANTS_HPP
 
-#include <cstdalign>
-#include <cstddef>
 #include <cstdint>
 
 #if defined(__clang__) || defined(__GNUC__)

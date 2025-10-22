@@ -20,7 +20,6 @@
 #define ANVIL_MEMORY_STACK_ALLOCATOR_HPP
 #include "constants.hpp"
 #include "error.hpp"
-#include <cstddef>
 
 // Namespaced C++ API (preferred)
 namespace anvil::memory::stack_allocator {
@@ -102,53 +101,6 @@ struct StackAllocator;
  * @return Error code, zero indicates success while other values indicate error.
  */
 [[nodiscard]] Error           reset(StackAllocator* const allocator);
-
-/**
- * @brief Writes data from one region outside the StackAllocator's managed region to a sub-region inside the StackAllocator's managed region.
- *
- * @pre `allocator != nullptr`.
- * @pre `src != nullptr`.
- * @pre `n_bytes > 0`.
- *
- * @post StackAllocator's capacity shrinks by `n_bytes` bytes with worst case being `n_bytes + page size - 1` amount of bytes.
- * @post The returned memory region contains `n_bytes` amount of data from `src`.
- * @post The returned memory region is aligned to `alignof(void*)`.
- *
- * @param[in] allocator     StackAllocator to whose region the outside data should be written.
- * @param[in] src           The outside memory region from where the data should be retrieved.
- * @param[in] n_bytes       The amount of bytes to be read from `src` and written to the allocator's sub-region.
- *
- * @return Pointer to sub-region of `allocator` containing `n_bytes` bytes copied from `src`.
- *
- * @note This operation is non-destructive and does not affect the data stored in `src`.
- */
-[[nodiscard]] void*           copy(StackAllocator* const allocator, const void* const src, const std::size_t n_bytes);
-
-/**
- * @brief Writes data from one region outside the StackAllocator's managed region to a sub-region of the StackAllocator's managed region, then it invalidates the outside region.
- *
- * @pre `allocator != nullptr`.
- * @pre `src != nullptr`.
- * @pre `*src != nullptr`.
- * @pre `free_func != nullptr`.
- * @pre `n_bytes > 0`.
- *
- * @post StackAllocator's capacity shrinks by `n_bytes` bytes with worst case being `n_bytes + page size - 1` amount of bytes.
- * @post The returned memory region contains `n_bytes` amount of data from `src`.
- * @post The returned memory region is aligned to `alignof(void*)`.
- * @post `*src == nullptr`.
- *
- * @param[in] allocator     StackAllocator to whose region the outside data should be written.
- * @param[in,out] src       The outside memory region from where the data should be retrieved.
- * @param[in] n_bytes       The amount of bytes to be read from `src` and written to the allocator's sub-region.
- * @param[in] free_func     Pointer to the appropriate function that should be used to free the `src` pointer.
- *
- * @return Pointer to sub-region of `allocator` containing `n_bytes` bytes copied from `src`.
- *
- * @note This operation is destructive as `src` is invalid after this operation.
- */
-[[nodiscard]] void*           move(StackAllocator* const allocator, void** src, const std::size_t n_bytes,
-                                   void (*free_func)(void*));
 
 /**
  * @brief Records the current allocation state for later unwinding

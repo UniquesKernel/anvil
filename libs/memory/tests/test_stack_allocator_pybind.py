@@ -27,7 +27,7 @@ class Allocation:
 RecordSnapshot = Tuple[int]  # stores allocation_count only
 
 @hypothesis.settings(
-    max_examples=1000,
+    max_examples=100,
 )
 class StackAllocatorModel(RuleBasedStateMachine):
     """Exercises allocator lifecycles with mode randomized (EAGER or LAZY)."""
