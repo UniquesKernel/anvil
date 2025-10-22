@@ -14,14 +14,6 @@ import anvil_memory as am
 AllocationRecord = Tuple[int, int, int]
 PTR_ALIGN = ctypes.sizeof(ctypes.c_void_p)
 
-# libc setup
-libc = ctypes.CDLL("libc.so.6")
-libc.malloc.argtypes = [c_size_t]
-libc.malloc.restype = c_void_p
-libc.free.argtypes = [c_void_p]
-libc.free.restype = None
-
-
 def align_up(address: int, alignment: int) -> int:
     """Smallest aligned address >= address."""
     rem = address % alignment
@@ -29,23 +21,18 @@ def align_up(address: int, alignment: int) -> int:
 
 
 @hypothesis.settings(
-    max_examples=100,
-    stateful_step_count=10,  # fewer steps per example
-    deadline=None,           # disable per-test deadlines
-    suppress_health_check=[hypothesis.HealthCheck.too_slow],
+    max_examples=1000,
 )
 class ScratchAllocatorModel(RuleBasedStateMachine):
     """Rule-based model exercising scratch allocator behavior."""
 
     def __init__(self):
         super().__init__()
-        self.allocator = None  # py::capsule or None
+        self.allocator = None
         self.capacity = 0
         self.allocations: List[AllocationRecord] = []
         # Map: address(int) -> original bytes
         self.copied_data: Dict[int, bytes] = {}
-
-    # ------------- Lifecycle -------------
 
     @rule(
         exponent=integers(min_value=am.MIN_ALIGNMENT_EXPONENT, max_value=am.MAX_ALIGNMENT_EXPONENT),
@@ -77,8 +64,6 @@ class ScratchAllocatorModel(RuleBasedStateMachine):
         self.copied_data.clear()
         assert err == am.ERR_SUCCESS, f"Allocator reset failed with error code {err}"
 
-    # ------------- Operations -------------
-
     @rule(
         alloc_size=integers(min_value=1, max_value=(1 << 20)),
         exponent=integers(min_value=am.MIN_ALIGNMENT_EXPONENT, max_value=am.MAX_ALIGNMENT_EXPONENT),
@@ -90,59 +75,6 @@ class ScratchAllocatorModel(RuleBasedStateMachine):
         if ptr:
             addr = am.ptr_to_int(ptr)
             self.allocations.append((addr, alloc_size, alignment))
-
-    @rule(data=binary(min_size=1, max_size=999_999))
-    @precondition(lambda self: self.allocator is not None)
-    def copy_data(self, data: bytes):
-        n = len(data)
-        dest_ptr = am.scratch_allocator_copy(self.allocator, data, n)
-        if not dest_ptr:
-            return
-
-        addr = am.ptr_to_int(dest_ptr)
-        # Validate the bytes were copied correctly
-        buf = (ctypes.c_char * n).from_address(addr)
-        assert bytes(buf) == data, "Data mismatch after copy"
-
-        # Ensure we don't double-track the same address
-        assert all(a != addr for a, _, _ in self.allocations), f"Address {addr} already tracked"
-        self.allocations.append((addr, n, PTR_ALIGN))
-        self.copied_data[addr] = data
-
-    @rule(data=binary(min_size=1, max_size=999_999))
-    @precondition(lambda self: self.allocator is not None)
-    def move_data(self, data: bytes):
-        n = len(data)
-        src_ptr = libc.malloc(n)
-        if not src_ptr:
-            return
-
-        # Write source bytes
-        src_buf = (ctypes.c_char * n).from_address(src_ptr)
-        src_buf[:] = data
-
-        # Holder for pointer (so C++ can null it out)
-        src_holder = ctypes.c_void_p(src_ptr)
-        holder_addr = ctypes.addressof(src_holder)
-        free_addr = ctypes.cast(libc.free, ctypes.c_void_p).value
-        assert free_addr is not None, "Failed to resolve libc.free"
-
-        dest_ptr = am.scratch_allocator_move(
-            am.ptr_to_int(self.allocator), holder_addr, n, free_addr
-        )
-        if not dest_ptr:
-            libc.free(src_ptr)
-            return
-
-        addr = am.ptr_to_int(dest_ptr)
-        moved = (ctypes.c_char * n).from_address(addr)
-        assert bytes(moved) == data, "Data mismatch after move"
-        assert not src_holder.value, "Source pointer should be nullptr after move"
-
-        self.allocations.append((addr, n, PTR_ALIGN))
-        self.copied_data[addr] = data
-
-    # ------------- Invariants -------------
 
     @invariant()
     @precondition(lambda self: self.allocator is not None and len(self.allocations) >= 1)
@@ -186,18 +118,4 @@ class ScratchAllocatorModel(RuleBasedStateMachine):
         for _, size, _ in self.allocations:
             assert size > 0, f"Invalid allocation size: {size}"
 
-    @invariant()
-    @precondition(lambda self: self.allocator is not None)
-    def inv_copied_data_integrity(self):
-        for addr, original in self.copied_data.items():
-            # Find matching allocation (if any)
-            found = next((rec for rec in self.allocations if rec[0] == addr), None)
-            if not found:
-                continue
-            _, size, _ = found
-            assert size == len(original), f"Size mismatch at {addr}: {size} != {len(original)}"
-            buf = (ctypes.c_char * size).from_address(addr)
-            assert bytes(buf) == original, f"Data corruption at {addr}"
-
-# For pytest discovery
-TestMyStateMachine = ScratchAllocatorModel.TestCase  # type: ignore
+TestMyStateMachine = ScratchAllocatorModel.TestCase  

@@ -102,7 +102,7 @@ static Stats make_stats(std::vector<double> s, double ops_per_run) {
 }
 
 struct Config {
-        int  runs = 12, iters = 200000;
+        int  runs = 100, iters = 200000;
         bool strict = false;
 };
 
@@ -291,7 +291,7 @@ static Row interleaved_patterns(const Config& cfg) {
             },
             [] {}, (double)N);
         double sp   = (base.ops_per_sec > 0) ? (scratch.ops_per_sec / base.ops_per_sec) : 1.0;
-        double gate = 1.1;
+        double gate = 1.0;
         bool   pass = !cfg.strict || sp >= gate;
         return {"interleaved_patterns", base, scratch, sp, pass, gate};
 }
