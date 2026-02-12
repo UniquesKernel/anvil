@@ -1,0 +1,72 @@
+Checks: >
+  -*,
+  clang-analyzer-*,
+  bugprone-*,
+  cert-*,
+  cppcoreguidelines-*,
+  performance-*,
+  readability-*,
+  hicpp-*,
+  misc-*,
+  -modernize-*,
+  -cppcoreguidelines-avoid-c-arrays,
+  -cppcoreguidelines-avoid-goto,
+  -cppcoreguidelines-pro-type-vararg,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-owning-memory,
+  -cppcoreguidelines-pro-type-cstyle-cast,
+  -cppcoreguidelines-init-variables,
+  -cppcoreguidelines-non-private-member-variables-in-classes,
+  -hicpp-avoid-c-arrays,
+  -hicpp-vararg,
+  -hicpp-no-array-decay,
+  -hicpp-braces-around-statements,
+  -readability-magic-numbers,
+  -readability-else-after-return,
+  -readability-braces-around-statements,
+  -readability-identifier-length,
+  -misc-non-private-member-variables-in-classes
+
+CheckOptions:
+  # Naming conventions (C-style)
+  - key: readability-identifier-naming.VariableCase
+    value: lower_case
+  - key: readability-identifier-naming.FunctionCase
+    value: lower_case
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.StructCase
+    value: CamelCase
+  - key: readability-identifier-naming.ConstantCase
+    value: UPPER_CASE
+  - key: readability-identifier-naming.EnumCase
+    value: lower_case
+  - key: readability-identifier-naming.GlobalConstantCase
+    value: UPPER_CASE
+  
+  # Power of Ten Rule 4: Limit function length (60 lines)
+  - key: readability-function-size.LineThreshold
+    value: 60
+  - key: readability-function-size.StatementThreshold
+    value: 50
+  - key: readability-function-size.BranchThreshold
+    value: 10
+  - key: readability-function-size.ParameterThreshold
+    value: 6
+  - key: readability-function-size.NestingThreshold
+    value: 4
+  
+  # Power of Ten Rule 1: Limit cyclomatic complexity
+  - key: readability-function-cognitive-complexity.Threshold
+    value: 15
+  
+  # Aggressive bounds checking
+  - key: cppcoreguidelines-narrowing-conversions.WarnOnIntegerNarrowingConversion
+    value: 1
+  - key: cppcoreguidelines-narrowing-conversions.WarnOnFloatingPointNarrowingConversion
+    value: 1
+
+WarningsAsErrors: '*'
+HeaderFilterRegex: '.*'
+FormatStyle: none

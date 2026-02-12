@@ -1,0 +1,71 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          # Ubuntu 24.04
+          - name: "Ubuntu 24.04 - GCC"
+            os: ubuntu-24.04
+            compiler: gcc
+            cc: gcc
+            cxx: g++
+            build_type: Release
+
+          - name: "Ubuntu 24.04 - Clang"
+            os: ubuntu-24.04
+            compiler: clang
+            cc: clang
+            cxx: clang++
+            build_type: Release
+
+          # Ubuntu 22.04
+          - name: "Ubuntu 22.04 - GCC"
+            os: ubuntu-22.04
+            compiler: gcc
+            cc: gcc
+            cxx: g++
+            build_type: Release
+
+          - name: "Ubuntu 22.04 - Clang"
+            os: ubuntu-22.04
+            compiler: clang
+            cc: clang
+            cxx: clang++
+            build_type: Release
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Run config script
+      env:
+        CC: ${{ matrix.config.cc }}
+        CXX: ${{ matrix.config.cxx }}
+      run: |
+        bash ./config-script.sh
+
+    - name: Configure and build
+      env:
+        CC: ${{ matrix.config.cc }}
+        CXX: ${{ matrix.config.cxx }}
+      run: make build
+
+    - name: Run tests
+      env:
+        CC: ${{ matrix.config.cc }}
+        CXX: ${{ matrix.config.cxx }}
+      run: make test
+
+    - name: Generate documentation
+      run: make docs

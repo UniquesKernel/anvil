@@ -1,0 +1,74 @@
+name: 🔧 Build/Installation Issue
+description: Report problems building or installing the project
+labels: ["build", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Having trouble building or installing? Let us know the details.
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Issue Type
+      description: What kind of build issue are you experiencing?
+      options:
+        - CMake configuration fails
+        - Compilation errors
+        - Linker errors
+        - Test failures
+        - Installation issues
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Build Steps
+      description: What steps did you take to build?
+      placeholder: |
+        1. cmake -B build
+        2. cmake --build build
+    validations:
+      required: true
+
+  - type: textarea
+    id: error-output
+    attributes:
+      label: Error Output
+      description: Paste the complete error output
+      placeholder: "Paste error messages here..."
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: System and build environment details
+      value: |
+        - OS: 
+        - CMake Version: 
+        - Compiler: 
+        - Compiler Version: 
+    validations:
+      required: true
+
+  - type: textarea
+    id: cmake-cache
+    attributes:
+      label: CMakeCache.txt (Optional)
+      description: If configuration issues, paste relevant parts of CMakeCache.txt
+      render: cmake
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other relevant information
+    validations:
+      required: false

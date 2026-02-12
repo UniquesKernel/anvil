@@ -1,0 +1,57 @@
+name: ✨ Feature Request
+description: Suggest a new feature or enhancement
+labels: ["enhancement", "needs-discussion"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! Please describe what you'd like to see.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Feature Description
+      description: What functionality would you like to see added?
+      placeholder: "I would like the project to support..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case / Motivation
+      description: Why is this feature important? What problem does it solve?
+      placeholder: "This would help me to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: api-design
+    attributes:
+      label: Proposed API or Workflow (Optional)
+      description: If you have ideas about how the API or workflow should look, share them here
+      placeholder: |
+        ```cpp
+        // Example API
+        int new_function(int value);
+        ```
+      render: cpp
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Would you be willing to contribute this feature?
+      options:
+        - label: I would be willing to submit a PR for this feature
+          required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other context, alternatives you've considered, etc.
+    validations:
+      required: false
