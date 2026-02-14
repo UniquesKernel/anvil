@@ -1,3 +1,6 @@
 pybind11
 pytest
 hypothesis
+numpy
+python-lsp-server
+

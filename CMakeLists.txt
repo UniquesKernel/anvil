@@ -19,7 +19,7 @@ if(BUILD_TESTING)
   message(STATUS "Using Python 3 Interpreter: ${Python3_EXECUTABLE}")
 endif()
 
-add_subdirectory(libs/sample)
+add_subdirectory(libs/math)
 
 if(CMAKE_EXPORT_COMPILE_COMMANDS)
   file(CREATE_LINK
