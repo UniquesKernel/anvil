@@ -4,42 +4,122 @@
 #include <algorithm>
 #include <cstdlib>
 namespace anvil::math {
+
+/**
+ * @brief Two-dimensional vector
+ *
+ * `Vector2` represents a mathematical vector in 2D space with components,
+ * `x` and `y`, approximated by single-precision (32-bit) floating-point arithmetic.
+ *
+ * Supported operations:
+ *      - Vector addition and subtraction
+ *      - Scalar multiplication (Using the `*` operator)
+ *      - Dot Product (using the `*` operator)
+ *      - Negation
+ *
+ * @note The multiplication operator (`*`) is overloaded:
+ *      - Vector2 * Vector2 → `float` (dot product)
+ *      - Vector2 * `float` → Vector2 (scalar multiplication)
+ *
+ * @note Equality uses relative tolerance (ε = 1e-4) to account for
+ *       floating-point rounding errors.
+ *
+ * ### Fields
+ * | Name | Type      | Size    |
+ * |------|-----------|---------|
+ * | x    | `float`   | 4 bytes |
+ * | y    | `float`   | 4 bytes |
+ *
+ * **Total Size:** 8 bytes
+ */
 struct Vector2 {
         float x = 0.0F;
         float y = 0.0F;
 };
 
+/**
+ * @brief Three-dimensional vector
+ *
+ * `Vector3` represents a mathematical vector in 3D space with components,
+ * `x`, `y`, and `z`, approximated by single-precision (32-bit) floating-point arithmetic.
+ *
+ * Supported operations:
+ *      - Vector addition and subtraction
+ *      - Scalar multiplication (Using the `*` operator)
+ *      - Dot Product (using the `*` operator)
+ *      - Negation
+ *
+ * @note The multiplication operator (`*`) is overloaded:
+ *      - Vector3 * Vector3 → `float` (dot product)
+ *      - Vector3 * `float` → Vector3 (scalar multiplication)
+ *
+ * @note Equality uses relative tolerance (ε = 1e-4) to account for
+ *       floating-point rounding errors.
+ *
+ * ### Fields
+ * | Name | Type      | Size    |
+ * |------|-----------|---------|
+ * | x    | `float`   | 4 bytes |
+ * | y    | `float`   | 4 bytes |
+ * | z    | `float`   | 4 bytes |
+ *
+ * **Total Size:** 12 bytes
+ */
 struct Vector3 {
         float x = 0.0F;
         float y = 0.0F;
         float z = 0.0F;
 };
 
-// ================== Vector2 ===================
+/* ================================================================================
+ *                                      VECTOR 2
+ *  ================================================================================ */
+
+/**
+ * @brief Vector addition in two dimensions
+ */
 inline Vector2 operator+(const Vector2& A, const Vector2& B) {
         return {A.x + B.x, A.y + B.y};
 }
 
+/**
+ * @brief Vector subtraction in two dimentsions
+ */
 inline Vector2 operator-(const Vector2& A, const Vector2& B) {
         return {A.x - B.x, A.y - B.y};
 }
 
+/**
+ * @brief Vector negation in two dimensions
+ */
 inline Vector2 operator-(const Vector2& A) {
         return {-A.x, -A.y};
 }
 
+/**
+ * @brief Dot product over a two-dimensional space
+ */
 inline float operator*(const Vector2& A, const Vector2& B) {
         return (A.x * B.x) + (A.y * B.y);
 }
 
-inline Vector2 operator*(const float SCALAR, const Vector2 A) {
+/**
+ * @brief Scalar product over a two-dimensional space
+ */
+inline Vector2 operator*(const float SCALAR, const Vector2& A) {
         return {A.x * SCALAR, A.y * SCALAR};
 }
 
+/**
+ * @brief Scalar product over a two-dimensional space
+ */
 inline Vector2 operator*(const Vector2& A, const float SCALAR) {
         return SCALAR * A;
 }
 
+/**
+ * @brief equality between two-dimensional vectors, using scaling approximations
+ */
 #pragma GCC diagnostic ignored "-Wfloat-equal"
 inline bool operator==(const Vector2& A, const Vector2& B) {
         const float EPSILON = 1e-4F;
@@ -53,32 +133,55 @@ inline bool operator==(const Vector2& A, const Vector2& B) {
         return ((A.x == B.x) && (A.y == B.y)) || ((DIFF_X <= EPSILON * SCALE_X) && (DIFF_Y <= EPSILON * SCALE_Y));
 }
 
-// ================== Vector3 ===================
+/* ================================================================================
+ *                                      VECTOR 3
+ *  ================================================================================ */
 
+/**
+ * @brief Vector addition in three dimensions
+ */
 inline Vector3 operator+(const Vector3& A, const Vector3& B) {
         return {A.x + B.x, A.y + B.y, A.z + B.z};
 }
 
+/**
+ * @brief Vector subtraction in three dimentsions
+ */
 inline Vector3 operator-(const Vector3& A, const Vector3& B) {
         return {A.x - B.x, A.y - B.y, A.z - B.z};
 }
 
+/**
+ * @brief Vector negation in three dimensions
+ */
 inline Vector3 operator-(const Vector3& A) {
         return {-A.x, -A.y, -A.z};
 }
 
+/**
+ * @brief Dot product over a three-dimensional space
+ */
 inline float operator*(const Vector3& A, const Vector3& B) {
         return (A.x * B.x) + (A.y * B.y) + (A.z * B.z);
 }
 
-inline Vector3 operator*(const float SCALAR, const Vector3 A) {
+/**
+ * @brief Scalar product over a three-dimensional space
+ */
+inline Vector3 operator*(const float SCALAR, const Vector3& A) {
         return {A.x * SCALAR, A.y * SCALAR, A.z * SCALAR};
 }
 
+/**
+ * @brief Scalar product over a three-dimensional space
+ */
 inline Vector3 operator*(const Vector3& A, const float SCALAR) {
         return SCALAR * A;
 }
 
+/**
+ * @brief equality between three-dimensional vectors, using scaling approximations
+ */
 #pragma GCC diagnostic ignored "-Wfloat-equal"
 inline bool operator==(const Vector3& A, const Vector3& B) {
         const float EPSILON = 1e-4F;
