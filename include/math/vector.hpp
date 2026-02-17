@@ -45,7 +45,7 @@ struct Vector2 {
         float x = 0.0F;
         float y = 0.0F;
 };
-static_assert(sizeof(Vector2) == 8, "Vector2 holds two floating-point values of 8 bytes total"); //NOLINT
+static_assert(sizeof(Vector2) == 8, "Vector2 holds two floating-point values of 8 bytes total"); // NOLINT
 
 /**
  * @brief Three-dimensional vector
@@ -80,7 +80,7 @@ struct Vector3 {
         float y = 0.0F;
         float z = 0.0F;
 };
-static_assert(sizeof(Vector3) == 12, "Vector3 holds three floating-point values of 12 bytes total"); //NOLINT
+static_assert(sizeof(Vector3) == 12, "Vector3 holds three floating-point values of 12 bytes total"); // NOLINT
 
 /* ================================================================================
  *                                      VECTOR 2
@@ -213,7 +213,7 @@ inline bool operator==(const Vector3& A, const Vector3& B) {
  * @brief Cross product takes two Vector3 and produces a new vector, which is perpendicular to both.
  *
  * @param[in] A         The first vector in the cross product
- * @param[in] B         The second vector in the cross product 
+ * @param[in] B         The second vector in the cross product
  *
  * @return Vector3 perpendicular to both A and B
  *
