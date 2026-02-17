@@ -1,3 +1,12 @@
+/**
+ * @file vector.hpp
+ * @brief Lightweight 2D/3D vector types and basic arithmetic operators.
+ *
+ * Provides `Vector2` and `Vector3` structs with inline operators for
+ * addition, subtraction, scalar multiplication, dot product, negation,
+ * and approximate equality. Equality uses a relative tolerance to reduce
+ * sensitivity to floating-point rounding.
+ */
 #ifndef ANVIL_MATH_VECTOR_HPP
 #define ANVIL_MATH_VECTOR_HPP
 
@@ -36,6 +45,7 @@ struct Vector2 {
         float x = 0.0F;
         float y = 0.0F;
 };
+static_assert(sizeof(Vector2) == 8, "Vector2 holds two floating-point values of 8 bytes total"); //NOLINT
 
 /**
  * @brief Three-dimensional vector
@@ -70,6 +80,7 @@ struct Vector3 {
         float y = 0.0F;
         float z = 0.0F;
 };
+static_assert(sizeof(Vector3) == 12, "Vector3 holds three floating-point values of 12 bytes total"); //NOLINT
 
 /* ================================================================================
  *                                      VECTOR 2
@@ -194,9 +205,21 @@ inline bool operator==(const Vector3& A, const Vector3& B) {
         const float SCALE_Y = std::max({std::abs(A.y), std::abs(B.y), 1.0F});
         const float SCALE_Z = std::max({std::abs(A.z), std::abs(B.z), 1.0F});
 
-        return ((A.x == B.x) && (A.y == B.y)) ||
+        return ((A.x == B.x) && (A.y == B.y) && (A.z == B.z)) ||
                ((DIFF_X <= EPSILON * SCALE_X) && (DIFF_Y <= EPSILON * SCALE_Y) && DIFF_Z <= EPSILON * SCALE_Z);
 }
+
+/**
+ * @brief Cross product takes two Vector3 and produces a new vector, which is perpendicular to both.
+ *
+ * @param[in] A         The first vector in the cross product
+ * @param[in] B         The second vector in the cross product 
+ *
+ * @return Vector3 perpendicular to both A and B
+ *
+ * @note The cross product is only defined in three dimensions.
+ */
+Vector3 cross_product(Vector3 A, Vector3 B);
 
 } // namespace anvil::math
 

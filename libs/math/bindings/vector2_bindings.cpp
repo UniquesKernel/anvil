@@ -1,4 +1,5 @@
 #include "math/vector.hpp"
+#include <pybind11/detail/common.h>
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
@@ -45,4 +46,6 @@ PYBIND11_MODULE(math_module, module) {
             .def("__mul__", [](const anvil::math::Vector3& A, const float SCALAR) { return A * SCALAR; })
             .def("__rmul__", [](const anvil::math::Vector3& A, const float SCALAR) { return SCALAR * A; })
             .def("__eq__", [](const anvil::math::Vector3& A, const anvil::math::Vector3& B) { return A == B; });
+
+        module.def("cross_product", &anvil::math::cross_product, py::return_value_policy::copy);
 }
