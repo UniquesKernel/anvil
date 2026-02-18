@@ -2,8 +2,8 @@
 
 namespace anvil::math {
 
-Vector3 cross_product(const Vector3 A, const Vector3 B) {
-        return {(A.y * B.z) - (A.z * B.y), (A.z * B.x) - (A.x * B.z), (A.x * B.y) - (A.y * B.x)};
+Vector3 cross_product(const Vector3 a, const Vector3 b) {
+        return {(a.y * b.z) - (a.z * b.y), (a.z * b.x) - (a.x * b.z), (a.x * b.y) - (a.y * b.x)};
 }
 
 } // namespace anvil::math

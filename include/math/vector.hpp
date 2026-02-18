@@ -89,59 +89,59 @@ static_assert(sizeof(Vector3) == 12, "Vector3 holds three floating-point values 
 /**
  * @brief Vector addition in two dimensions
  */
-inline Vector2 operator+(const Vector2& A, const Vector2& B) {
-        return {A.x + B.x, A.y + B.y};
+inline Vector2 operator+(const Vector2& a, const Vector2& b) {
+        return {a.x + b.x, a.y + b.y};
 }
 
 /**
  * @brief Vector subtraction in two dimentsions
  */
-inline Vector2 operator-(const Vector2& A, const Vector2& B) {
-        return {A.x - B.x, A.y - B.y};
+inline Vector2 operator-(const Vector2& a, const Vector2& b) {
+        return {a.x - b.x, a.y - b.y};
 }
 
 /**
  * @brief Vector negation in two dimensions
  */
-inline Vector2 operator-(const Vector2& A) {
-        return {-A.x, -A.y};
+inline Vector2 operator-(const Vector2& a) {
+        return {-a.x, -a.y};
 }
 
 /**
  * @brief Dot product over a two-dimensional space
  */
-inline float operator*(const Vector2& A, const Vector2& B) {
-        return (A.x * B.x) + (A.y * B.y);
+inline float operator*(const Vector2& a, const Vector2& b) {
+        return (a.x * b.x) + (a.y * b.y);
 }
 
 /**
  * @brief Scalar product over a two-dimensional space
  */
-inline Vector2 operator*(const float SCALAR, const Vector2& A) {
-        return {A.x * SCALAR, A.y * SCALAR};
+inline Vector2 operator*(const float scalar, const Vector2& a) {
+        return {a.x * scalar, a.y * scalar};
 }
 
 /**
  * @brief Scalar product over a two-dimensional space
  */
-inline Vector2 operator*(const Vector2& A, const float SCALAR) {
-        return SCALAR * A;
+inline Vector2 operator*(const Vector2& a, const float scalar) {
+        return scalar * a;
 }
 
 /**
  * @brief equality between two-dimensional vectors, using scaling approximations
  */
 #pragma GCC diagnostic ignored "-Wfloat-equal"
-inline bool operator==(const Vector2& A, const Vector2& B) {
+inline bool operator==(const Vector2& a, const Vector2& b) {
         const float EPSILON = 1e-4F;
 
-        const float DIFF_X  = std::abs((A - B).x);
-        const float DIFF_Y  = std::abs((A - B).y);
+        const float DIFF_X  = std::abs((a - b).x);
+        const float DIFF_Y  = std::abs((a - b).y);
 
-        const float SCALE_X = std::max({std::abs(A.x), std::abs(B.x), 1.0F});
-        const float SCALE_Y = std::max({std::abs(A.y), std::abs(B.y), 1.0F});
+        const float SCALE_X = std::max({std::abs(a.x), std::abs(a.x), 1.0F});
+        const float SCALE_Y = std::max({std::abs(a.y), std::abs(a.y), 1.0F});
 
-        return ((A.x == B.x) && (A.y == B.y)) || ((DIFF_X <= EPSILON * SCALE_X) && (DIFF_Y <= EPSILON * SCALE_Y));
+        return ((a.x == b.x) && (a.y == b.y)) || ((DIFF_X <= EPSILON * SCALE_X) && (DIFF_Y <= EPSILON * SCALE_Y));
 }
 
 /* ================================================================================
@@ -151,61 +151,61 @@ inline bool operator==(const Vector2& A, const Vector2& B) {
 /**
  * @brief Vector addition in three dimensions
  */
-inline Vector3 operator+(const Vector3& A, const Vector3& B) {
-        return {A.x + B.x, A.y + B.y, A.z + B.z};
+inline Vector3 operator+(const Vector3& a, const Vector3& b) {
+        return {a.x + b.x, a.y + b.y, a.z + b.z};
 }
 
 /**
  * @brief Vector subtraction in three dimentsions
  */
-inline Vector3 operator-(const Vector3& A, const Vector3& B) {
-        return {A.x - B.x, A.y - B.y, A.z - B.z};
+inline Vector3 operator-(const Vector3& a, const Vector3& b) {
+        return {a.x - b.x, a.y - b.y, a.z - b.z};
 }
 
 /**
  * @brief Vector negation in three dimensions
  */
-inline Vector3 operator-(const Vector3& A) {
-        return {-A.x, -A.y, -A.z};
+inline Vector3 operator-(const Vector3& a) {
+        return {-a.x, -a.y, -a.z};
 }
 
 /**
  * @brief Dot product over a three-dimensional space
  */
-inline float operator*(const Vector3& A, const Vector3& B) {
-        return (A.x * B.x) + (A.y * B.y) + (A.z * B.z);
+inline float operator*(const Vector3& a, const Vector3& b) {
+        return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
 }
 
 /**
  * @brief Scalar product over a three-dimensional space
  */
-inline Vector3 operator*(const float SCALAR, const Vector3& A) {
-        return {A.x * SCALAR, A.y * SCALAR, A.z * SCALAR};
+inline Vector3 operator*(const float scalar, const Vector3& a) {
+        return {a.x * scalar, a.y * scalar, a.z * scalar};
 }
 
 /**
  * @brief Scalar product over a three-dimensional space
  */
-inline Vector3 operator*(const Vector3& A, const float SCALAR) {
-        return SCALAR * A;
+inline Vector3 operator*(const Vector3& a, const float scalar) {
+        return scalar * a;
 }
 
 /**
  * @brief equality between three-dimensional vectors, using scaling approximations
  */
 #pragma GCC diagnostic ignored "-Wfloat-equal"
-inline bool operator==(const Vector3& A, const Vector3& B) {
+inline bool operator==(const Vector3& a, const Vector3& b) {
         const float EPSILON = 1e-4F;
 
-        const float DIFF_X  = std::abs((A - B).x);
-        const float DIFF_Y  = std::abs((A - B).y);
-        const float DIFF_Z  = std::abs((A - B).z);
+        const float DIFF_X  = std::abs((a - b).x);
+        const float DIFF_Y  = std::abs((a - b).y);
+        const float DIFF_Z  = std::abs((a - b).z);
 
-        const float SCALE_X = std::max({std::abs(A.x), std::abs(B.x), 1.0F});
-        const float SCALE_Y = std::max({std::abs(A.y), std::abs(B.y), 1.0F});
-        const float SCALE_Z = std::max({std::abs(A.z), std::abs(B.z), 1.0F});
+        const float SCALE_X = std::max({std::abs(a.x), std::abs(b.x), 1.0F});
+        const float SCALE_Y = std::max({std::abs(a.y), std::abs(b.y), 1.0F});
+        const float SCALE_Z = std::max({std::abs(a.z), std::abs(b.z), 1.0F});
 
-        return ((A.x == B.x) && (A.y == B.y) && (A.z == B.z)) ||
+        return ((a.x == b.x) && (a.y == b.y) && (a.z == b.z)) ||
                ((DIFF_X <= EPSILON * SCALE_X) && (DIFF_Y <= EPSILON * SCALE_Y) && DIFF_Z <= EPSILON * SCALE_Z);
 }
 
@@ -219,7 +219,7 @@ inline bool operator==(const Vector3& A, const Vector3& B) {
  *
  * @note The cross product is only defined in three dimensions.
  */
-Vector3 cross_product(Vector3 A, Vector3 B);
+Vector3 cross_product(Vector3 a, Vector3 b);
 
 } // namespace anvil::math
 

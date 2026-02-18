@@ -20,6 +20,7 @@ if(BUILD_TESTING)
 endif()
 
 add_subdirectory(libs/math)
+add_subdirectory(libs/graphic)
 add_subdirectory(examples)
 
 if(CMAKE_EXPORT_COMPILE_COMMANDS)

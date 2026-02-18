@@ -14,16 +14,16 @@ PYBIND11_MODULE(math_module, module) {
             .def_property(
                 "y", [](anvil::math::Vector2& v) { return pybind11::module_::import("numpy").attr("float32")(v.y); },
                 [](anvil::math::Vector2& v, float val) { v.y = val; })
-            .def("__add__", [](const anvil::math::Vector2& A, const anvil::math::Vector2& B) { return A + B; })
-            .def("__sub__", [](const anvil::math::Vector2& A, const anvil::math::Vector2& B) { return A - B; })
-            .def("__neg__", [](const anvil::math::Vector2& A) { return -A; })
+            .def("__add__", [](const anvil::math::Vector2& a, const anvil::math::Vector2& b) { return a + b; })
+            .def("__sub__", [](const anvil::math::Vector2& a, const anvil::math::Vector2& b) { return a - b; })
+            .def("__neg__", [](const anvil::math::Vector2& a) { return -a; })
             .def("__mul__",
-                 [](const anvil::math::Vector2& A, const anvil::math::Vector2& B) {
-                         return pybind11::module_::import("numpy").attr("float32")(A * B);
+                 [](const anvil::math::Vector2& a, const anvil::math::Vector2& b) {
+                         return pybind11::module_::import("numpy").attr("float32")(a * b);
                  })
-            .def("__mul__", [](const anvil::math::Vector2& A, const float SCALAR) { return A * SCALAR; })
-            .def("__rmul__", [](const anvil::math::Vector2& A, const float SCALAR) { return SCALAR * A; })
-            .def("__eq__", [](const anvil::math::Vector2& A, const anvil::math::Vector2& B) { return A == B; });
+            .def("__mul__", [](const anvil::math::Vector2& a, const float scalar) { return a * scalar; })
+            .def("__rmul__", [](const anvil::math::Vector2& a, const float scalar) { return scalar * a; })
+            .def("__eq__", [](const anvil::math::Vector2& a, const anvil::math::Vector2& b) { return a == b; });
 
         py::class_<anvil::math::Vector3>(module, "Vector3")
             .def(py::init([](const float& a, const float& b, const float& c) { return anvil::math::Vector3{a, b, c}; }))
@@ -36,16 +36,16 @@ PYBIND11_MODULE(math_module, module) {
             .def_property(
                 "z", [](anvil::math::Vector3& v) { return pybind11::module_::import("numpy").attr("float32")(v.z); },
                 [](anvil::math::Vector3& v, float val) { v.z = val; })
-            .def("__add__", [](const anvil::math::Vector3& A, const anvil::math::Vector3& B) { return A + B; })
-            .def("__sub__", [](const anvil::math::Vector3& A, const anvil::math::Vector3& B) { return A - B; })
-            .def("__neg__", [](const anvil::math::Vector3& A) { return -A; })
+            .def("__add__", [](const anvil::math::Vector3& a, const anvil::math::Vector3& b) { return a + b; })
+            .def("__sub__", [](const anvil::math::Vector3& a, const anvil::math::Vector3& b) { return a - b; })
+            .def("__neg__", [](const anvil::math::Vector3& a) { return -a; })
             .def("__mul__",
-                 [](const anvil::math::Vector3& A, const anvil::math::Vector3& B) {
-                         return pybind11::module_::import("numpy").attr("float32")(A * B);
+                 [](const anvil::math::Vector3& a, const anvil::math::Vector3& b) {
+                         return pybind11::module_::import("numpy").attr("float32")(a * b);
                  })
-            .def("__mul__", [](const anvil::math::Vector3& A, const float SCALAR) { return A * SCALAR; })
-            .def("__rmul__", [](const anvil::math::Vector3& A, const float SCALAR) { return SCALAR * A; })
-            .def("__eq__", [](const anvil::math::Vector3& A, const anvil::math::Vector3& B) { return A == B; });
+            .def("__mul__", [](const anvil::math::Vector3& a, const float scalar) { return a * scalar; })
+            .def("__rmul__", [](const anvil::math::Vector3& a, const float scalar) { return scalar * a; })
+            .def("__eq__", [](const anvil::math::Vector3& a, const anvil::math::Vector3& b) { return a == b; });
 
         module.def("cross_product", &anvil::math::cross_product, py::return_value_policy::copy);
 }

@@ -2,23 +2,28 @@ Checks: >
   -*,
   clang-analyzer-*,
   bugprone-*,
+  -bugprone-easily-swappable-parameters,
   cert-*,
   cppcoreguidelines-*,
   performance-*,
   readability-*,
   hicpp-*,
+  -hicpp-member-init,
   misc-*,
   -modernize-*,
   -cppcoreguidelines-avoid-c-arrays,
+  -cppcoreguidelines-pro-type-member-init,
   -cppcoreguidelines-avoid-goto,
   -cppcoreguidelines-pro-type-vararg,
   -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
   -cppcoreguidelines-pro-bounds-constant-array-index,
   -cppcoreguidelines-owning-memory,
+  -cppcoreguidelines-avoid-do-while,
   -cppcoreguidelines-pro-type-cstyle-cast,
   -cppcoreguidelines-init-variables,
   -cppcoreguidelines-non-private-member-variables-in-classes,
   -hicpp-avoid-c-arrays,
+  -hicpp-avoid-do-while,
   -hicpp-vararg,
   -hicpp-no-array-decay,
   -hicpp-braces-around-statements,
@@ -41,10 +46,12 @@ CheckOptions:
   - key: readability-identifier-naming.ConstantCase
     value: UPPER_CASE
   - key: readability-identifier-naming.EnumCase
-    value: lower_case
+    value: CamelCase
   - key: readability-identifier-naming.GlobalConstantCase
     value: UPPER_CASE
-  
+  - key: readability-identifier-naming.ConstantParameterCase
+    value: lower_case
+
   # Power of Ten Rule 4: Limit function length (60 lines)
   - key: readability-function-size.LineThreshold
     value: 60
