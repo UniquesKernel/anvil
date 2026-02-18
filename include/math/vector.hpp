@@ -130,7 +130,8 @@ inline Vector2 operator*(const Vector2& a, const float scalar) {
 
 /**
  * @brief equality between two-dimensional vectors, using scaling approximations
- */
+ */ 
+#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
 inline bool operator==(const Vector2& a, const Vector2& b) {
         const float EPSILON = 1e-4F;
@@ -138,11 +139,12 @@ inline bool operator==(const Vector2& a, const Vector2& b) {
         const float DIFF_X  = std::abs((a - b).x);
         const float DIFF_Y  = std::abs((a - b).y);
 
-        const float SCALE_X = std::max({std::abs(a.x), std::abs(a.x), 1.0F});
-        const float SCALE_Y = std::max({std::abs(a.y), std::abs(a.y), 1.0F});
+        const float SCALE_X = std::max({std::abs(a.x), std::abs(b.x), 1.0F});
+        const float SCALE_Y = std::max({std::abs(a.y), std::abs(b.y), 1.0F});
 
         return ((a.x == b.x) && (a.y == b.y)) || ((DIFF_X <= EPSILON * SCALE_X) && (DIFF_Y <= EPSILON * SCALE_Y));
 }
+#pragma GCC diagnostic pop
 
 /* ================================================================================
  *                                      VECTOR 3
@@ -193,6 +195,7 @@ inline Vector3 operator*(const Vector3& a, const float scalar) {
 /**
  * @brief equality between three-dimensional vectors, using scaling approximations
  */
+#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
 inline bool operator==(const Vector3& a, const Vector3& b) {
         const float EPSILON = 1e-4F;
@@ -208,6 +211,7 @@ inline bool operator==(const Vector3& a, const Vector3& b) {
         return ((a.x == b.x) && (a.y == b.y) && (a.z == b.z)) ||
                ((DIFF_X <= EPSILON * SCALE_X) && (DIFF_Y <= EPSILON * SCALE_Y) && DIFF_Z <= EPSILON * SCALE_Z);
 }
+#pragma GCC diagnostic pop
 
 /**
  * @brief Cross product takes two Vector3 and produces a new vector, which is perpendicular to both.
