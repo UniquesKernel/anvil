@@ -176,14 +176,28 @@ class TestVector3:
         """Dot product is commutative: a * b = b * a"""
         assert math.isclose(a * b, b * a, rel_tol=TOLERANCE, abs_tol=TOLERANCE)
 
-    @given(a=vector3_strategy)
-    def test_vector3_magnitude(self, a):
-        """Vector magnitude squared equals dot product with itself"""
-        assert math.isclose(
-                a * a,
-                math.sqrt(a.x**2 + a.y**2 + a.z**2)**2 * np.float32(math.cos(0)),
-                rel_tol=TOLERANCE,
-                abs_tol=TOLERANCE)
+    angle_strategy = st.floats(min_value=-math.pi, max_value=math.pi, allow_nan=False, allow_infinity=False)
+    magnitude_strategy = st.floats(min_value=0.1, max_value=1e5, allow_nan=False, allow_infinity=False)
+
+    @given(r1=magnitude_strategy, r2=magnitude_strategy, 
+       t1=angle_strategy, t2=angle_strategy,
+       p1=angle_strategy, p2=angle_strategy)
+    def test_dot_geometric_3d(self, r1, r2, t1, t2, p1, p2):
+        """Dot product equals |a||b|cos(θ) where θ is the angle between them"""
+        a = Vector3(
+            r1 * math.sin(p1) * math.cos(t1),
+            r1 * math.sin(p1) * math.sin(t1),
+            r1 * math.cos(p1)
+        )
+        b = Vector3(
+            r2 * math.sin(p2) * math.cos(t2),
+            r2 * math.sin(p2) * math.sin(t2),
+            r2 * math.cos(p2)
+        )
+        # cos of angle between two vectors in spherical coords
+        cos_angle = (math.sin(p1)*math.sin(p2)*math.cos(t1-t2) + math.cos(p1)*math.cos(p2))
+        expected = r1 * r2 * cos_angle
+        assert math.isclose(a * b, expected, rel_tol=TOLERANCE, abs_tol=TOLERANCE)
 
     # ============================================================================
     # Dot Product Properties

@@ -17,13 +17,13 @@ namespace anvil::math {
 /**
  * @brief Two-dimensional vector
  *
- * `Vector2` represents a mathematical vector in 2D space with components,
- * `x` and `y`, approximated by single-precision (32-bit) floating-point arithmetic.
+ * `Vector2` represents a mathematical vector in 2D space with components
+ * `x` and `y`, represented using single-precision (32-bit) floating-point arithmetic.
  *
  * Supported operations:
  *      - Vector addition and subtraction
- *      - Scalar multiplication (Using the `*` operator)
- *      - Dot Product (using the `*` operator)
+ *      - Scalar multiplication (using the `*` operator)
+ *      - Dot product (using the `*` operator)
  *      - Negation
  *
  * @note The multiplication operator (`*`) is overloaded:
@@ -50,13 +50,13 @@ static_assert(sizeof(Vector2) == 8, "Vector2 holds two floating-point values of 
 /**
  * @brief Three-dimensional vector
  *
- * `Vector3` represents a mathematical vector in 3D space with components,
- * `x`, `y`, and `z`, approximated by single-precision (32-bit) floating-point arithmetic.
+ * `Vector3` represents a mathematical vector in 3D space with components
+ * `x`, `y`, and `z`, represented using single-precision (32-bit) floating-point arithmetic.
  *
  * Supported operations:
  *      - Vector addition and subtraction
- *      - Scalar multiplication (Using the `*` operator)
- *      - Dot Product (using the `*` operator)
+ *      - Scalar multiplication (using the `*` operator)
+ *      - Dot product (using the `*` operator)
  *      - Negation
  *
  * @note The multiplication operator (`*`) is overloaded:
@@ -94,7 +94,7 @@ inline Vector2 operator+(const Vector2& a, const Vector2& b) {
 }
 
 /**
- * @brief Vector subtraction in two dimentsions
+ * @brief Vector subtraction in two dimensions
  */
 inline Vector2 operator-(const Vector2& a, const Vector2& b) {
         return {a.x - b.x, a.y - b.y};
@@ -129,8 +129,8 @@ inline Vector2 operator*(const Vector2& a, const float scalar) {
 }
 
 /**
- * @brief equality between two-dimensional vectors, using scaling approximations
- */ 
+ * @brief Equality between two-dimensional vectors using scaled approximations
+ */
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
 inline bool operator==(const Vector2& a, const Vector2& b) {
@@ -158,7 +158,7 @@ inline Vector3 operator+(const Vector3& a, const Vector3& b) {
 }
 
 /**
- * @brief Vector subtraction in three dimentsions
+ * @brief Vector subtraction in three dimensions
  */
 inline Vector3 operator-(const Vector3& a, const Vector3& b) {
         return {a.x - b.x, a.y - b.y, a.z - b.z};
@@ -193,7 +193,7 @@ inline Vector3 operator*(const Vector3& a, const float scalar) {
 }
 
 /**
- * @brief equality between three-dimensional vectors, using scaling approximations
+ * @brief Equality between three-dimensional vectors using scaled approximations
  */
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
@@ -208,18 +208,19 @@ inline bool operator==(const Vector3& a, const Vector3& b) {
         const float SCALE_Y = std::max({std::abs(a.y), std::abs(b.y), 1.0F});
         const float SCALE_Z = std::max({std::abs(a.z), std::abs(b.z), 1.0F});
 
-        return ((a.x == b.x) && (a.y == b.y) && (a.z == b.z)) ||
-               ((DIFF_X <= EPSILON * SCALE_X) && (DIFF_Y <= EPSILON * SCALE_Y) && DIFF_Z <= EPSILON * SCALE_Z);
+         return ((a.x == b.x) && (a.y == b.y) && (a.z == b.z)) ||
+                 ((DIFF_X <= EPSILON * SCALE_X) && (DIFF_Y <= EPSILON * SCALE_Y) && (DIFF_Z <= EPSILON * SCALE_Z));
 }
 #pragma GCC diagnostic pop
 
 /**
- * @brief Cross product takes two Vector3 and produces a new vector, which is perpendicular to both.
+ * @brief The cross product takes two `Vector3` values and produces a new vector
+ *        that is perpendicular to both.
  *
- * @param[in] A         The first vector in the cross product
- * @param[in] B         The second vector in the cross product
+ * @param[in] a         The first vector in the cross product
+ * @param[in] b         The second vector in the cross product
  *
- * @return Vector3 perpendicular to both A and B
+ * @return A `Vector3` perpendicular to both `a` and `b`
  *
  * @note The cross product is only defined in three dimensions.
  */

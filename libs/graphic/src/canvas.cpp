@@ -1,12 +1,11 @@
-/* #include "graphic/canvas.hpp"
+#include "graphic/canvas.hpp"
 #include "error/assert.hpp"
 #include "error/status.hpp"
 #include <cstring>
 
-namespace anvil::graphic {
 
 [[nodiscard]]
-Error create(Canvas* const canvas_out, const unsigned long width, const unsigned long height,
+Error anvil::graphic::create(Canvas* const canvas_out, const unsigned long width, const unsigned long height,
              const char fill_char = ' ') {
         // NOTE: Validate width in range [1, MAX_WIDTH]
         INVARIANT(width - 1 < MAX_WIDTH, INVALID_DIMENSIONS);
@@ -21,5 +20,3 @@ Error create(Canvas* const canvas_out, const unsigned long width, const unsigned
         return OK;
 }
 
-}; // namespace anvil::graphic
-*/

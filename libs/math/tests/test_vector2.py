@@ -31,6 +31,48 @@ TOLERANCE = 1e-4
 
 class TestVector2:
     # ============================================================================
+    # Equality Tolerance Properties
+    # ============================================================================
+
+    unit_float_strategy = st.floats(
+        min_value=-1.0,
+        max_value=1.0,
+        allow_nan=False,
+        allow_infinity=False,
+        width=32,
+    )
+
+    unit_vector2_strategy = st.builds(
+        Vector2,
+        unit_float_strategy,
+        unit_float_strategy,
+    )
+
+    @given(a=unit_vector2_strategy,
+           axis=st.sampled_from(["x", "y"]),
+           sign=st.sampled_from([-1.0, 1.0]))
+    def test_equality_inside_tolerance(self, a, axis, sign):
+        """Vectors explicitly inside tolerance compare equal."""
+        delta = sign * 1e-6
+        if axis == "x":
+            b = Vector2(a.x + delta, a.y)
+        else:
+            b = Vector2(a.x, a.y + delta)
+        assert a == b
+
+    @given(a=unit_vector2_strategy,
+           axis=st.sampled_from(["x", "y"]),
+           sign=st.sampled_from([-1.0, 1.0]))
+    def test_equality_outside_tolerance(self, a, axis, sign):
+        """Vectors explicitly outside tolerance compare not equal."""
+        delta = sign * 1e-3
+        if axis == "x":
+            b = Vector2(a.x + delta, a.y)
+        else:
+            b = Vector2(a.x, a.y + delta)
+        assert a != b
+
+    # ============================================================================
     # Vector Addition Properties
     # ============================================================================
     @given(a=vector2_strategy)
@@ -162,11 +204,13 @@ class TestVector2:
         """Dot product is commutative: a * b = b * a"""
         assert math.isclose(a * b, b * a, rel_tol=TOLERANCE, abs_tol=TOLERANCE)
 
-    @given(a=vector2_strategy)
-    def test_vector2_magnitude(self, a):
-        """Vector magnitude squared equals dot product with itself"""
-        assert math.isclose(
-                a * a,
-                math.sqrt(a.x**2 + a.y**2)**2 * np.float32(math.cos(0)),
-                rel_tol=TOLERANCE,
-                abs_tol=TOLERANCE)
+    angle_strategy = st.floats(min_value=-math.pi, max_value=math.pi, allow_nan=False, allow_infinity=False)
+    magnitude_strategy = st.floats(min_value=0.1, max_value=1e5, allow_nan=False, allow_infinity=False)
+
+    @given(r1=magnitude_strategy, r2=magnitude_strategy, t1=angle_strategy, t2=angle_strategy)
+    def test_dot_geometric(self, r1, r2, t1, t2):
+        """Dot product equals |a||b|cos(θ) where θ is the angle between them"""
+        a = Vector2(r1 * math.cos(t1), r1 * math.sin(t1))
+        b = Vector2(r2 * math.cos(t2), r2 * math.sin(t2))
+        expected = r1 * r2 * math.cos(t1 - t2)
+        assert math.isclose(a * b, expected, rel_tol=TOLERANCE, abs_tol=TOLERANCE)
