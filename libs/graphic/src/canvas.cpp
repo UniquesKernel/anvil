@@ -3,10 +3,9 @@
 #include "error/status.hpp"
 #include <cstring>
 
-
 [[nodiscard]]
 Error anvil::graphic::create(Canvas* const canvas_out, const unsigned long width, const unsigned long height,
-             const char fill_char = ' ') {
+                             const char fill_char = ' ') {
         // NOTE: Validate width in range [1, MAX_WIDTH]
         INVARIANT(width - 1 < MAX_WIDTH, INVALID_DIMENSIONS);
 
@@ -20,3 +19,11 @@ Error anvil::graphic::create(Canvas* const canvas_out, const unsigned long width
         return OK;
 }
 
+[[nodiscard]]
+Error anvil::graphic::set(Canvas* const canvas_out, const unsigned long index, const char character) {
+        INVARIANT(canvas_out == nullptr, NULL_PARAMETER);
+        INVARIANT(index < (MAX_HEIGHT * MAX_WIDTH), INVALID_ARGUMENTS);
+
+        canvas_out->buffer[index] = character;
+        return OK;
+}

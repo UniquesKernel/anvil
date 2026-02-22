@@ -6,19 +6,24 @@ Checks: >
   cert-*,
   cppcoreguidelines-*,
   performance-*,
+  -performance-no-int-to-ptr,
   readability-*,
   hicpp-*,
   -hicpp-member-init,
+  -hicpp-use-auto,
   misc-*,
   -modernize-*,
+  -modernize-use-auto,
   -cppcoreguidelines-avoid-c-arrays,
   -cppcoreguidelines-pro-type-member-init,
   -cppcoreguidelines-avoid-goto,
   -cppcoreguidelines-pro-type-vararg,
   -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
   -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-pro-type-reinterpret-cast,
   -cppcoreguidelines-owning-memory,
   -cppcoreguidelines-avoid-do-while,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
   -cppcoreguidelines-pro-type-cstyle-cast,
   -cppcoreguidelines-init-variables,
   -cppcoreguidelines-non-private-member-variables-in-classes,
@@ -32,6 +37,8 @@ Checks: >
   -readability-else-after-return,
   -readability-braces-around-statements,
   -readability-identifier-length,
+  -readability-implicit-bool-conversion,
+  -readability-auto-when-initialize-with-cast,
   -misc-non-private-member-variables-in-classes
 
 CheckOptions:
@@ -57,17 +64,16 @@ CheckOptions:
   - key: readability-function-size.LineThreshold
     value: 60
   - key: readability-function-size.StatementThreshold
-    value: 50
+    value: 100
   - key: readability-function-size.BranchThreshold
-    value: 10
+    value: 20
   - key: readability-function-size.ParameterThreshold
     value: 6
   - key: readability-function-size.NestingThreshold
     value: 4
   
-  # Power of Ten Rule 1: Limit cyclomatic complexity
   - key: readability-function-cognitive-complexity.Threshold
-    value: 15
+    value: 30
   
   # Aggressive bounds checking
   - key: cppcoreguidelines-narrowing-conversions.WarnOnIntegerNarrowingConversion

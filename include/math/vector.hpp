@@ -208,8 +208,8 @@ inline bool operator==(const Vector3& a, const Vector3& b) {
         const float SCALE_Y = std::max({std::abs(a.y), std::abs(b.y), 1.0F});
         const float SCALE_Z = std::max({std::abs(a.z), std::abs(b.z), 1.0F});
 
-         return ((a.x == b.x) && (a.y == b.y) && (a.z == b.z)) ||
-                 ((DIFF_X <= EPSILON * SCALE_X) && (DIFF_Y <= EPSILON * SCALE_Y) && (DIFF_Z <= EPSILON * SCALE_Z));
+        return ((a.x == b.x) && (a.y == b.y) && (a.z == b.z)) ||
+               ((DIFF_X <= EPSILON * SCALE_X) && (DIFF_Y <= EPSILON * SCALE_Y) && (DIFF_Z <= EPSILON * SCALE_Z));
 }
 #pragma GCC diagnostic pop
 

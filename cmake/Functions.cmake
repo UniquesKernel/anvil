@@ -28,7 +28,6 @@ function(anvil_set_strict_warnings target_name)
             -Wundef
             -Wnull-dereference
             -Wdouble-promotion
-            -Wold-style-cast
             -Wcast-align -Wcast-qual
             -Woverloaded-virtual
             -Wnon-virtual-dtor
@@ -62,6 +61,7 @@ function(anvil_set_strict_warnings target_name)
             -Wlogical-op
             -Wformat-signedness
             -Warray-bounds=2  # GCC supports level 2
+            -Wuseless-cast
         )
     endif()
 
@@ -72,32 +72,12 @@ function(anvil_set_strict_warnings target_name)
             -Wunreachable-code-break
             -Wunreachable-code-return
             -Warray-bounds  # Clang only supports level 1 (implicit)
+            -Wloop-analysis
+            -Wconditional-uninitialized
+            -Wcomma
+            -Wover-aligned
         )
     endif()
-endfunction()
-
-function(anvil_enable_static_analysis target_name)
-  # clang-tidy
-  find_program(CLANG_TIDY_EXE NAMES clang-tidy)
-  if(CLANG_TIDY_EXE)
-    set_target_properties(${target_name} PROPERTIES
-      CXX_CLANG_TIDY "${CLANG_TIDY_EXE};--config-file=${CMAKE_SOURCE_DIR}/.clang-tidy;--warnings-as-errors=*;--extra-arg=-Wno-unknown-warning-option;--extra-arg=-Wno-error=unknown-warning-option"
-    )
-    message(STATUS "clang-tidy enabled for ${target_name}")
-  else()
-    message(WARNING "clang-tidy not found")
-  endif()
-
-  # cppcheck
-  find_program(CPPCHECK_EXE NAMES cppcheck)
-  if(CPPCHECK_EXE)
-    set_target_properties(${target_name} PROPERTIES
-      CXX_CPPCHECK "${CPPCHECK_EXE};--enable=all;--inline-suppr;--error-exitcode=1;--suppress=missingIncludeSystem;--suppress=unmatchedSuppression"
-    )
-    message(STATUS "cppcheck enabled for ${target_name}")
-  else()
-    message(WARNING "cppcheck not found")
-  endif()
 endfunction()
 
 function(anvil_enable_static_analysis_root)
@@ -127,6 +107,7 @@ function(anvil_enable_static_analysis_root)
         --error-exitcode=1
         --suppress=missingIncludeSystem
         --suppress=unmatchedSuppression
+        --suppress=unusedFunction
         --project=${CMAKE_BINARY_DIR}/compile_commands.json
       WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
       COMMENT "Running cppcheck (compile_commands.json)"

@@ -62,6 +62,22 @@ static_assert(sizeof(Canvas) == (2073616), "Canvas size must be 2073616 bytes");
  */
 Error create(Canvas* canvas_out, unsigned long width, unsigned long height, char fill_char);
 
+/**
+ * @brief Set the value of the buffer index to `character`
+ *
+ * @pre canvas_out != null
+ * @pre index < MAX_WIDTH * MAX_HEIGHT
+ *
+ * @post canvas_out.buffer[index] set to character
+ *
+ * @param[out] canvas_out       The canvas whose buffer to write to
+ * @param[in] index             The position in the buffer to write to
+ * @param[in] character         The character to write to the canvas buffer
+ *
+ * @return `Error` code enumeration with OK indicating a successful write
+ */
+Error set(Canvas* canvas_out, unsigned long index, char character);
+
 } // namespace anvil::graphic
 
 #endif // !ANVIL_GRAPHIC_CANVAS_HPP

@@ -15,6 +15,7 @@ anvil_set_strict_warnings(${MODULE_NAME})
 
 if(BUILD_TESTING)
   anvil_find_pybind11()
+
   set(TEST_MODULE ${MODULE_NAME}_module)
   pybind11_add_module(${TEST_MODULE}
     bindings/canvas_bindings.cpp
@@ -41,9 +42,9 @@ if(BUILD_TESTING)
   )
 
   add_custom_command(TARGET ${TEST_MODULE} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:math_module>
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${TEST_MODULE}>
             ${CMAKE_CURRENT_SOURCE_DIR}/tests/
-    COMMENT "Copying math_module to tests directory"
+    COMMENT "Copying graphic_module to tests directory"
   )
 
   add_test(

@@ -2,6 +2,12 @@
 #define ANVIL_ERROR_STATUS_HPP
 
 #include <cstdint>
-enum Error : std::uint8_t { OK = 0, INVALID_DIMENSIONS = 1 };
+enum Error : std::uint8_t {
+        OK                 = 0,
+        INVALID_DIMENSIONS = 1,
+        INVALID_ARGUMENTS  = 2,
+        NULL_PARAMETER     = 3,
+        OUT_OF_MEMORY      = 4,
+};
 
 #endif // !ANVIL_ERROR_STATUS_HPP
