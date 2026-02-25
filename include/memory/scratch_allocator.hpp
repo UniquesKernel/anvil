@@ -18,6 +18,7 @@
 #ifndef ANVIL_MEMORY_SCRATCH_ALLOCATOR_HPP
 #define ANVIL_MEMORY_SCRATCH_ALLOCATOR_HPP
 #include "error/status.hpp"
+#include <cstddef>
 
 namespace anvil::memory::scratch_allocator {
 

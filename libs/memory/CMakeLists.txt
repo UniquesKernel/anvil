@@ -4,6 +4,7 @@ set(MODULE_NAME memory)
 set(MODULE_SOURCE 
     src/memory_allocation.cpp
     src/scratch_allocator.cpp
+    src/stack_allocator.cpp
     src/utility.cpp
 )
 
@@ -42,8 +43,10 @@ if(BUILD_TESTING)
 
     # Create Python module using pybind11
     pybind11_add_module(anvil_memory 
-        bindings/memory_bindings.cpp 
-        ${MODULE_SOURCE}
+      bindings/memory_bindings.cpp
+      bindings/scratch_bindings.cpp 
+      bindings/stack_bindings.cpp 
+      ${MODULE_SOURCE}
     )
     
     target_include_directories(anvil_memory
@@ -64,15 +67,24 @@ if(BUILD_TESTING)
     )
 
     add_test(
-      NAME ${MODULE_NAME}_pytest
-      COMMAND ${Python3_EXECUTABLE} -m pytest -s -v "${CMAKE_CURRENT_SOURCE_DIR}/tests/"
+      NAME scratch_allocator_pytest
+      COMMAND ${Python3_EXECUTABLE} -m pytest -s -v "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_scratch_allocator.py"
       WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/tests"
     )
-    set_tests_properties(${MODULE_NAME}_pytest PROPERTIES
+
+    set_tests_properties(scratch_allocator_pytest PROPERTIES
       ENVIRONMENT "HYPOTHESIS_MAX_EXAMPLES=1000;PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tests:${CMAKE_SOURCE_DIR}/libs"
     )
 
+    add_test(
+      NAME stack_allocator_pytest
+      COMMAND ${Python3_EXECUTABLE} -m pytest -s -v "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_stack_allocator.py"
+      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/tests"
+    )
 
+    set_tests_properties(stack_allocator_pytest PROPERTIES
+      ENVIRONMENT "HYPOTHESIS_MAX_EXAMPLES=1000;PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tests:${CMAKE_SOURCE_DIR}/libs"
+    )
 endif()
 
 install(TARGETS ${MODULE_NAME}

@@ -1,69 +1,36 @@
 #include "error/status.hpp"
 #include "memory/constants.hpp"
-#include "memory/scratch_allocator.hpp"
-#include <cstddef>
-#include <pybind11/cast.h>
+#include <cstdint>
 #include <pybind11/detail/common.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 
-namespace py                      = pybind11;
+void bind_scratch_allocator(pybind11::module_& module);
+void bind_stack_allocator(pybind11::module_& module);
 
-constexpr const char* SCRATCH_TAG = "ScratchAllocator";
-constexpr const char* MEM_TAG     = "memory";
+namespace py = pybind11;
 
 PYBIND11_MODULE(anvil_memory, m) {
-        m.doc() = "Anvil memory management library";
+        m.doc() = "Anvil Memory Library";
+
+        bind_scratch_allocator(m);
+        bind_stack_allocator(m);
 
         // Error codes
         py::enum_<Error>(m, "Error")
             .value("OK", OK)
             .value("INVALID_ARGUMENTS", INVALID_ARGUMENTS)
             .value("NULL_PARAMETER", NULL_PARAMETER)
+            .value("OUT_OF_MEMORY", OUT_OF_MEMORY)
             .export_values();
 
         // Constants
-        m.attr("MIN_ALIGNMENT") = py::int_(anvil::memory::MIN_ALIGNMENT);
-        m.attr("MAX_ALIGNMENT") = py::int_(anvil::memory::MAX_ALIGNMENT);
-        m.attr("MAX_CAPACITY")  = py::int_(anvil::memory::MAX_CAPACITY);
-
-        // ========== ScratchAllocator ==========
-        m.def(
-            "scratch_allocator_create",
-            [](const size_t capacity, const size_t alignment) {
-                    anvil::memory::scratch_allocator::ScratchAllocator* allocator = nullptr;
-                    const Error ERR = anvil::memory::scratch_allocator::create(&allocator, capacity, alignment);
-                    if (ERR != OK) {
-                            return py::make_tuple(ERR, py::none());
-                    }
-                    return py::make_tuple(ERR,
-                                          py::capsule(allocator, "anvil::memory::scratch_allocator::ScratchAllocator"));
-            },
-            py::arg("capacity"), py::arg("alignment"));
+        m.attr("MIN_ALIGNMENT")   = py::int_(anvil::memory::MIN_ALIGNMENT);
+        m.attr("MAX_ALIGNMENT")   = py::int_(anvil::memory::MAX_ALIGNMENT);
+        m.attr("MAX_CAPACITY")    = py::int_(anvil::memory::MAX_CAPACITY);
+        m.attr("MAX_STACK_DEPTH") = py::int_(anvil::memory::MAX_STACK_DEPTH);
 
         m.def(
-            "scratch_allocator_destroy",
-            [](py::capsule& allocator) {
-                    anvil::memory::scratch_allocator::ScratchAllocator* alloc =
-                        static_cast<anvil::memory::scratch_allocator::ScratchAllocator*>(allocator.get_pointer());
-
-                    if (alloc == nullptr || alloc == (anvil::memory::scratch_allocator::ScratchAllocator*)0x1) {
-                            // NOTE: Rather than early return with the proper error code which would test the
-                            // binding layer, we manufacture the same error code using C++ code thus exercising
-                            // the proper path in the actual destroy function
-                            anvil::memory::scratch_allocator::ScratchAllocator* null_alloc = nullptr;
-                            return anvil::memory::scratch_allocator::destroy(&null_alloc);
-                    }
-
-                    const Error ERR = anvil::memory::scratch_allocator::destroy(&alloc);
-                    if (ERR != OK) {
-                            return ERR;
-                    }
-
-                    // NOTE: set_pointer does not accept nullptr, so for testing sake we use 0x1 as
-                    // the nullptr
-                    allocator.set_pointer(reinterpret_cast<void*>(0x1));
-                    return ERR;
-            },
-            py::arg("allocator"));
+            "ptr_to_int", [](py::capsule& cap) { return reinterpret_cast<uintptr_t>(cap.get_pointer()); },
+            py::arg("ptr"), "Convert a pointer capsule to integer address");
 }

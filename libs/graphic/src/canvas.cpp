@@ -24,6 +24,7 @@ Error anvil::graphic::set(Canvas* const canvas_out, const unsigned long index, c
         INVARIANT(canvas_out == nullptr, NULL_PARAMETER);
         INVARIANT(index < (MAX_HEIGHT * MAX_WIDTH), INVALID_ARGUMENTS);
 
-        canvas_out->buffer[index] = character;
+        (void)canvas_out;
+        (void)character;
         return OK;
 }

@@ -1,45 +1,44 @@
 #include "error/status.hpp"
 #include "memory/scratch_allocator.hpp"
+#include <cstddef>
 #include <cstdio>
 
-#define DEFER(func) __attribute__((cleanup(func)))
-
 namespace {
-void cleanup_allocator(anvil::memory::scratch_allocator::ScratchAllocator** a) noexcept {
-        (void)anvil::memory::scratch_allocator::destroy(a);
+void cleanup_allocator(anvil::memory::scratch_allocator::ScratchAllocator** allocator) {
+        (void)anvil::memory::scratch_allocator::destroy(allocator);
 }
 } // namespace
 
 int main(void) {
-        const int                                                                    ARRAYSIZE = 100;
+        const int                                   NUM_ALLOCS = 10000000;
+        const size_t                                ALLOC_SIZE = 8; // tiny allocations
 
-        DEFER(cleanup_allocator) anvil::memory::scratch_allocator::ScratchAllocator* allocator = nullptr;
-        if (anvil::memory::scratch_allocator::create(&allocator, sizeof(int) * ARRAYSIZE, alignof(int)) != OK) {
-                printf("MEMORY ERROR\n");
+        // Create allocator with enough space
+        __attribute__((cleanup(cleanup_allocator))) anvil::memory::scratch_allocator::ScratchAllocator* allocator =
+            nullptr;
+        const Error ERR = anvil::memory::scratch_allocator::create(&allocator, ALLOC_SIZE * NUM_ALLOCS, alignof(int));
+
+        if (ERR != OK) {
+                printf("ERROR: %i\n", ERR);
                 return 1;
         }
 
-        int* arr = reinterpret_cast<int*>(anvil::memory::scratch_allocator::alloc(allocator, sizeof(int) * (ARRAYSIZE),
-                                                                                  alignof(int)));
-
-        if (arr == nullptr) {
-                printf("ALLOCATION FAILURE");
-                return 1;
-        }
-
-        for (int i = 0; i < ARRAYSIZE; i++) {
-                arr[i] = i;
-        }
-
-        for (int i = 0; i < ARRAYSIZE; i++) {
-                printf("%i\n", arr[i]);
-        }
-
+        // Benchmark: many tiny allocations
         int sum = 0;
-        for (int i = 0; i < ARRAYSIZE; i++) {
-                sum += arr[i];
+        for (int i = 0; i < NUM_ALLOCS; i++) {
+                int* ptr = reinterpret_cast<int*>(anvil::memory::scratch_allocator::alloc(allocator, ALLOC_SIZE,
+                                                                                          alignof(int)));
+
+                if (ptr == nullptr) {
+                        printf("ALLOCATION FAILURE at %i\n", i);
+                        return 1;
+                }
+
+                *ptr  = i;
+                sum  += *ptr;
         }
 
-        printf("SUM: %i", sum);
+        printf("SUM: %i\n", sum);
+
         return 0;
 }

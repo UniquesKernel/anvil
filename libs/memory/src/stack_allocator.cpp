@@ -1,4 +1,4 @@
-#include "memory/scratch_allocator.hpp"
+#include "memory/stack_allocator.hpp"
 #include "error/assert.hpp"
 #include "error/status.hpp"
 #include "internal/utility.hpp"
@@ -6,12 +6,11 @@
 #include "memory/memory_allocation.hpp"
 #include <cstddef>
 #include <cstdint>
-#include <cstdio>
 
-namespace anvil::memory::scratch_allocator {
+namespace anvil::memory::stack_allocator {
 
 [[nodiscard]]
-Error create(ScratchAllocator** allocator_out, const std::size_t capacity, const std::size_t alignment) noexcept {
+Error create(StackAllocator** allocator_out, const std::size_t capacity, const std::size_t alignment) noexcept {
         INVARIANT(allocator_out != nullptr, NULL_PARAMETER);
         INVARIANT(*allocator_out == nullptr, NULL_PARAMETER);
         INVARIANT(capacity > 0, INVALID_ARGUMENTS);
@@ -20,21 +19,22 @@ Error create(ScratchAllocator** allocator_out, const std::size_t capacity, const
         INVARIANT(alignment >= MIN_ALIGNMENT, INVALID_ARGUMENTS);
         INVARIANT(alignment <= MAX_ALIGNMENT, INVALID_ARGUMENTS);
 
-        const size_t TOTAL_MEMORY_NEEDED = capacity + sizeof(ScratchAllocator) + alignment - 1;
+        const size_t TOTAL_MEMORY_NEEDED = capacity + sizeof(StackAllocator) + alignment - 1;
 
         void*        mem                 = nullptr;
         if (anvil::memory::anvil_memory_alloc_eager(&mem, TOTAL_MEMORY_NEEDED, alignment) != OK) {
                 return OUT_OF_MEMORY;
         }
 
-        *allocator_out                  = static_cast<ScratchAllocator*>(mem);
+        *allocator_out                  = static_cast<StackAllocator*>(mem);
 
-        const uintptr_t RAW_BASE        = reinterpret_cast<uintptr_t>(*allocator_out) + sizeof(ScratchAllocator);
+        const uintptr_t RAW_BASE        = reinterpret_cast<uintptr_t>(*allocator_out) + sizeof(StackAllocator);
         const uintptr_t ALIGNED_BASE    = (RAW_BASE + (alignment - 1)) & ~(alignment - 1);
 
         (*allocator_out)->base          = reinterpret_cast<void*>(ALIGNED_BASE);
         (*allocator_out)->capacity      = capacity;
         (*allocator_out)->allocated     = 0;
+        (*allocator_out)->stack_depth   = 0;
 
         const size_t ACTUALLY_AVAILABLE = reinterpret_cast<uintptr_t>((*allocator_out)->base) + capacity -
                                           reinterpret_cast<uintptr_t>(*allocator_out);
@@ -45,7 +45,7 @@ Error create(ScratchAllocator** allocator_out, const std::size_t capacity, const
 }
 
 [[nodiscard]]
-Error destroy(ScratchAllocator** allocator) noexcept {
+Error destroy(StackAllocator** allocator) noexcept {
         INVARIANT(allocator != nullptr, NULL_PARAMETER);
         INVARIANT(*allocator != nullptr, NULL_PARAMETER);
 
@@ -59,7 +59,19 @@ Error destroy(ScratchAllocator** allocator) noexcept {
 }
 
 [[nodiscard]]
-void* alloc(ScratchAllocator* const allocator, const size_t allocation_size, const size_t alignment) noexcept {
+Error reset(StackAllocator* const allocator) noexcept {
+        INVARIANT(allocator != nullptr, NULL_PARAMETER);
+        GUARANTEE(allocator->base != nullptr);
+
+        // memset(allocator->base, 0x0, allocator->allocated);
+        allocator->allocated   = 0;
+        allocator->stack_depth = 0;
+
+        return OK;
+}
+
+[[nodiscard]]
+void* alloc(StackAllocator* const allocator, const size_t allocation_size, const size_t alignment) noexcept {
         INVARIANT(allocator != nullptr, nullptr);
         INVARIANT(allocation_size > 0, nullptr);
         INVARIANT(allocation_size <= MAX_CAPACITY, nullptr);
@@ -67,6 +79,7 @@ void* alloc(ScratchAllocator* const allocator, const size_t allocation_size, con
         INVARIANT(MIN_ALIGNMENT <= alignment, nullptr);
         INVARIANT(alignment <= MAX_ALIGNMENT, nullptr);
 
+        GUARANTEE(allocator->base != nullptr);
         GUARANTEE(allocator->allocated <= allocator->capacity);
 
         const uintptr_t CURRENT_ADDR     = reinterpret_cast<uintptr_t>(allocator->base) + allocator->allocated;
@@ -84,14 +97,30 @@ void* alloc(ScratchAllocator* const allocator, const size_t allocation_size, con
 }
 
 [[nodiscard]]
-Error reset(ScratchAllocator* const allocator) noexcept {
+Error record(StackAllocator* const allocator) noexcept {
         INVARIANT(allocator != nullptr, NULL_PARAMETER);
-        GUARANTEE(allocator->base);
+        GUARANTEE(allocator->base != nullptr);
 
-        // memset(allocator->base, 0x0, allocator->allocated);
-        allocator->allocated = 0;
+        INVARIANT(allocator->stack_depth < MAX_STACK_DEPTH, INVALID_ARGUMENTS);
+
+        allocator->stack[allocator->stack_depth] = allocator->allocated;
+        allocator->stack_depth++;
 
         return OK;
 }
 
-} // namespace anvil::memory::scratch_allocator
+[[nodiscard]]
+Error unwind(StackAllocator* const allocator) noexcept {
+        INVARIANT(allocator != nullptr, NULL_PARAMETER);
+        GUARANTEE(allocator->base != nullptr);
+        INVARIANT(allocator->stack_depth > 0, INVALID_ARGUMENTS);
+        GUARANTEE(allocator->stack_depth <= MAX_STACK_DEPTH);
+
+        const uintptr_t RESTORED_ALLOCATED = allocator->stack[allocator->stack_depth - 1];
+        allocator->allocated               = RESTORED_ALLOCATED;
+        allocator->stack_depth--;
+
+        return OK;
+}
+
+} // namespace anvil::memory::stack_allocator

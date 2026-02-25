@@ -44,6 +44,7 @@ function(anvil_set_strict_warnings target_name)
             -Winit-self
             -fno-exceptions -fno-rtti
             -fstack-protector-strong
+            -O3
         )
 
         # Runtime fortification (both compilers)
