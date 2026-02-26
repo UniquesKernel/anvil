@@ -34,7 +34,7 @@ configure:
 	@cmake -B $(BUILD_DIR) $(CMAKE_OPTS) .
 
 build: configure
-	@cmake --build $(BUILD_DIR)
+	@cmake --build $(BUILD_DIR) -j$(nproc)
 
 test: build
 	@cd $(BUILD_DIR) && ctest --output-on-failure
