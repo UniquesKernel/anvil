@@ -3,4 +3,3 @@ pytest
 hypothesis
 numpy
 python-lsp-server
-

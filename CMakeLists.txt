@@ -10,6 +10,18 @@ include(CompilerStandards)
 include(Functions)
 anvil_enable_static_analysis_root()
 
+option(ENABLE_COVERAGE "Enable coverage reporting" OFF)
+
+if(ENABLE_COVERAGE)
+  if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    add_compile_options(--coverage -O0 -g)
+    add_link_options(--coverage)
+    message(STATUS "Coverage enabled")
+  else()
+    message(WARNING "Coverage requested but compiler is not GCC or Clang")
+  endif()
+endif()
+
 if(BUILD_TESTING)
   enable_testing()
   if(DEFINED Python3_EXECUTABLE)

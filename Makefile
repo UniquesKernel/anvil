@@ -14,7 +14,7 @@ endif
 # Prefer the project venv Python when available so tests use installed deps.
 VENV_PY = $(VENV_DIR)/bin/python
 ifneq ($(wildcard $(VENV_PY)),)
-	CMAKE_OPTS += -DPython3_EXECUTABLE=$(abspath $(VENV_PY))
+	CMAKE_OPTS += -DPython3_EXECUTABLE=$(abspath $(VENV_PY)) -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=ON
 endif
 
 help:
@@ -44,3 +44,4 @@ docs:
 
 clean:
 	@rm -rf $(BUILD_DIR) docs/doxygen
+	@find . -name ".hypothesis" -print0 | xargs -0 rm -r
