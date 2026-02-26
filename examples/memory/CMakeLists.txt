@@ -2,7 +2,6 @@ set(MODULE_NAME memory_example)
 
 include(${CMAKE_SOURCE_DIR}/cmake/Functions.cmake)
 
-
 add_executable(memory_example memory_example.cpp)
 
 anvil_set_strict_warnings(${MODULE_NAME})
@@ -33,6 +32,7 @@ set_target_properties(memory_example_malloc PROPERTIES
     CXX_CLANG_TIDY ""
 )
 
+# stack
 add_executable(stack_example stack_memory.cpp)
 
 anvil_set_strict_warnings(${MODULE_NAME})
@@ -43,4 +43,14 @@ target_include_directories(stack_example
 )
 target_link_libraries(stack_example PRIVATE memory)
 
+# lazy stack
 
+add_executable(lazy_stack_example lazy_stack_memory.cpp)
+
+anvil_set_strict_warnings(${MODULE_NAME})
+
+target_include_directories(lazy_stack_example
+  PUBLIC
+  ${CMAKE_SOURCE_DIR}/include
+)
+target_link_libraries(lazy_stack_example PRIVATE memory)
