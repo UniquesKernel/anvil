@@ -38,6 +38,10 @@ class ScratchAllocatorModel(RuleBasedStateMachine):
         capacity, alignment = config
         err, allocator = scratch_allocator_create(capacity,alignment)
 
+        if err != Error.OK or allocator is None:
+            self.isValid = False
+            return
+
         assert err == Error.OK
         assert allocator is not None
 
@@ -52,6 +56,10 @@ class ScratchAllocatorModel(RuleBasedStateMachine):
         capacity, alignment = config
         err, allocator = scratch_allocator_create(capacity, alignment)
 
+        if err != Error.OK or allocator is None:
+            self.isValid = False
+            return
+
         assert err == Error.OK
         assert allocator is not None
 
@@ -61,6 +69,7 @@ class ScratchAllocatorModel(RuleBasedStateMachine):
         self.alignment = alignment
 
     @rule(config=allocator_config())
+    @precondition(lambda self: self.allocator is not None)
     def alloc(self, config):
         allocation_size, alignment = config
         ptr, _ = scratch_allocator_alloc(self.allocator, allocation_size, alignment)
@@ -74,6 +83,7 @@ class ScratchAllocatorModel(RuleBasedStateMachine):
             self.allocated = self.allocated + allocation_size
 
     @rule()
+    @precondition(lambda self: self.allocator is not None)
     def allocator_reset(self):
         err = scratch_allocator_reset(self.allocator)
 
@@ -85,6 +95,7 @@ class ScratchAllocatorModel(RuleBasedStateMachine):
             assert err == Error.NULL_PARAMETER
 
     @rule()
+    @precondition(lambda self: self.allocator is not None)
     def destroy(self): 
         err = scratch_allocator_destroy(self.allocator)
         if (self.isValid == True):

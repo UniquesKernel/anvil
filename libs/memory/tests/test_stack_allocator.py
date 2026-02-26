@@ -39,6 +39,10 @@ class StackAllocatorModel(RuleBasedStateMachine):
 
         err, allocator = stack_allocator_create(capacity,alignment)
 
+        if err != Error.OK or allocator is None:
+            self.isValid = False
+            return
+
         assert allocator is not None
         assert err == Error.OK
 
@@ -56,6 +60,10 @@ class StackAllocatorModel(RuleBasedStateMachine):
         capacity, alignment = config
         err, allocator = stack_allocator_create(capacity, alignment)
 
+        if err != Error.OK or allocator is None:
+            self.isValid = False
+            return
+
         assert allocator is not None
         assert err == Error.OK
 
@@ -68,6 +76,7 @@ class StackAllocatorModel(RuleBasedStateMachine):
         self.allocated = 0
 
     @rule(config = allocator_config())
+    @precondition(lambda self: self.allocator is not None)
     def alloc(self, config):
         allocation_size, alignment = config
         ptr, _ = stack_allocator_alloc(self.allocator, allocation_size, alignment)
@@ -81,6 +90,7 @@ class StackAllocatorModel(RuleBasedStateMachine):
             self.allocated = self.allocated + allocation_size
 
     @rule()
+    @precondition(lambda self: self.allocator is not None)
     def allocator_reset(self):
         err = stack_allocator_reset(self.allocator)
         self.allocations.clear()
@@ -95,6 +105,7 @@ class StackAllocatorModel(RuleBasedStateMachine):
 
 
     @rule()
+    @precondition(lambda self: self.allocator is not None)
     def record(self):
         err = stack_allocator_record(self.allocator)
         
@@ -111,6 +122,7 @@ class StackAllocatorModel(RuleBasedStateMachine):
             self.epoch += 1
 
     @rule()
+    @precondition(lambda self: self.allocator is not None)
     def unwind(self):
         err = stack_allocator_unwind(self.allocator)
     
@@ -128,6 +140,7 @@ class StackAllocatorModel(RuleBasedStateMachine):
         self.allocated -= epoch_size
 
     @rule()
+    @precondition(lambda self: self.allocator is not None)
     def destroy(self): 
         err = stack_allocator_destroy(self.allocator)
         if (self.isValid == True):

@@ -1,5 +1,5 @@
 pybind11
 pytest
-hypothesis
+hypothesis==6.151.9
 numpy
 python-lsp-server

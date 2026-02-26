@@ -24,7 +24,8 @@ sudo apt-get install -y \
   libpapi-dev \
   clang-tidy \
   cppcheck \
-  iwyu
+  iwyu \
+  ccache
 if [[ "${CC:-}" == *clang* ]] || [[ "${CXX:-}" == *clang* ]]; then
   sudo apt-get install -y clang
 fi

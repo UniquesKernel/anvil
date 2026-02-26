@@ -12,14 +12,9 @@ anvil_enable_static_analysis_root()
 
 option(ENABLE_COVERAGE "Enable coverage reporting" OFF)
 
-if(ENABLE_COVERAGE)
-  if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    add_compile_options(--coverage -O0 -g)
-    add_link_options(--coverage)
-    message(STATUS "Coverage enabled")
-  else()
-    message(WARNING "Coverage requested but compiler is not GCC or Clang")
-  endif()
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
 endif()
 
 if(BUILD_TESTING)

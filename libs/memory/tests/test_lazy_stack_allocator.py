@@ -50,6 +50,14 @@ class DifferentialAllocatorModel(RuleBasedStateMachine):
         lazy_err, lazy_allocator = lazy_stack_allocator_create(capacity, alignment)
         stack_err, stack_allocator = stack_allocator_create(capacity, alignment)
 
+        if lazy_err != Error.OK or self.lazy_allocator is None:
+            self.isValid = False
+            return
+
+        if stack_err != Error.OK or self.stack_allocator is None:
+            self.isValid = False
+            return
+
         assert lazy_err == stack_err
         assert (lazy_allocator is None) == (stack_allocator is None)
 
@@ -71,6 +79,14 @@ class DifferentialAllocatorModel(RuleBasedStateMachine):
         lazy_err, lazy_allocator = lazy_stack_allocator_create(capacity, alignment)
         stack_err, stack_allocator = stack_allocator_create(capacity, alignment)
 
+        if lazy_err != Error.OK or self.lazy_allocator is None:
+            self.isValid = False
+            return
+
+        if stack_err != Error.OK or self.stack_allocator is None:
+            self.isValid = False
+            return
+
         assert lazy_err == stack_err
         assert (lazy_allocator is not None) == (stack_allocator is not None)
 
@@ -85,6 +101,7 @@ class DifferentialAllocatorModel(RuleBasedStateMachine):
         self.stack.clear()
 
     @rule(config=allocator_config())
+    @precondition(lambda self: (self.lazy_allocator is not None) and (self.stack_allocator is not None))
     def alloc(self, config):
         allocation_size, alignment = config
 
@@ -99,6 +116,7 @@ class DifferentialAllocatorModel(RuleBasedStateMachine):
             self.allocated = self.allocated + allocation_size
 
     @rule()
+    @precondition(lambda self: (self.lazy_allocator is not None) and (self.stack_allocator is not None))
     def allocator_reset(self):
         lazy_err = lazy_stack_allocator_reset(self.lazy_allocator)
         stack_err = stack_allocator_reset(self.stack_allocator)
@@ -114,6 +132,7 @@ class DifferentialAllocatorModel(RuleBasedStateMachine):
             assert lazy_err == stack_err 
 
     @rule()
+    @precondition(lambda self: (self.lazy_allocator is not None) and (self.stack_allocator is not None))
     def record(self):
         lazy_err = lazy_stack_allocator_record(self.lazy_allocator)
         stack_err = stack_allocator_record(self.stack_allocator)
@@ -133,6 +152,7 @@ class DifferentialAllocatorModel(RuleBasedStateMachine):
         self.epoch += 1
 
     @rule()
+    @precondition(lambda self: (self.lazy_allocator is not None) and (self.stack_allocator is not None))
     def unwind(self):
         lazy_err = lazy_stack_allocator_unwind(self.lazy_allocator)
         stack_err = stack_allocator_unwind(self.stack_allocator)
@@ -154,6 +174,7 @@ class DifferentialAllocatorModel(RuleBasedStateMachine):
         self.allocated -= epoch_size
 
     @rule()
+    @precondition(lambda self: (self.lazy_allocator is not None) and (self.stack_allocator is not None))
     def destroy(self):
         lazy_err = lazy_stack_allocator_destroy(self.lazy_allocator)
         stack_err = stack_allocator_destroy(self.stack_allocator)

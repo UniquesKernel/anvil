@@ -15,6 +15,7 @@ Error create(LazyStackAllocator** allocator_out, const std::size_t capacity, con
         INVARIANT(*allocator_out == nullptr, NULL_PARAMETER);
         INVARIANT(capacity > 0, INVALID_ARGUMENTS);
         INVARIANT(capacity <= MAX_CAPACITY, INVALID_ARGUMENTS);
+        INVARIANT(capacity >= alignment, INVALID_ARGUMENTS);
         INVARIANT(is_power_of_two(alignment), INVALID_ARGUMENTS);
         INVARIANT(alignment >= MIN_ALIGNMENT, INVALID_ARGUMENTS);
         INVARIANT(alignment <= MAX_ALIGNMENT, INVALID_ARGUMENTS);
