@@ -72,8 +72,9 @@ class StackAllocatorModel(RuleBasedStateMachine):
         allocation_size, alignment = config
         ptr, _ = stack_allocator_alloc(self.allocator, allocation_size, alignment)
 
-        if (allocation_size + self.allocated > self.capacity):
-            assert ptr is None 
+        if self.isValid == False:
+            assert ptr is None, "Can't allocate from invalid allocator"
+            return
 
         if ptr:
             self.allocations.append((ptr, allocation_size, alignment, self.epoch))

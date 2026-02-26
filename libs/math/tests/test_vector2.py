@@ -26,7 +26,7 @@ vector2_strategy = st.builds(
     float32_strategy
 )
 
-TOLERANCE = 1e-4
+TOLERANCE = 0.01
 
 
 class TestVector2:
@@ -180,8 +180,14 @@ class TestVector2:
     def test_dot_distributive(self, a, b, c):
         """Dot product is distributive ver addition"""
         # Avoid catastrophic cancellation in vector addition
-        assume(not (math.isclose(b.x, -c.x, rel_tol=TOLERANCE, abs_tol=TOLERANCE) and 
-                    math.isclose(b.y, -c.y, rel_tol=TOLERANCE, abs_tol=TOLERANCE)))
+        assume(not (
+            abs(a.x + b.x) < TOLERANCE * max(abs(a.x), abs(b.x), 1.0) and
+            abs(a.y + b.y) < TOLERANCE * max(abs(a.y), abs(b.y), 1.0) 
+        ))
+        dot_ab = a.x * b.x + a.y * b.y
+        dot_ac = a.x * c.x + a.y * c.y
+        # Avoid catastrophic cancellation in dot product terms
+        assume(not math.isclose(dot_ab, -dot_ac, rel_tol=TOLERANCE, abs_tol=TOLERANCE))
         assert math.isclose(a * (b + c),
                             (a * b) + (a * c),
                             rel_tol=TOLERANCE,

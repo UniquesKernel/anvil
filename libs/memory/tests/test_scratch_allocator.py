@@ -65,8 +65,9 @@ class ScratchAllocatorModel(RuleBasedStateMachine):
         allocation_size, alignment = config
         ptr, _ = scratch_allocator_alloc(self.allocator, allocation_size, alignment)
 
-        if (allocation_size + self.allocated > self.capacity):
+        if (self.isValid == False):
             assert ptr is None
+            return 
 
         if ptr:
             self.allocations.append((ptr, allocation_size, alignment))

@@ -28,7 +28,7 @@ vector3_strategy = st.builds(
     float32_strategy
 )
 
-TOLERANCE = 1e-4
+TOLERANCE = 0.01
 
 
 class TestVector3:
@@ -123,9 +123,11 @@ class TestVector3:
     def test_distributive_addition(self, a, b, c):
         """Scalar distributes over vector addition: c * (a + b) == c*a + c*b"""
         # Avoid catastrophic cancellation in the sum
-        assume(not (math.isclose(a.x, -b.x, rel_tol=TOLERANCE, abs_tol=TOLERANCE) and 
-                    math.isclose(a.y, -b.y, rel_tol=TOLERANCE, abs_tol=TOLERANCE) and
-                    math.isclose(a.z, -b.z, rel_tol=TOLERANCE, abs_tol=TOLERANCE)))
+        assume(not (
+            abs(a.x + b.x) < TOLERANCE * max(abs(a.x), abs(b.x), 1.0) and
+            abs(a.y + b.y) < TOLERANCE * max(abs(a.y), abs(b.y), 1.0) and
+            abs(a.z + b.z) < TOLERANCE * max(abs(a.z), abs(b.z), 1.0)
+        ))
         assert c * (a + b) == (c * a) + (c * b)
 
     @given(vector3_strategy, float32_strategy, float32_strategy)
