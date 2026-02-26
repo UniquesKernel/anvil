@@ -14,15 +14,14 @@ void bind_lazy_stack_allocator(pybind11::module_& module) { // NOLINT
 
         m.def(
             "lazy_stack_allocator_create",
-            [](const size_t capacity, const size_t alignment) {
+            [](const size_t capacity, const size_t alignment) -> py::tuple {
                     anvil::memory::lazy_stack_allocator::LazyStackAllocator* allocator = nullptr;
                     const Error ERR = anvil::memory::lazy_stack_allocator::create(&allocator, capacity, alignment);
                     if (ERR != OK) {
                             return py::make_tuple(ERR, py::none());
                     }
-                    return py::make_tuple(
-                        ERR,
-                        py::capsule(allocator, "anvil::memory::lazy_stack_allocator::LazyStackAllocator"));
+                    return py::make_tuple(ERR, py::capsule(allocator,
+                                                           "anvil::memory::lazy_stack_allocator::LazyStackAllocator"));
             },
             py::arg("capacity"), py::arg("alignment"));
 
@@ -64,7 +63,7 @@ void bind_lazy_stack_allocator(pybind11::module_& module) { // NOLINT
 
         m.def(
             "lazy_stack_allocator_alloc",
-            [](py::capsule& allocator, const size_t allocation_size, const size_t alignment) {
+            [](py::capsule& allocator, const size_t allocation_size, const size_t alignment) -> py::tuple {
                     anvil::memory::lazy_stack_allocator::LazyStackAllocator* alloc =
                         static_cast<anvil::memory::lazy_stack_allocator::LazyStackAllocator*>(allocator.get_pointer());
 
@@ -72,16 +71,18 @@ void bind_lazy_stack_allocator(pybind11::module_& module) { // NOLINT
                     if (alloc == nullptr || alloc == (anvil::memory::lazy_stack_allocator::LazyStackAllocator*)0x1) {
                             anvil::memory::lazy_stack_allocator::LazyStackAllocator* null_alloc = nullptr;
 
-                            allocation = static_cast<char*>(
-                                anvil::memory::lazy_stack_allocator::alloc(null_alloc, allocation_size, alignment));
+                            allocation = static_cast<char*>(anvil::memory::lazy_stack_allocator::alloc(null_alloc,
+                                                                                                       allocation_size,
+                                                                                                       alignment));
 
                             if (allocation == nullptr) {
                                     return py::make_tuple(py::none(), OK);
                             }
+                            return py::make_tuple(py::capsule(allocation, "char*"), OK);
                     }
 
-                    allocation =
-                        static_cast<char*>(anvil::memory::lazy_stack_allocator::alloc(alloc, allocation_size, alignment));
+                    allocation = static_cast<char*>(anvil::memory::lazy_stack_allocator::alloc(alloc, allocation_size,
+                                                                                               alignment));
 
                     if (allocation == nullptr) {
                             return py::make_tuple(py::none(), OK);
