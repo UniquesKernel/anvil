@@ -1,16 +1,15 @@
 /**
  * @file lazy_stack_allocator.hpp
- * @brief Stack-like allocator with lazy (on-demand) physical memory commitment
+ * @brief Lazy stack allocator with on-demand physical memory commitment.
  *
- * This header defines a stack-based allocator that reserves a contiguous virtual
- * address space and commits physical pages lazily as allocations are performed.
- * The allocator provides efficient, sequential memory allocation with alignment
- * guarantees and supports checkpoint-based management via record/unwind, along
- * with bulk reset.
+ * This header defines a stack allocator that reserves a contiguous virtual
+ * address space and commits physical pages on demand as allocations advance.
+ * The allocator supports record/unwind checkpoints for LIFO-style rollback and
+ * a full reset operation for bulk invalidation.
  *
- * @note All functions follow fail-fast design – programmer errors trigger an
+ * @note All functions in this module follow fail-fast design; programmer errors
  *       immediate abort with diagnostics.
- * @note The lazy stack allocator is NOT thread-safe and requires external
+ * @note This allocator is NOT thread-safe and requires external
  *       synchronization for concurrent use.
  */
 
@@ -67,13 +66,21 @@ static_assert(alignof(LazyStackAllocator) == alignof(void*), "LazyStackAllocator
  * metadata and `capacity` bytes of usable memory, deferring physical memory
  * commitment until allocations occur.
  *
+ * @pre `allocator_out != nullptr`.
+ * @pre `*allocator_out == nullptr`.
  * @pre `capacity > 0`.
+ * @pre `capacity <= MAX_CAPACITY`.
+ * @pre `capacity >= alignment`.
  * @pre `alignment` is a power of two.
  * @pre `MIN_ALIGNMENT <= alignment <= MAX_ALIGNMENT`.
  *
- * @post LazyStackAllocator manages `capacity` bytes of usable memory.
+ * @post On success, a valid allocator instance is created with metadata followed
+ *       by a usable region of exactly `capacity` bytes.
+ * @post Backing allocation requests
+ *       `capacity + sizeof(LazyStackAllocator) + alignment - 1` bytes before
+ *       page rounding in the underlying allocator.
  * @post All allocations from LazyStackAllocator are aligned to `alignment`.
- * @post Initially the LazyStackAllocator has `allocated == 0` and `stack_depth == 0`.
+ * @post Initially, the allocation watermark is zero and checkpoint depth is zero.
  *
  * @param[out] allocator_out Output location that receives the created allocator.
  * @param[in] capacity       The amount of usable memory to reserve (bytes).
@@ -89,7 +96,7 @@ static_assert(alignof(LazyStackAllocator) == alignof(void*), "LazyStackAllocator
  * @pre `allocator != nullptr`.
  * @pre `*allocator != nullptr`.
  *
- * @post `*allocator == nullptr`.
+ * @post The allocator handle is set to null.
  * @post The system has released all reserved/committed memory back to the OS.
  * @post All outstanding allocations are invalid.
  *
@@ -99,7 +106,7 @@ static_assert(alignof(LazyStackAllocator) == alignof(void*), "LazyStackAllocator
 [[nodiscard]] Error destroy(LazyStackAllocator** allocator) noexcept;
 
 /**
- * @brief Allocates a contiguous, aligned region and commits additional pages on demand.
+ * @brief Allocates a contiguous aligned sub-region and commits pages on demand.
  *
  * Advances the internal watermark with proper alignment and, for lazy
  * provisioning, commits additional physical memory to cover the newly
@@ -107,19 +114,21 @@ static_assert(alignof(LazyStackAllocator) == alignof(void*), "LazyStackAllocator
  *
  * @pre `allocator != nullptr`.
  * @pre `allocation_size > 0`.
+ * @pre `allocation_size <= MAX_CAPACITY`.
  * @pre `alignment` is a power of two.
  * @pre `MIN_ALIGNMENT <= alignment <= MAX_ALIGNMENT`.
  *
- * @post On success, `allocator->allocated` increases by `allocation_size + padding`,
- *       where `0 <= padding < alignment`, and the returned pointer is aligned to
- *       `alignment`.
+ * @post On success, the allocation watermark increases by
+ *       `allocation_size + padding`, where `0 <= padding < alignment`.
+ * @post Returned pointer (if non-null) is aligned to `alignment`.
+ * @post Returns `nullptr` if insufficient capacity remains or page commit fails.
  *
  * @param[in] allocator        LazyStackAllocator from which the allocation should be made.
  * @param[in] allocation_size  Size in bytes of the requested allocation.
  * @param[in] alignment        Alignment of the returned memory region.
  *
- * @return Pointer to aligned memory region on success; `nullptr` if insufficient capacity
- *         remains or commit of additional pages fails.
+ * @return Pointer to aligned memory region of size `allocation_size` (bytes),
+ *         or `nullptr` on failure.
  */
 [[nodiscard]] void* alloc(LazyStackAllocator* allocator, std::size_t allocation_size, std::size_t alignment) noexcept;
 
@@ -129,8 +138,9 @@ static_assert(alignof(LazyStackAllocator) == alignof(void*), "LazyStackAllocator
  * @pre `allocator != nullptr`.
  * @pre `allocator->base != nullptr`.
  *
- * @post `allocator->allocated == 0` and `allocator->stack_depth == 0`.
+ * @post The allocation watermark is zero and checkpoint depth is zero.
  * @post All previous allocations from this allocator are invalid.
+ * @post Allocated bytes are not cleared.
  *
  * @param[in] allocator  LazyStackAllocator that should be reset.
  * @return Error code, `OK` on success while other values indicate failure.

@@ -1,19 +1,17 @@
 /**
  * @file stack_allocator.hpp
- * @brief Stack-based memory allocator interface for contiguous memory management
+ * @brief Eager stack allocator interface for contiguous memory management.
  *
- * This header defines a high-level interface for stack memory allocation using
- * a contiguous memory region strategy. The stack allocator provides efficient,
- * sequential memory allocation with customizable alignment guarantees. The allocator
- * is designed for scenarios where memory allocations follow a stack-like pattern
- * (LIFO - Last In, First Out), making it ideal for nested scope-based memory
- * management and high-performance applications requiring memory locality.
+ * This header defines a stack allocator that eagerly maps physical memory for a
+ * contiguous region and serves fast linear allocations from that region. The
+ * allocator supports record/unwind checkpoints for LIFO-style rollback and a
+ * full reset operation for bulk invalidation.
  *
- * @note All functions in this module follow fail-fast design - programmer errors
+ * @note All functions in this module follow fail-fast design; programmer errors
  *       trigger immediate abort with diagnostics.
  *
- * @note The stack allocators are **NOT** thread safe and should not be used
- *       in a concurrent environment without proper synchronization.
+ * @note This allocator is NOT thread-safe and requires external synchronization
+ *       for concurrent use.
  */
 
 #ifndef ANVIL_MEMORY_STACK_ALLOCATOR_HPP
@@ -63,19 +61,29 @@ static_assert(sizeof(StackAllocator) == 544, "StackAllocator size must be 544 by
 static_assert(alignof(StackAllocator) == alignof(void*), "StackAllocator alignment must match void* alignment");
 
 /**
- * @brief Establishes a region of physical memory that is managed as a contiguous region.
+ * @brief Creates an eager stack allocator over a contiguous memory region.
  *
+ * @pre `allocator_out != nullptr`.
+ * @pre `*allocator_out == nullptr`.
  * @pre `capacity > 0`.
+ * @pre `capacity <= MAX_CAPACITY`.
+ * @pre `capacity >= alignment`.
  * @pre `alignment` is a power of two.
  * @pre `MIN_ALIGNMENT <= alignment <= MAX_ALIGNMENT`.
  *
- * @post StackAllocator manages `capacity` amount of bytes with worst case being `capacity + page size - 1` amount of bytes.
+ * @post On success, a valid allocator instance is created with metadata followed
+ *       by a usable region of exactly `capacity` bytes.
+ * @post Backing allocation requests
+ *       `capacity + sizeof(StackAllocator) + alignment - 1` bytes before page
+ *       rounding in the underlying allocator.
  * @post All allocations from StackAllocator are aligned to `alignment`.
- * @post Initially the StackAllocator has allocated zero bytes.
+ * @post Initially, the allocation watermark is zero and checkpoint depth is zero.
  *
- * @param[in] capacity      The amount of physical memory to allocate.
- * @param[in] alignment     The alignment of all memory allocated from the StackAllocator.
- * @return Pointer to a StackAllocator.
+ * @param[out] allocator_out Output location that receives the created allocator.
+ * @param[in] capacity       The amount of usable memory to manage (bytes).
+ * @param[in] alignment      Alignment of all memory allocated from the StackAllocator.
+ *
+ * @return Error code, `OK` on success while other values indicate failure.
  */
 [[nodiscard]] Error create(StackAllocator** allocator_out, std::size_t capacity, std::size_t alignment) noexcept;
 
@@ -85,33 +93,36 @@ static_assert(alignof(StackAllocator) == alignof(void*), "StackAllocator alignme
  * @pre `allocator != nullptr`.
  * @pre `*allocator != nullptr`.
  *
- * @post `*allocator == nullptr`
+ * @post The allocator handle is set to null.
  * @post The system has released all allocated memory back to the OS.
  * @post All outstanding allocations are invalid.
  *
  * @param[in,out] allocator    Reference to the allocator whose memory mapping should be undone.
  *
- * @return Error code, zero indicates success while other values indicate error.
+ * @return Error code, `OK` on success while other values indicate failure.
  */
 [[nodiscard]] Error destroy(StackAllocator** allocator) noexcept;
 
 /**
- * @brief Establishes a contiguous sub-region of memory from an allocator's total contiguous region.
+ * @brief Allocates a contiguous aligned sub-region from allocator capacity.
  *
  * @pre `allocator != nullptr`.
  * @pre `allocation_size > 0`.
+ * @pre `allocation_size <= MAX_CAPACITY`.
  * @pre `alignment` is a power of two.
  * @pre `MIN_ALIGNMENT <= alignment <= MAX_ALIGNMENT`.
  *
- * @post `allocator` shrinks by `allocation_size + padding`, where `0 <= padding < alignment`.
- * @post The returned memory region is aligned to `alignment`.
- * @post Returned pointer satisfies `(uintptr_t)ptr % alignment == 0`.
+ * @post On success, the allocation watermark increases by
+ *       `allocation_size + padding`, where `0 <= padding < alignment`.
+ * @post Returned pointer (if non-null) is aligned to `alignment`.
+ * @post Returns `nullptr` if insufficient capacity remains.
  *
  * @param[in] allocator         StackAllocator from which the allocation should be made.
  * @param[in] allocation_size   Size in bytes of the allocation that should be made.
  * @param[in] alignment         Alignment of the returned memory region.
  *
- * @return Pointer to aligned memory region of size `allocation_size` (bytes).
+ * @return Pointer to aligned memory region of size `allocation_size` (bytes),
+ *         or `nullptr` on failure.
  *
  * @note Uncertainty in allocator memory usage is improved by making `allocation_size` a multiple of
  * `alignment`.
@@ -125,16 +136,17 @@ static_assert(alignof(StackAllocator) == alignof(void*), "StackAllocator alignme
  * @pre `allocator->base != nullptr`.
  *
  * @post All previous allocations from this allocator become invalid.
- * @post `allocator` has identical state to its initialization state from `anvil_memory_stack_allocator_create`.
+ * @post The allocation watermark is zero and checkpoint depth is zero.
+ * @post Allocated bytes are not cleared.
  *
  * @param[in] allocator     StackAllocator that should be reset.
  *
- * @return Error code, zero indicates success while other values indicate error.
+ * @return Error code, `OK` on success while other values indicate failure.
  */
 [[nodiscard]] Error reset(StackAllocator* allocator) noexcept;
 
 /**
- * @brief Records the current allocation state for later unwinding
+ * @brief Records the current allocation state for later unwinding.
  *
  * @pre `allocator != nullptr`.
  * @pre `allocator->stack_depth < MAX_STACK_DEPTH`.
@@ -143,12 +155,12 @@ static_assert(alignof(StackAllocator) == alignof(void*), "StackAllocator alignme
  *
  * @param[in] allocator     StackAllocator whose state should be recorded.
  *
- * @return Error code, zero indicates success while other values indicate error.
+ * @return Error code, `OK` on success while other values indicate failure.
  */
 [[nodiscard]] Error record(StackAllocator* allocator) noexcept;
 
 /**
- * @brief Unwinds allocations back to the last recorded state
+ * @brief Unwinds allocations back to the last recorded state.
  *
  * @pre `allocator != nullptr`.
  * @pre `allocator->stack_depth > 0`.
@@ -158,7 +170,7 @@ static_assert(alignof(StackAllocator) == alignof(void*), "StackAllocator alignme
  *
  * @param[in] allocator     StackAllocator that should be unwound.
  *
- * @return Error code, zero indicates success while other values indicate error.
+ * @return Error code, `OK` on success while other values indicate failure.
  */
 [[nodiscard]] Error unwind(StackAllocator* allocator) noexcept;
 
