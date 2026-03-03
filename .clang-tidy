@@ -27,6 +27,7 @@ Checks: >
   -cppcoreguidelines-pro-type-cstyle-cast,
   -cppcoreguidelines-init-variables,
   -cppcoreguidelines-non-private-member-variables-in-classes,
+  -cppcoreguidelines-pro-type-union-access,
   -cppcoreguidelines-macro-usage,
   -hicpp-avoid-c-arrays,
   -hicpp-avoid-do-while,
