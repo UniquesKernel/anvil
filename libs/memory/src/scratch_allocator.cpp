@@ -13,7 +13,7 @@ namespace anvil::memory::scratch_allocator {
 [[nodiscard]]
 Error create(ScratchAllocator** allocator_out, const std::size_t capacity, const std::size_t alignment) noexcept {
         INVARIANT(allocator_out != nullptr, NULL_PARAMETER);
-        INVARIANT(*allocator_out == nullptr, NULL_PARAMETER);
+        INVARIANT(*allocator_out == nullptr, INVALID_ARGUMENTS);
         INVARIANT(capacity > 0, INVALID_ARGUMENTS);
         INVARIANT(capacity <= MAX_CAPACITY, INVALID_ARGUMENTS);
         INVARIANT(capacity >= alignment, INVALID_ARGUMENTS);
@@ -50,10 +50,7 @@ Error destroy(ScratchAllocator** allocator) noexcept {
         INVARIANT(allocator != nullptr, NULL_PARAMETER);
         INVARIANT(*allocator != nullptr, NULL_PARAMETER);
 
-        const Error DEALLOC_RESULT = anvil_memory_dealloc(*allocator);
-        if (DEALLOC_RESULT != OK) [[unlikely]] {
-                return DEALLOC_RESULT;
-        }
+        GUARANTEE(anvil_memory_dealloc(*allocator) == OK);
         *allocator = nullptr;
 
         return OK;

@@ -11,6 +11,8 @@ target_include_directories(${MODULE_NAME}
     $<INSTALL_INTERFACE:include>
 )
 
+target_link_libraries(graphic PUBLIC memory)
+
 anvil_set_strict_warnings(${MODULE_NAME})
 
 if(BUILD_TESTING)
@@ -32,7 +34,7 @@ if(BUILD_TESTING)
       ${CMAKE_SOURCE_DIR}/include
   )
 
-  target_link_libraries(${TEST_MODULE} PRIVATE Python3::Python)
+  target_link_libraries(${TEST_MODULE} PRIVATE Python3::Python memory)
 
   anvil_set_strict_warnings(${TEST_MODULE})
 
@@ -52,4 +54,5 @@ if(BUILD_TESTING)
     COMMAND ${Python3_EXECUTABLE} -m pytest -q "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_canvas.py"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/tests"
   )
+
 endif()

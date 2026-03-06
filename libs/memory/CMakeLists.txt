@@ -9,7 +9,7 @@ set(MODULE_SOURCE
     src/utility.cpp
 )
 
-add_library(${MODULE_NAME} STATIC ${MODULE_SOURCE}) # Release Target
+add_library(${MODULE_NAME} SHARED ${MODULE_SOURCE}) # Release Target
 
 ## =================== Set Compiler Options ===================
 

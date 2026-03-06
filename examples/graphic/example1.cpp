@@ -18,6 +18,7 @@ int                            main(void) {
 
         printf("%lu\n", canvas.height);
         printf("%lu\n", canvas.width);
-        printf("%c", canvas.buffer[0]);
+        printf("%c\n", canvas.buffer[0]);
+
         return 0;
 }

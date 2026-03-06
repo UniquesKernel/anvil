@@ -9,6 +9,7 @@
 #define ANVIL_GRAPHIC_CANVAS_HPP
 
 #include "error/status.hpp"
+#include "memory/scratch_allocator.hpp"
 
 namespace anvil::graphic {
 
@@ -25,25 +26,24 @@ static const unsigned long MAX_HEIGHT = 1080;
  * @invariant 0 < height <= MAX_HEIGHT
  * @invariant 0 < width <= MAX_WIDTH
  *
- * @note The buffer is statically sized at 2073600 bytes (~2MB).
- *
  * ### Fields
- * | Name       | Type          | Size          |
- * |------------|---------------|---------------|
- * | height     | unsigned long | 8 bytes       |
- * | width      | unsigned long | 8 bytes       |
- * | buffer     | char[]        | 2073600 bytes |
+ * | Name       | Type                  | Size          |
+ * |------------|-----------------------|---------------|
+ * | height     | unsigned long         | 8 bytes       |
+ * | width      | unsigned long         | 8 bytes       |
+ * | buffer     | char*                 | 8 bytes       |
+ * | allocator  | ScratchAllocator*     | 8 bytes       |
  *
- * **Total Size:** 2073616 bytes
+ * **Total Size:** 32 bytes
  */
 struct Canvas {
-        unsigned long height;
-        unsigned long width;
-        char          buffer[MAX_WIDTH * MAX_HEIGHT]{'\0'};
+        unsigned long                                height    = 0;
+        unsigned long                                width     = 0;
+        char*                                        buffer    = nullptr;
+        memory::scratch_allocator::ScratchAllocator* allocator = nullptr;
 };
 
-// Canvas must be exactly 1920x1080 chars + 2 unsigned longs (height, width)
-static_assert(sizeof(Canvas) == (2073616), "Canvas size must be 2073616 bytes"); // NOLINT
+static_assert(sizeof(Canvas) == 32, "Canvas size must be 32 bytes"); // NOLINT
 
 /**
  * @brief Initialize a `Canvas` that can be used for rendering ASCII graphics to a terminal screen
@@ -68,7 +68,7 @@ Error create(Canvas* canvas_out, unsigned long width, unsigned long height, char
  * @pre canvas_out != null
  * @pre index < MAX_WIDTH * MAX_HEIGHT
  *
- * @post canvas_out.buffer[index] set to character
+ * @post position at the (index - 1) is set with the fill_char value
  *
  * @param[out] canvas_out       The canvas whose buffer to write to
  * @param[in] index             The position in the buffer to write to
@@ -77,6 +77,8 @@ Error create(Canvas* canvas_out, unsigned long width, unsigned long height, char
  * @return `Error` code enumeration with OK indicating a successful write
  */
 Error set(Canvas* canvas_out, unsigned long index, char character);
+
+Error destroy(Canvas* canvas_out);
 
 } // namespace anvil::graphic
 

@@ -1,5 +1,4 @@
 
-#include "error/status.hpp"
 #include "graphic/canvas.hpp"
 #include <pybind11/detail/common.h>
 #include <pybind11/pybind11.h>
@@ -23,5 +22,7 @@ PYBIND11_MODULE(graphic_module, module) {
             .def_property(
                 "width", [](const anvil::graphic::Canvas& canvas) { return canvas.width; },
                 [](anvil::graphic::Canvas& canvas, unsigned long val) { canvas.width = val; })
-            .def_property("buffer", [](const anvil::graphic::Canvas& canvas) { return canvas.buffer; }, []() {});
+            .def_property(
+                "buffer", [](const anvil::graphic::Canvas& canvas) { return canvas.buffer; }, []() {})
+            .def_property("allocator", [](const anvil::graphic::Canvas& canvas) { return canvas.allocator; }, []() {});
 }
