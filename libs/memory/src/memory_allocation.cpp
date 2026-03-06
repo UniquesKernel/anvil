@@ -26,11 +26,13 @@ Error anvil_memory_alloc_lazy(void** mem_out, const size_t capacity, const size_
                 return OUT_OF_MEMORY;
         }
 
-        // NOTE: (UniquesKernel) On failure madvise will default to Normal paging of ~4KB
-        // Since this is a generalized memory allocator mechanism, the
-        // return value can safely be ignored
-        (void)madvise(base, total_size, MADV_HUGEPAGE);
+        if (capacity >= (1 << 21)) { // NOLINT enable huge page advice for allocations larger than 2MB
+                // NOTE: (UniquesKernel) On failure madvise will default to Normal paging of ~4KB
+                // Since this is a generalized memory allocator mechanism, the
+                // return value can safely be ignored
 
+                (void)madvise(base, total_size, MADV_HUGEPAGE);
+        }
         if (mprotect(base, PAGE_SIZE, PROT_READ | PROT_WRITE) != 0) {
                 munmap(base, total_size);
                 return OUT_OF_MEMORY;
@@ -66,11 +68,13 @@ Error anvil_memory_alloc_eager(void** mem_out, const size_t capacity, const size
                 return OUT_OF_MEMORY;
         }
 
-        // NOTE: (UniquesKernel) On failure madvise will default to Normal paging of ~4KB
-        // Since this is a generalized memory allocator mechanism, the
-        // return value can safely be ignored
-        (void)madvise(base, total_size, MADV_HUGEPAGE);
+        if (capacity >= (1 << 21)) { // NOLINT enable huge page advice for allocations larger than 2MB
+                // NOTE: (UniquesKernel) On failure madvise will default to Normal paging of ~4KB
+                // Since this is a generalized memory allocator mechanism, the
+                // return value can safely be ignored
 
+                (void)madvise(base, total_size, MADV_HUGEPAGE);
+        }
         const uintptr_t ADDR         = reinterpret_cast<uintptr_t>(base) + sizeof(Metadata);
         const uintptr_t ALIGNED_ADDR = (ADDR + (alignment - 1U)) & ~(alignment - 1U);
 
