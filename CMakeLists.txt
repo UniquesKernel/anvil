@@ -10,8 +10,6 @@ include(CompilerStandards)
 include(Functions)
 anvil_enable_static_analysis_root()
 
-option(ENABLE_COVERAGE "Enable coverage reporting" OFF)
-
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
     set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")

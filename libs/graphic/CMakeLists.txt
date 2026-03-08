@@ -5,6 +5,10 @@ include(${CMAKE_SOURCE_DIR}/cmake/Functions.cmake)
 
 add_library(${MODULE_NAME} STATIC ${MODULE_SOURCE})
 
+target_compile_options(graphic PRIVATE
+    -include ${CMAKE_SOURCE_DIR}/include/memory/memory_policy.hpp
+)
+
 target_include_directories(${MODULE_NAME}
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>

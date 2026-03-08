@@ -11,6 +11,10 @@ set(MODULE_SOURCE
 
 add_library(${MODULE_NAME} SHARED ${MODULE_SOURCE}) # Release Target
 
+target_compile_options(memory PRIVATE
+    -include ${CMAKE_SOURCE_DIR}/include/memory/memory_policy.hpp
+)
+
 ## =================== Set Compiler Options ===================
 
 target_include_directories(${MODULE_NAME}
@@ -98,17 +102,4 @@ if(BUILD_TESTING)
       ENVIRONMENT "HYPOTHESIS_MAX_EXAMPLES=1000;PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tests:${CMAKE_SOURCE_DIR}/libs"
     )
 endif()
-
-install(TARGETS ${MODULE_NAME}
-    EXPORT ${PROJECT_NAME}-${MODULE_NAME}-targets
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
-)
-
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/memory
-    DESTINATION include
-    FILES_MATCHING PATTERN "*.h"
-)
-
-
 
