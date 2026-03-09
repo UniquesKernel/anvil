@@ -4,21 +4,22 @@
 #include <cstdlib>
 
 /**
- *  @brief defines the INVARIANT macro.
+ *  @brief A requirement characterizes a condition that must hold under correct usage
  *
- *  A runtime check used to ensure an invariant is true.
- *  If the invariant is broken, the invariant returns the
- *  associated `error_code`.
+ *  Requirements define properties and conditions that must be satisfied and truthful
+ *  at certain points during a program's execution. If a requirement is broken, it
+ *  indicates a failure on the part of the invoker of a piece of code to follow the
+ *  code's contract.
  *
- *  Invariants are conditions that if broken are recoverable.
+ *  @invariant produces no side effects
+ *  @invariant forces the return of an error_code
  *
- *  @param[in] condition        The invariant that should be true
- *  @param[in] error_code       The error_code the calling scope should return if the condition is false
+ *  @param[in] condition        The condition or property that should be satisfied.
+ *  @param[in] error_code       The error code that should be returned.
  *
- *  @note The macro does not return an error_code like a function would, it either no-ops or
- *        it forces the calling function to return the error_code
+ *  @note For functions that return void, set error_code = void
  */
-#define INVARIANT(condition, error_code)                                                                               \
+#define REQUIRE(condition, error_code)                                                                                 \
         do {                                                                                                           \
                 if (!(condition)) [[unlikely]] {                                                                       \
                         return error_code;                                                                             \
@@ -26,20 +27,21 @@
         } while (0)
 
 /**
- * @brief defines the GUARANTEE macro.
+ *  @brief An invariant characterizes a condition or property that the invokee guarantees to be satisfied
  *
- * A runtime check that ensures the program is in a healthy state.
- * If the associated check is false, the program is in an unhealthy
- * and unrecoverable state.
+ *  An invariant defines a property or condition that the invokee of a piece of code wishes to
+ *  mark as important, to the point that a failure should be considered grounds to halt a program.
  *
- * If the GUARANTEE is broken, the program terminates because the state
- * is unrecoverable and dangerous to continue in.
+ *  @invariant halts a process if condition or property fails.
  *
- * @param[in] condition         The condition that should be guaranteed to hold
+ *  @param[in] condition        The condition that should be satisfied to continue execution of the program.
  *
- * @note The macro does not return a value, it either no-ops or it aborts the program.
+ *  @note A condition need not be proven to always hold to be promoted to an invariant. An invokee can use an
+ *  invariant to indicate that a failed condition is of no interest to the invoker because no reasonable
+ *  actions can be taken by either the invokee or the invoker to address the issue caused by the breakage of
+ *  the condition.
  */
-#define GUARANTEE(condition)                                                                                           \
+#define INVARIANT(condition)                                                                                           \
         do {                                                                                                           \
                 if (!(condition)) [[unlikely]] {                                                                       \
                         abort();                                                                                       \
