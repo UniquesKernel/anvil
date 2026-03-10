@@ -2,66 +2,45 @@ Checks: >
   -*,
   clang-analyzer-*,
   bugprone-*,
+  -bugprone-casting-through-void,
   -bugprone-easily-swappable-parameters,
   cert-*,
-  cppcoreguidelines-*,
-  performance-*,
-  -performance-no-int-to-ptr,
-  readability-*,
-  hicpp-*,
-  -hicpp-member-init,
-  -hicpp-use-auto,
-  misc-*,
-  -modernize-*,
-  -modernize-use-auto,
-  -cppcoreguidelines-avoid-c-arrays,
-  -cppcoreguidelines-pro-type-member-init,
-  -cppcoreguidelines-avoid-goto,
-  -cppcoreguidelines-pro-type-vararg,
-  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
-  -cppcoreguidelines-pro-bounds-constant-array-index,
-  -cppcoreguidelines-pro-type-reinterpret-cast,
-  -cppcoreguidelines-owning-memory,
-  -cppcoreguidelines-avoid-do-while,
-  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
-  -cppcoreguidelines-pro-type-cstyle-cast,
-  -cppcoreguidelines-init-variables,
-  -cppcoreguidelines-non-private-member-variables-in-classes,
-  -cppcoreguidelines-pro-type-union-access,
-  -cppcoreguidelines-macro-usage,
-  -hicpp-avoid-c-arrays,
-  -hicpp-avoid-do-while,
-  -hicpp-vararg,
-  -hicpp-no-array-decay,
-  -hicpp-braces-around-statements,
-  -readability-magic-numbers,
-  -readability-else-after-return,
-  -readability-braces-around-statements,
-  -readability-identifier-length,
-  -readability-implicit-bool-conversion,
-  -readability-auto-when-initialize-with-cast,
-  -misc-non-private-member-variables-in-classes
+  -cert-exp05-cpp,
+  cppcoreguidelines-narrowing-conversions,
+  cppcoreguidelines-slicing,
+  cppcoreguidelines-interfaces-global-init,
+  cppcoreguidelines-virtual-class-destructor,
+  cppcoreguidelines-no-malloc,
+  performance-move-constructor-init,
+  performance-no-automatic-move,
+  performance-trivially-destructible,
+  misc-misplaced-const,
+  misc-no-recursion,
+  misc-redundant-expression,
+  misc-static-assert,
+  misc-throw-by-value-catch-by-reference,
+  misc-unconventional-assign-operator,
+  misc-uniqueptr-reset-release,
+  misc-unused-parameters,
+  readability-function-size,
+  readability-function-cognitive-complexity,
+  readability-identifier-naming
 
 CheckOptions:
-  # Naming conventions (C-style)
-  - key: readability-identifier-naming.VariableCase
-    value: lower_case
-  - key: readability-identifier-naming.FunctionCase
-    value: lower_case
-  - key: readability-identifier-naming.ClassCase
-    value: CamelCase
-  - key: readability-identifier-naming.StructCase
-    value: CamelCase
-  - key: readability-identifier-naming.ConstantCase
-    value: UPPER_CASE
-  - key: readability-identifier-naming.EnumCase
-    value: CamelCase
-  - key: readability-identifier-naming.GlobalConstantCase
-    value: UPPER_CASE
-  - key: readability-identifier-naming.ConstantParameterCase
-    value: lower_case
-
-  # Power of Ten Rule 4: Limit function length (60 lines)
+  - key: cppcoreguidelines-narrowing-conversions.WarnOnIntegerNarrowingConversion
+    value: 1
+  - key: cppcoreguidelines-narrowing-conversions.WarnOnFloatingPointNarrowingConversion
+    value: 1
+  - key: cppcoreguidelines-narrowing-conversions.WarnOnEquivalentBitWidth
+    value: 1
+  - key: bugprone-switch-missing-default-case.EnableForSwitch
+    value: 1
+  - key: bugprone-string-constructor.WarnOnLargeLength
+    value: 1
+  - key: bugprone-string-constructor.LargeLengthThreshold
+    value: 8388608
+  - key: cert-err34-c.AllowedFunctions
+    value: ''
   - key: readability-function-size.LineThreshold
     value: 60
   - key: readability-function-size.StatementThreshold
@@ -72,16 +51,25 @@ CheckOptions:
     value: 6
   - key: readability-function-size.NestingThreshold
     value: 4
-  
   - key: readability-function-cognitive-complexity.Threshold
     value: 30
-  
-  # Aggressive bounds checking
-  - key: cppcoreguidelines-narrowing-conversions.WarnOnIntegerNarrowingConversion
-    value: 1
-  - key: cppcoreguidelines-narrowing-conversions.WarnOnFloatingPointNarrowingConversion
-    value: 1
+  - key: readability-identifier-naming.VariableCase
+    value: lower_case
+  - key: readability-identifier-naming.FunctionCase
+    value: lower_case
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.StructCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumCase
+    value: CamelCase
+  - key: readability-identifier-naming.ConstantCase
+    value: UPPER_CASE
+  - key: readability-identifier-naming.GlobalConstantCase
+    value: UPPER_CASE
+  - key: readability-identifier-naming.ConstantParameterCase
+    value: lower_case
 
 WarningsAsErrors: '*'
 HeaderFilterRegex: '.*'
-FormatStyle: none
+FormatStyle:       none

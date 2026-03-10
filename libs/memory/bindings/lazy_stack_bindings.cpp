@@ -28,8 +28,8 @@ void bind_lazy_stack_allocator(pybind11::module_& module) { // NOLINT
         m.def(
             "lazy_stack_allocator_destroy",
             [](py::capsule& allocator) {
-                    anvil::memory::lazy_stack_allocator::LazyStackAllocator* alloc =
-                        static_cast<anvil::memory::lazy_stack_allocator::LazyStackAllocator*>(allocator.get_pointer());
+                                        anvil::memory::lazy_stack_allocator::LazyStackAllocator* alloc =
+                                                (anvil::memory::lazy_stack_allocator::LazyStackAllocator*)(allocator.get_pointer());
 
                     if (alloc == nullptr || alloc == (anvil::memory::lazy_stack_allocator::LazyStackAllocator*)0x1) {
                             anvil::memory::lazy_stack_allocator::LazyStackAllocator* null_alloc = nullptr;
@@ -41,7 +41,7 @@ void bind_lazy_stack_allocator(pybind11::module_& module) { // NOLINT
                             return ERR;
                     }
 
-                    allocator.set_pointer(reinterpret_cast<void*>(0x1));
+                    allocator.set_pointer((void*)(0x1));
                     return ERR;
             },
             py::arg("allocator"));
@@ -49,8 +49,8 @@ void bind_lazy_stack_allocator(pybind11::module_& module) { // NOLINT
         m.def(
             "lazy_stack_allocator_reset",
             [](py::capsule& allocator) {
-                    anvil::memory::lazy_stack_allocator::LazyStackAllocator* alloc =
-                        static_cast<anvil::memory::lazy_stack_allocator::LazyStackAllocator*>(allocator.get_pointer());
+                                        anvil::memory::lazy_stack_allocator::LazyStackAllocator* alloc =
+                                                (anvil::memory::lazy_stack_allocator::LazyStackAllocator*)(allocator.get_pointer());
 
                     if (alloc == nullptr || alloc == (anvil::memory::lazy_stack_allocator::LazyStackAllocator*)0x1) {
                             anvil::memory::lazy_stack_allocator::LazyStackAllocator* null_alloc = nullptr;
@@ -64,16 +64,15 @@ void bind_lazy_stack_allocator(pybind11::module_& module) { // NOLINT
         m.def(
             "lazy_stack_allocator_alloc",
             [](py::capsule& allocator, const size_t allocation_size, const size_t alignment) -> py::tuple {
-                    anvil::memory::lazy_stack_allocator::LazyStackAllocator* alloc =
-                        static_cast<anvil::memory::lazy_stack_allocator::LazyStackAllocator*>(allocator.get_pointer());
+                                        anvil::memory::lazy_stack_allocator::LazyStackAllocator* alloc =
+                                                (anvil::memory::lazy_stack_allocator::LazyStackAllocator*)(allocator.get_pointer());
 
                     char* allocation = nullptr;
                     if (alloc == nullptr || alloc == (anvil::memory::lazy_stack_allocator::LazyStackAllocator*)0x1) {
                             anvil::memory::lazy_stack_allocator::LazyStackAllocator* null_alloc = nullptr;
 
-                            allocation = static_cast<char*>(anvil::memory::lazy_stack_allocator::alloc(null_alloc,
-                                                                                                       allocation_size,
-                                                                                                       alignment));
+                                                        allocation =
+                                                                (char*)(anvil::memory::lazy_stack_allocator::alloc(null_alloc, allocation_size, alignment));
 
                             if (allocation == nullptr) {
                                     return py::make_tuple(py::none(), OK);
@@ -81,8 +80,7 @@ void bind_lazy_stack_allocator(pybind11::module_& module) { // NOLINT
                             return py::make_tuple(py::capsule(allocation, "char*"), OK);
                     }
 
-                    allocation = static_cast<char*>(anvil::memory::lazy_stack_allocator::alloc(alloc, allocation_size,
-                                                                                               alignment));
+                    allocation = (char*)(anvil::memory::lazy_stack_allocator::alloc(alloc, allocation_size, alignment));
 
                     if (allocation == nullptr) {
                             return py::make_tuple(py::none(), OK);
@@ -95,8 +93,8 @@ void bind_lazy_stack_allocator(pybind11::module_& module) { // NOLINT
         m.def(
             "lazy_stack_allocator_record",
             [](py::capsule& allocator) {
-                    anvil::memory::lazy_stack_allocator::LazyStackAllocator* alloc =
-                        static_cast<anvil::memory::lazy_stack_allocator::LazyStackAllocator*>(allocator.get_pointer());
+                                        anvil::memory::lazy_stack_allocator::LazyStackAllocator* alloc =
+                                                (anvil::memory::lazy_stack_allocator::LazyStackAllocator*)(allocator.get_pointer());
 
                     if (alloc == nullptr || alloc == (anvil::memory::lazy_stack_allocator::LazyStackAllocator*)0x1) {
                             anvil::memory::lazy_stack_allocator::LazyStackAllocator* null_alloc = nullptr;
@@ -110,8 +108,8 @@ void bind_lazy_stack_allocator(pybind11::module_& module) { // NOLINT
         m.def(
             "lazy_stack_allocator_unwind",
             [](py::capsule& allocator) {
-                    anvil::memory::lazy_stack_allocator::LazyStackAllocator* alloc =
-                        static_cast<anvil::memory::lazy_stack_allocator::LazyStackAllocator*>(allocator.get_pointer());
+                                        anvil::memory::lazy_stack_allocator::LazyStackAllocator* alloc =
+                                                (anvil::memory::lazy_stack_allocator::LazyStackAllocator*)(allocator.get_pointer());
 
                     if (alloc == nullptr || alloc == (anvil::memory::lazy_stack_allocator::LazyStackAllocator*)0x1) {
                             anvil::memory::lazy_stack_allocator::LazyStackAllocator* null_alloc = nullptr;

@@ -38,16 +38,16 @@ Error anvil_memory_alloc_lazy(void** mem_out, const size_t capacity, const size_
                 return OUT_OF_MEMORY;
         }
 
-        const uintptr_t ADDR         = reinterpret_cast<uintptr_t>(base) + sizeof(Metadata);
+        const uintptr_t ADDR         = (uintptr_t)(base) + sizeof(Metadata);
         const uintptr_t ALIGNED_ADDR = (ADDR + (alignment - 1)) & ~(alignment - 1);
 
-        Metadata*       metadata     = reinterpret_cast<Metadata*>(ALIGNED_ADDR - sizeof(Metadata));
+        Metadata*       metadata     = (Metadata*)(ALIGNED_ADDR - sizeof(Metadata));
         metadata->base               = base;
         metadata->virtual_capacity   = total_size;
         metadata->capacity           = PAGE_SIZE;
         metadata->page_count         = metadata->capacity >> PAGE_SHIFT;
 
-        *mem_out                     = reinterpret_cast<void*>(ALIGNED_ADDR);
+        *mem_out                     = (void*)(ALIGNED_ADDR);
         return OK;
 }
 
@@ -75,25 +75,25 @@ Error anvil_memory_alloc_eager(void** mem_out, const size_t capacity, const size
 
                 (void)madvise(base, total_size, MADV_HUGEPAGE);
         }
-        const uintptr_t ADDR         = reinterpret_cast<uintptr_t>(base) + sizeof(Metadata);
+        const uintptr_t ADDR         = (uintptr_t)(base) + sizeof(Metadata);
         const uintptr_t ALIGNED_ADDR = (ADDR + (alignment - 1U)) & ~(alignment - 1U);
 
         // NOTE: (UniquesKernel) since anvil_memory_dealloc relies on the virtual capacity for correct deallocation of
         // memory the virtual capacity to total_size. In eager allocation the virtual capacity is rather meaningless.
-        Metadata*       metadata     = reinterpret_cast<Metadata*>(ALIGNED_ADDR - sizeof(Metadata));
+        Metadata*       metadata     = (Metadata*)(ALIGNED_ADDR - sizeof(Metadata));
         metadata->base               = base;
         metadata->virtual_capacity   = total_size;
         metadata->capacity           = capacity;
         metadata->page_count         = total_size >> PAGE_SHIFT;
 
-        *mem_out                     = reinterpret_cast<void*>(ALIGNED_ADDR);
+        *mem_out                     = (void*)(ALIGNED_ADDR);
         return OK;
 }
 
 Error anvil_memory_dealloc(void* ptr) noexcept {
         REQUIRE(ptr != nullptr, NULL_PARAMETER);
 
-        Metadata* metadata = reinterpret_cast<Metadata*>(reinterpret_cast<uintptr_t>(ptr) - sizeof(Metadata));
+        Metadata* metadata = (Metadata*)((uintptr_t)(ptr) - sizeof(Metadata));
         INVARIANT(metadata->base != nullptr);
         INVARIANT(metadata->virtual_capacity > 0);
         INVARIANT(munmap(metadata->base, metadata->virtual_capacity) == 0);
@@ -106,7 +106,7 @@ Error anvil_memory_commit(void* ptr, const size_t commit_size) noexcept {
         REQUIRE(commit_size > 0, INVALID_ARGUMENTS);
         REQUIRE(commit_size <= MAX_CAPACITY, INVALID_ARGUMENTS);
 
-        Metadata* metadata = reinterpret_cast<Metadata*>(reinterpret_cast<uintptr_t>(ptr) - sizeof(Metadata));
+        Metadata* metadata = (Metadata*)((uintptr_t)(ptr) - sizeof(Metadata));
         INVARIANT(metadata->base != nullptr);
         INVARIANT(metadata->virtual_capacity > 0);
         INVARIANT(metadata->capacity <= metadata->virtual_capacity);
@@ -116,7 +116,7 @@ Error anvil_memory_commit(void* ptr, const size_t commit_size) noexcept {
                 return OUT_OF_MEMORY;
         }
 
-        void* commit_base = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(metadata->base) + metadata->capacity);
+        void* commit_base = (void*)((uintptr_t)(metadata->base) + metadata->capacity);
         if (mprotect(commit_base, COMMIT_SIZE, PROT_READ | PROT_WRITE) != 0) [[unlikely]] {
                 return OUT_OF_MEMORY;
         }

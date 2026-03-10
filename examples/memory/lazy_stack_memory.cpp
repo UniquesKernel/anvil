@@ -27,8 +27,7 @@ int main(void) {
         // Benchmark: many tiny allocations
         int sum = 0;
         for (int i = 0; i < NUM_ALLOCS; i++) {
-                int* ptr = reinterpret_cast<int*>(anvil::memory::lazy_stack_allocator::alloc(allocator, ALLOC_SIZE,
-                                                                                             alignof(int)));
+                int* ptr = (int*)(anvil::memory::lazy_stack_allocator::alloc(allocator, ALLOC_SIZE, alignof(int)));
 
                 if (ptr == nullptr) {
                         printf("ALLOCATION FAILURE at %i\n", i);

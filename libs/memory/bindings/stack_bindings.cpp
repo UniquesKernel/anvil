@@ -28,8 +28,8 @@ void bind_stack_allocator(pybind11::module_& module) { // NOLINT
         m.def(
             "stack_allocator_destroy",
             [](py::capsule& allocator) {
-                    anvil::memory::stack_allocator::StackAllocator* alloc =
-                        static_cast<anvil::memory::stack_allocator::StackAllocator*>(allocator.get_pointer());
+                                        anvil::memory::stack_allocator::StackAllocator* alloc =
+                                                (anvil::memory::stack_allocator::StackAllocator*)(allocator.get_pointer());
 
                     if (alloc == nullptr || alloc == (anvil::memory::stack_allocator::StackAllocator*)0x1) {
                             // NOTE: Rather than early return with the proper error code which would test the
@@ -46,7 +46,7 @@ void bind_stack_allocator(pybind11::module_& module) { // NOLINT
 
                     // NOTE: set_pointer does not accept nullptr, so for testing sake we use 0x1 as
                     // the nullptr
-                    allocator.set_pointer(reinterpret_cast<void*>(0x1));
+                    allocator.set_pointer((void*)(0x1));
                     return ERR;
             },
             py::arg("allocator"));
@@ -54,8 +54,8 @@ void bind_stack_allocator(pybind11::module_& module) { // NOLINT
         m.def(
             "stack_allocator_reset",
             [](py::capsule& allocator) {
-                    anvil::memory::stack_allocator::StackAllocator* alloc =
-                        static_cast<anvil::memory::stack_allocator::StackAllocator*>(allocator.get_pointer());
+                                        anvil::memory::stack_allocator::StackAllocator* alloc =
+                                                (anvil::memory::stack_allocator::StackAllocator*)(allocator.get_pointer());
 
                     if (alloc == nullptr || alloc == (anvil::memory::stack_allocator::StackAllocator*)0x1) {
                             anvil::memory::stack_allocator::StackAllocator* null_alloc = nullptr;
@@ -69,16 +69,15 @@ void bind_stack_allocator(pybind11::module_& module) { // NOLINT
         m.def(
             "stack_allocator_alloc",
             [](py::capsule& allocator, const size_t allocation_size, const size_t alignment) -> py::tuple {
-                    anvil::memory::stack_allocator::StackAllocator* alloc =
-                        static_cast<anvil::memory::stack_allocator::StackAllocator*>(allocator.get_pointer());
+                                        anvil::memory::stack_allocator::StackAllocator* alloc =
+                                                (anvil::memory::stack_allocator::StackAllocator*)(allocator.get_pointer());
 
                     char* allocation = nullptr;
                     if (alloc == nullptr || alloc == (anvil::memory::stack_allocator::StackAllocator*)0x1) {
                             anvil::memory::stack_allocator::StackAllocator* null_alloc = nullptr;
 
-                            allocation =
-                                static_cast<char*>(anvil::memory::stack_allocator::alloc(null_alloc, allocation_size,
-                                                                                         alignment));
+                                                        allocation =
+                                                                (char*)(anvil::memory::stack_allocator::alloc(null_alloc, allocation_size, alignment));
 
                             if (allocation == nullptr) {
                                     return py::make_tuple(py::none(), OK);
@@ -86,8 +85,7 @@ void bind_stack_allocator(pybind11::module_& module) { // NOLINT
                             return py::make_tuple(py::capsule(allocation, "char*"), OK);
                     }
 
-                    allocation =
-                        static_cast<char*>(anvil::memory::stack_allocator::alloc(alloc, allocation_size, alignment));
+                                        allocation = (char*)(anvil::memory::stack_allocator::alloc(alloc, allocation_size, alignment));
 
                     if (allocation == nullptr) {
                             return py::make_tuple(py::none(), OK);
@@ -100,8 +98,8 @@ void bind_stack_allocator(pybind11::module_& module) { // NOLINT
         m.def(
             "stack_allocator_record",
             [](py::capsule& allocator) {
-                    anvil::memory::stack_allocator::StackAllocator* alloc =
-                        static_cast<anvil::memory::stack_allocator::StackAllocator*>(allocator.get_pointer());
+                                        anvil::memory::stack_allocator::StackAllocator* alloc =
+                                                (anvil::memory::stack_allocator::StackAllocator*)(allocator.get_pointer());
 
                     if (alloc == nullptr || alloc == (anvil::memory::stack_allocator::StackAllocator*)0x1) {
                             // NOTE: Rather than early return with the proper error code which would test the
@@ -118,8 +116,8 @@ void bind_stack_allocator(pybind11::module_& module) { // NOLINT
         m.def(
             "stack_allocator_unwind",
             [](py::capsule& allocator) {
-                    anvil::memory::stack_allocator::StackAllocator* alloc =
-                        static_cast<anvil::memory::stack_allocator::StackAllocator*>(allocator.get_pointer());
+                                        anvil::memory::stack_allocator::StackAllocator* alloc =
+                                                (anvil::memory::stack_allocator::StackAllocator*)(allocator.get_pointer());
 
                     if (alloc == nullptr || alloc == (anvil::memory::stack_allocator::StackAllocator*)0x1) {
                             // NOTE: Rather than early return with the proper error code which would test the

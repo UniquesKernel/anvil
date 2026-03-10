@@ -27,18 +27,17 @@ Error create(LazyStackAllocator** allocator_out, const std::size_t capacity, con
                 return OUT_OF_MEMORY;
         }
 
-        *allocator_out                  = static_cast<LazyStackAllocator*>(mem);
+        *allocator_out                  = (LazyStackAllocator*)(mem);
 
-        const uintptr_t RAW_BASE        = reinterpret_cast<uintptr_t>(*allocator_out) + sizeof(LazyStackAllocator);
+        const uintptr_t RAW_BASE        = (uintptr_t)(*allocator_out) + sizeof(LazyStackAllocator);
         const uintptr_t ALIGNED_BASE    = (RAW_BASE + (alignment - 1)) & ~(alignment - 1);
 
-        (*allocator_out)->base          = reinterpret_cast<void*>(ALIGNED_BASE);
+        (*allocator_out)->base          = (void*)(ALIGNED_BASE);
         (*allocator_out)->capacity      = capacity;
         (*allocator_out)->allocated     = 0;
         (*allocator_out)->stack_depth   = 0;
 
-        const size_t ACTUALLY_AVAILABLE = reinterpret_cast<uintptr_t>((*allocator_out)->base) + capacity -
-                                          reinterpret_cast<uintptr_t>(*allocator_out);
+        const size_t ACTUALLY_AVAILABLE = (uintptr_t)((*allocator_out)->base) + capacity - (uintptr_t)(*allocator_out);
 
         INVARIANT(ACTUALLY_AVAILABLE <= TOTAL_MEMORY_NEEDED);
 
@@ -79,7 +78,7 @@ void* alloc(LazyStackAllocator* const allocator, const size_t allocation_size, c
         INVARIANT(allocator->base != nullptr);
         INVARIANT(allocator->allocated <= allocator->capacity);
 
-        const uintptr_t CURRENT_ADDR     = reinterpret_cast<uintptr_t>(allocator->base) + allocator->allocated;
+        const uintptr_t CURRENT_ADDR     = (uintptr_t)(allocator->base) + allocator->allocated;
         const uintptr_t ALIGNED_ADDR     = (CURRENT_ADDR + (alignment - 1)) & ~(alignment - 1);
         const size_t    OFFSET           = ALIGNED_ADDR - CURRENT_ADDR;
         const size_t    TOTAL_ALLOCATION = allocation_size + OFFSET;
@@ -88,8 +87,8 @@ void* alloc(LazyStackAllocator* const allocator, const size_t allocation_size, c
                 return nullptr;
         }
 
-        Metadata*    metadata = reinterpret_cast<Metadata*>(reinterpret_cast<uintptr_t>(allocator) - sizeof(Metadata));
-        const size_t TOTAL_NEEDED = (ALIGNED_ADDR + allocation_size) - reinterpret_cast<uintptr_t>(metadata->base);
+        Metadata*    metadata = (Metadata*)((uintptr_t)(allocator) - sizeof(Metadata));
+        const size_t TOTAL_NEEDED = (ALIGNED_ADDR + allocation_size) - (uintptr_t)(metadata->base);
 
         if (TOTAL_NEEDED > metadata->capacity) {
                 const size_t ADDITIONAL_COMMIT = TOTAL_NEEDED - metadata->capacity;
@@ -99,7 +98,7 @@ void* alloc(LazyStackAllocator* const allocator, const size_t allocation_size, c
         }
 
         allocator->allocated += TOTAL_ALLOCATION;
-        return reinterpret_cast<void*>(ALIGNED_ADDR);
+        return (void*)(ALIGNED_ADDR);
 }
 
 [[nodiscard]]

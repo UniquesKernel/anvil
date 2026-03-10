@@ -28,17 +28,16 @@ Error create(ScratchAllocator** allocator_out, const std::size_t capacity, const
                 return OUT_OF_MEMORY;
         }
 
-        *allocator_out                  = static_cast<ScratchAllocator*>(mem);
+        *allocator_out                  = (ScratchAllocator*)(mem);
 
-        const uintptr_t RAW_BASE        = reinterpret_cast<uintptr_t>(*allocator_out) + sizeof(ScratchAllocator);
+        const uintptr_t RAW_BASE        = (uintptr_t)(*allocator_out) + sizeof(ScratchAllocator);
         const uintptr_t ALIGNED_BASE    = (RAW_BASE + (alignment - 1)) & ~(alignment - 1);
 
-        (*allocator_out)->base          = reinterpret_cast<void*>(ALIGNED_BASE);
+        (*allocator_out)->base          = (void*)(ALIGNED_BASE);
         (*allocator_out)->capacity      = capacity;
         (*allocator_out)->allocated     = 0;
 
-        const size_t ACTUALLY_AVAILABLE = reinterpret_cast<uintptr_t>((*allocator_out)->base) + capacity -
-                                          reinterpret_cast<uintptr_t>(*allocator_out);
+        const size_t ACTUALLY_AVAILABLE = (uintptr_t)((*allocator_out)->base) + capacity - (uintptr_t)(*allocator_out);
 
         INVARIANT(ACTUALLY_AVAILABLE <= TOTAL_MEMORY_NEEDED);
 
@@ -67,7 +66,7 @@ void* alloc(ScratchAllocator* const allocator, const size_t allocation_size, con
 
         INVARIANT(allocator->allocated <= allocator->capacity);
 
-        const uintptr_t CURRENT_ADDR     = reinterpret_cast<uintptr_t>(allocator->base) + allocator->allocated;
+        const uintptr_t CURRENT_ADDR     = (uintptr_t)(allocator->base) + allocator->allocated;
         const uintptr_t ALIGNED_ADDR     = (CURRENT_ADDR + (alignment - 1)) & ~(alignment - 1);
         const size_t    OFFSET           = ALIGNED_ADDR - CURRENT_ADDR;
 
@@ -78,7 +77,7 @@ void* alloc(ScratchAllocator* const allocator, const size_t allocation_size, con
         }
 
         allocator->allocated += TOTAL_ALLOCATION;
-        return reinterpret_cast<void*>(ALIGNED_ADDR);
+        return (void*)(ALIGNED_ADDR);
 }
 
 [[nodiscard]]

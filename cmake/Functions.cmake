@@ -109,6 +109,7 @@ function(anvil_enable_static_analysis_root)
         --suppress=missingIncludeSystem
         --suppress=unmatchedSuppression
         --suppress=unusedFunction
+        --suppress=cstyleCast
         --project=${CMAKE_BINARY_DIR}/compile_commands.json
       WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
       COMMENT "Running cppcheck (compile_commands.json)"

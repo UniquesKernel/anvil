@@ -32,7 +32,6 @@ PYBIND11_MODULE(anvil_memory, m) {
         m.attr("MAX_CAPACITY")    = py::int_(anvil::memory::MAX_CAPACITY);
         m.attr("MAX_STACK_DEPTH") = py::int_(anvil::memory::MAX_STACK_DEPTH);
 
-        m.def(
-            "ptr_to_int", [](py::capsule& cap) { return reinterpret_cast<uintptr_t>(cap.get_pointer()); },
-            py::arg("ptr"), "Convert a pointer capsule to integer address");
+          m.def("ptr_to_int", [](py::capsule& cap) { return (uintptr_t)(cap.get_pointer()); }, py::arg("ptr"),
+              "Convert a pointer capsule to integer address");
 }
