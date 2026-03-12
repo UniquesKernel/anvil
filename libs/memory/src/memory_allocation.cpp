@@ -18,7 +18,7 @@ Error anvil_memory_alloc_lazy(void** mem_out, const size_t capacity, const size_
         REQUIRE(anvil::memory::MIN_ALIGNMENT <= alignment, INVALID_ARGUMENTS);
         REQUIRE(alignment <= anvil::memory::MAX_ALIGNMENT, INVALID_ARGUMENTS);
 
-        size_t total_size = capacity + sizeof(Metadata);
+        size_t total_size = capacity + sizeof(Metadata) + alignment - 1;
         total_size        = (total_size + (PAGE_SIZE - 1U)) & ~(PAGE_SIZE - 1U);
         void* base        = mmap(nullptr, total_size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
@@ -60,7 +60,7 @@ Error anvil_memory_alloc_eager(void** mem_out, const size_t capacity, const size
         REQUIRE(anvil::memory::MIN_ALIGNMENT <= alignment, INVALID_ARGUMENTS);
         REQUIRE(alignment <= anvil::memory::MAX_ALIGNMENT, INVALID_ARGUMENTS);
 
-        size_t total_size = capacity + sizeof(Metadata);
+        size_t total_size = capacity + sizeof(Metadata) + alignment - 1;
         total_size        = (total_size + (PAGE_SIZE - 1U)) & ~(PAGE_SIZE - 1U);
         void* base        = mmap(nullptr, total_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 

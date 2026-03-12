@@ -21,25 +21,21 @@ Error create(ScratchAllocator** allocator_out, const std::size_t capacity, const
         REQUIRE(alignment >= MIN_ALIGNMENT, INVALID_ARGUMENTS);
         REQUIRE(alignment <= MAX_ALIGNMENT, INVALID_ARGUMENTS);
 
-        const size_t TOTAL_MEMORY_NEEDED = capacity + sizeof(ScratchAllocator) + alignment - 1;
+        const size_t TOTAL_MEMORY_NEEDED = capacity + sizeof(ScratchAllocator);
 
         void*        mem                 = nullptr;
         if (anvil::memory::anvil_memory_alloc_eager(&mem, TOTAL_MEMORY_NEEDED, alignment) != OK) {
                 return OUT_OF_MEMORY;
         }
 
-        *allocator_out                  = (ScratchAllocator*)(mem);
+        *allocator_out               = (ScratchAllocator*)(mem);
 
-        const uintptr_t RAW_BASE        = (uintptr_t)(*allocator_out) + sizeof(ScratchAllocator);
-        const uintptr_t ALIGNED_BASE    = (RAW_BASE + (alignment - 1)) & ~(alignment - 1);
+        const uintptr_t RAW_BASE     = (uintptr_t)(*allocator_out) + sizeof(ScratchAllocator);
+        const uintptr_t ALIGNED_BASE = (RAW_BASE + (alignment - 1)) & ~(alignment - 1);
 
-        (*allocator_out)->base          = (void*)(ALIGNED_BASE);
-        (*allocator_out)->capacity      = capacity;
-        (*allocator_out)->allocated     = 0;
-
-        const size_t ACTUALLY_AVAILABLE = (uintptr_t)((*allocator_out)->base) + capacity - (uintptr_t)(*allocator_out);
-
-        INVARIANT(ACTUALLY_AVAILABLE <= TOTAL_MEMORY_NEEDED);
+        (*allocator_out)->base       = (void*)(ALIGNED_BASE);
+        (*allocator_out)->capacity   = capacity;
+        (*allocator_out)->allocated  = 0;
 
         return OK;
 }

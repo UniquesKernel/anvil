@@ -6,6 +6,7 @@
 #include "memory/memory_allocation.hpp"
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 
 namespace anvil::memory::lazy_stack_allocator {
 
@@ -20,26 +21,21 @@ Error create(LazyStackAllocator** allocator_out, const std::size_t capacity, con
         REQUIRE(alignment >= MIN_ALIGNMENT, INVALID_ARGUMENTS);
         REQUIRE(alignment <= MAX_ALIGNMENT, INVALID_ARGUMENTS);
 
-        const size_t TOTAL_MEMORY_NEEDED = capacity + sizeof(LazyStackAllocator) + alignment - 1;
+        const size_t TOTAL_MEMORY_NEEDED = capacity + sizeof(LazyStackAllocator);
 
         void*        mem                 = nullptr;
         if (anvil::memory::anvil_memory_alloc_lazy(&mem, TOTAL_MEMORY_NEEDED, alignment) != OK) {
                 return OUT_OF_MEMORY;
         }
+        *allocator_out                = (LazyStackAllocator*)(mem);
 
-        *allocator_out                  = (LazyStackAllocator*)(mem);
+        const uintptr_t RAW_BASE      = (uintptr_t)(*allocator_out) + sizeof(LazyStackAllocator);
+        const uintptr_t ALIGNED_BASE  = (RAW_BASE + (alignment - 1)) & ~(alignment - 1);
 
-        const uintptr_t RAW_BASE        = (uintptr_t)(*allocator_out) + sizeof(LazyStackAllocator);
-        const uintptr_t ALIGNED_BASE    = (RAW_BASE + (alignment - 1)) & ~(alignment - 1);
-
-        (*allocator_out)->base          = (void*)(ALIGNED_BASE);
-        (*allocator_out)->capacity      = capacity;
-        (*allocator_out)->allocated     = 0;
-        (*allocator_out)->stack_depth   = 0;
-
-        const size_t ACTUALLY_AVAILABLE = (uintptr_t)((*allocator_out)->base) + capacity - (uintptr_t)(*allocator_out);
-
-        INVARIANT(ACTUALLY_AVAILABLE <= TOTAL_MEMORY_NEEDED);
+        (*allocator_out)->base        = (void*)(ALIGNED_BASE);
+        (*allocator_out)->capacity    = capacity;
+        (*allocator_out)->allocated   = 0;
+        (*allocator_out)->stack_depth = 0;
 
         return OK;
 }
@@ -87,7 +83,7 @@ void* alloc(LazyStackAllocator* const allocator, const size_t allocation_size, c
                 return nullptr;
         }
 
-        Metadata*    metadata = (Metadata*)((uintptr_t)(allocator) - sizeof(Metadata));
+        Metadata*    metadata     = (Metadata*)((uintptr_t)(allocator) - sizeof(Metadata));
         const size_t TOTAL_NEEDED = (ALIGNED_ADDR + allocation_size) - (uintptr_t)(metadata->base);
 
         if (TOTAL_NEEDED > metadata->capacity) {

@@ -16,14 +16,20 @@ from anvil_memory.stack_allocator import (
 )
 from anvil_memory import Error, MAX_STACK_DEPTH, ptr_to_int
 from hypothesis import strategies as st, reproduce_failure
-from hypothesis.stateful import RuleBasedStateMachine, initialize, invariant, precondition, rule
+from hypothesis.stateful import (
+    RuleBasedStateMachine,
+    initialize,
+    invariant,
+    precondition,
+    rule,
+)
 
 
 @st.composite
 def allocator_config(draw):
     """Generate (capacity, alignment) where alignment is power-of-two in supported range."""
     base = draw(st.integers(min_value=3, max_value=11))
-    alignment = 2 ** base
+    alignment = 2**base
 
     capacity = draw(st.integers(min_value=1, max_value=2**24))
     return (capacity, alignment)
@@ -101,27 +107,41 @@ class DifferentialAllocatorModel(RuleBasedStateMachine):
         self.stack.clear()
 
     @rule(config=allocator_config())
-    @precondition(lambda self: (self.lazy_allocator is not None) and (self.stack_allocator is not None))
+    @precondition(
+        lambda self: (self.lazy_allocator is not None)
+        and (self.stack_allocator is not None)
+    )
     def alloc(self, config):
         allocation_size, alignment = config
 
-        lazy_ptr, _ = lazy_stack_allocator_alloc(self.lazy_allocator, allocation_size, alignment)
-        stack_ptr, _ = stack_allocator_alloc(self.stack_allocator, allocation_size, alignment)
+        lazy_ptr, _ = lazy_stack_allocator_alloc(
+            self.lazy_allocator, allocation_size, alignment
+        )
+        stack_ptr, _ = stack_allocator_alloc(
+            self.stack_allocator, allocation_size, alignment
+        )
 
         assert (lazy_ptr is None) == (stack_ptr is None)
 
         if lazy_ptr and stack_ptr:
-            self.lazy_allocations.append((lazy_ptr, allocation_size, alignment, self.epoch))
-            self.stack_allocations.append((stack_ptr, allocation_size, alignment, self.epoch))
+            self.lazy_allocations.append(
+                (lazy_ptr, allocation_size, alignment, self.epoch)
+            )
+            self.stack_allocations.append(
+                (stack_ptr, allocation_size, alignment, self.epoch)
+            )
             self.allocated = self.allocated + allocation_size
 
     @rule()
-    @precondition(lambda self: (self.lazy_allocator is not None) and (self.stack_allocator is not None))
+    @precondition(
+        lambda self: (self.lazy_allocator is not None)
+        and (self.stack_allocator is not None)
+    )
     def allocator_reset(self):
         lazy_err = lazy_stack_allocator_reset(self.lazy_allocator)
         stack_err = stack_allocator_reset(self.stack_allocator)
 
-        if (self.isValid == True):
+        if self.isValid == True:
             assert lazy_err == stack_err
             self.lazy_allocations.clear()
             self.stack_allocations.clear()
@@ -129,39 +149,47 @@ class DifferentialAllocatorModel(RuleBasedStateMachine):
             self.allocated = 0
             self.epoch = 0
         else:
-            assert lazy_err == stack_err 
+            assert lazy_err == stack_err
 
     @rule()
-    @precondition(lambda self: (self.lazy_allocator is not None) and (self.stack_allocator is not None))
+    @precondition(
+        lambda self: (self.lazy_allocator is not None)
+        and (self.stack_allocator is not None)
+    )
     def record(self):
         lazy_err = lazy_stack_allocator_record(self.lazy_allocator)
         stack_err = stack_allocator_record(self.stack_allocator)
 
-        if (self.isValid == False):
+        if self.isValid == False:
             assert lazy_err == stack_err
             return
 
-        if (len(self.lazy_allocations) > MAX_STACK_DEPTH):
+        if len(self.lazy_allocations) > MAX_STACK_DEPTH:
             assert lazy_err == stack_err
             return
 
         assert lazy_err == stack_err
 
-        epoch_alloc_size = sum([x for (_, x, _, epoch) in self.lazy_allocations if epoch == self.epoch])
+        epoch_alloc_size = sum(
+            [x for (_, x, _, epoch) in self.lazy_allocations if epoch == self.epoch]
+        )
         self.stack.append((len(self.lazy_allocations), epoch_alloc_size))
         self.epoch += 1
 
     @rule()
-    @precondition(lambda self: (self.lazy_allocator is not None) and (self.stack_allocator is not None))
+    @precondition(
+        lambda self: (self.lazy_allocator is not None)
+        and (self.stack_allocator is not None)
+    )
     def unwind(self):
         lazy_err = lazy_stack_allocator_unwind(self.lazy_allocator)
         stack_err = stack_allocator_unwind(self.stack_allocator)
 
-        if (self.isValid == False):
+        if self.isValid == False:
             assert lazy_err == stack_err
             return
 
-        if (len(self.stack) == 0):
+        if len(self.stack) == 0:
             assert lazy_err == stack_err
             return
 
@@ -174,12 +202,15 @@ class DifferentialAllocatorModel(RuleBasedStateMachine):
         self.allocated -= epoch_size
 
     @rule()
-    @precondition(lambda self: (self.lazy_allocator is not None) and (self.stack_allocator is not None))
+    @precondition(
+        lambda self: (self.lazy_allocator is not None)
+        and (self.stack_allocator is not None)
+    )
     def destroy(self):
         lazy_err = lazy_stack_allocator_destroy(self.lazy_allocator)
         stack_err = stack_allocator_destroy(self.stack_allocator)
 
-        if (self.isValid == True):
+        if self.isValid == True:
             assert lazy_err == stack_err
         else:
             assert lazy_err == stack_err
@@ -203,8 +234,12 @@ class DifferentialAllocatorModel(RuleBasedStateMachine):
             lazy_size == stack_size
             and lazy_align == stack_align
             and lazy_epoch == stack_epoch
-            for (_, lazy_size, lazy_align, lazy_epoch), (_, stack_size, stack_align, stack_epoch)
-            in zip(self.lazy_allocations, self.stack_allocations)
+            for (_, lazy_size, lazy_align, lazy_epoch), (
+                _,
+                stack_size,
+                stack_align,
+                stack_epoch,
+            ) in zip(self.lazy_allocations, self.stack_allocations)
         )
 
     @invariant()
@@ -215,7 +250,9 @@ class DifferentialAllocatorModel(RuleBasedStateMachine):
 
         assert all(
             (ptr_to_int(lazy_ptr) - lazy_base) == (ptr_to_int(stack_ptr) - stack_base)
-            for (lazy_ptr, _, _, _), (stack_ptr, _, _, _) in zip(self.lazy_allocations, self.stack_allocations)
+            for (lazy_ptr, _, _, _), (stack_ptr, _, _, _) in zip(
+                self.lazy_allocations, self.stack_allocations
+            )
         )
 
 
