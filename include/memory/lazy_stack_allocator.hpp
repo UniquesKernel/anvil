@@ -8,7 +8,7 @@
  * a full reset operation for bulk invalidation.
  *
  * @note All functions in this module follow fail-fast design; programmer errors
- *       immediate abort with diagnostics.
+ *       immediate abort.
  * @note This allocator is NOT thread-safe and requires external
  *       synchronization for concurrent use.
  */
@@ -22,11 +22,12 @@
 namespace anvil::memory::lazy_stack_allocator {
 
 /**
- * @brief Internal representation of a lazy stack allocator with checkpoint/restore capability.
+ * @brief Representation of a lazy stack allocator with record/unwind capability.
  *
- * This structure manages a contiguous virtual address space with linear
- * allocation semantics and supports a record/unwind mechanism for checkpoint-
- * based memory management. Physical memory is committed lazily on demand.
+ * The lazy stack allocator manages a contiguous virtual address space. All allocations
+ * are linear allocations, that partition the contiguous memory buffer and lazily commits
+ * additional physical memory, when required. The lazy stack allocator, supports a record
+ * and unwind mechanism, that allows it to record a checkpoint and later restore that checkpoint.
  *
  * Memory layout: [LazyStackAllocator metadata][usable memory region]
  *
@@ -36,8 +37,8 @@ namespace anvil::memory::lazy_stack_allocator {
  * @invariant 0 <= stack_depth <= MAX_STACK_DEPTH
  * @invariant For all i < stack_depth: stack[i] <= allocated
  *
- * @note The structure is placed at the beginning of the reserved address space.
- * @note Total reservation footprint is sizeof(LazyStackAllocator) + capacity bytes.
+ * @note Any allocation made after a record operation but before an unwind operation should be considered
+ * invalid after the unwind operation.
  *
  * Field       | Type     | Size (Bytes)      | Description
  * ----------- | -------- | ----------------- | -------------------------------------------------
@@ -47,7 +48,7 @@ namespace anvil::memory::lazy_stack_allocator {
  * stack_depth | size_t   | sizeof(size_t)    | Current depth of the record/unwind stack
  * stack       | size_t[] | MAX_STACK_DEPTH*8 | Allocation checkpoints for record/unwind operations
  *
- * @note On 64-bit systems: sizeof(LazyStackAllocator) = 8 + 8 + 8 + 8 + (64 * 8) = 544 bytes
+ * Total size: 544 bytes
  */
 struct LazyStackAllocator {
         void*  base;                                  ///< Start of usable memory region
@@ -60,11 +61,11 @@ static_assert(sizeof(LazyStackAllocator) == 544, "LazyStackAllocator size must b
 static_assert(alignof(LazyStackAllocator) == alignof(void*), "LazyStackAllocator alignment must match void* alignment");
 
 /**
- * @brief Creates a lazy (virtual-reserving) stack allocator.
+ * @brief Initialize a lazy stack allocator.
  *
- * Reserves a contiguous virtual address space sufficient for the allocator
- * metadata and `capacity` bytes of usable memory, deferring physical memory
- * commitment until allocations occur.
+ * Initialize a stack allocator using virtual memory addresses.
+ * Memory is committed on-demand, consuming only the memory necessary
+ * within the granularity of a single memory page.
  *
  * @pre `allocator_out != nullptr`.
  * @pre `*allocator_out == nullptr`.
@@ -74,103 +75,91 @@ static_assert(alignof(LazyStackAllocator) == alignof(void*), "LazyStackAllocator
  * @pre `alignment` is a power of two.
  * @pre `MIN_ALIGNMENT <= alignment <= MAX_ALIGNMENT`.
  *
- * @post On success, a valid allocator instance is created with metadata followed
- *       by a usable region of exactly `capacity` bytes.
- * @post Backing allocation requests
- *       `capacity + sizeof(LazyStackAllocator) + alignment - 1` bytes before
- *       page rounding in the underlying allocator.
- * @post All allocations from LazyStackAllocator are aligned to `alignment`.
- * @post Initially, the allocation watermark is zero and checkpoint depth is zero.
- *
  * @param[out] allocator_out Output location that receives the created allocator.
  * @param[in] capacity       The amount of usable memory to reserve (bytes).
  * @param[in] alignment      Alignment of all memory allocated from the LazyStackAllocator.
  *
- * @return Error code, `OK` on success while other values indicate failure.
+ * @return Error enumeration code `OK` on success with other values indicating failure.
  */
 [[nodiscard]] Error create(LazyStackAllocator** allocator_out, std::size_t capacity, std::size_t alignment) noexcept;
 
 /**
- * @brief Removes the reserved/committed region and releases all resources.
+ * @brief Null out an allocator and return the underlying memory to the Operating System.
  *
  * @pre `allocator != nullptr`.
  * @pre `*allocator != nullptr`.
  *
- * @post The allocator handle is set to null.
- * @post The system has released all reserved/committed memory back to the OS.
- * @post All outstanding allocations are invalid.
+ * @post The `allocator` pointer is set to null.
+ * @post The backing memory has been returned to the Operating System.
+ * @post All allocations become invalid.
  *
- * @param[in,out] allocator  Reference to the allocator pointer which will be nulled.
- * @return Error code, `OK` on success while other values indicate failure.
+ * @param[out] allocator        The allocator that should be destroyed.
+ * @return Error enumeration code where `OK` indicates success and other values indicate failure.
+ *
+ * @note A failure to return the memory to the operating system is treated as a state corruption
+ *       and the function will abort the process rather than continue.
  */
 [[nodiscard]] Error destroy(LazyStackAllocator** allocator) noexcept;
 
 /**
- * @brief Allocates a contiguous aligned sub-region and commits pages on demand.
+ * @brief Allocate a contiguous region of memory from the allocator's backing memory buffer.
  *
- * Advances the internal watermark with proper alignment and, for lazy
- * provisioning, commits additional physical memory to cover the newly
- * allocated span.
+ * Allocate a contiguous region of memory from the allocator's backing memory buffer.
+ * The memory is lazy allocated, in the granularity of one page segments.
  *
  * @pre `allocator != nullptr`.
- * @pre `allocation_size > 0`.
- * @pre `allocation_size <= MAX_CAPACITY`.
+ * @pre `0 < allocation_size <= MAX_CAPACITY`.
  * @pre `alignment` is a power of two.
  * @pre `MIN_ALIGNMENT <= alignment <= MAX_ALIGNMENT`.
- *
- * @post On success, the allocation watermark increases by
- *       `allocation_size + padding`, where `0 <= padding < alignment`.
- * @post Returned pointer (if non-null) is aligned to `alignment`.
- * @post Returns `nullptr` if insufficient capacity remains or page commit fails.
  *
  * @param[in] allocator        LazyStackAllocator from which the allocation should be made.
  * @param[in] allocation_size  Size in bytes of the requested allocation.
  * @param[in] alignment        Alignment of the returned memory region.
  *
- * @return Pointer to aligned memory region of size `allocation_size` (bytes),
- *         or `nullptr` on failure.
+ * @return Pointer to aligned memory region of size `allocation_size` bytes,
+ *         `nullptr` indicates failure to allocate the requested memory.
  */
 [[nodiscard]] void* alloc(LazyStackAllocator* allocator, std::size_t allocation_size, std::size_t alignment) noexcept;
 
 /**
- * @brief Re-initializes the allocator state; prior allocations become invalid.
+ * @brief Reset the allocator to it's initialization state.
  *
  * @pre `allocator != nullptr`.
  * @pre `allocator->base != nullptr`.
  *
- * @post The allocation watermark is zero and checkpoint depth is zero.
- * @post All previous allocations from this allocator are invalid.
- * @post Allocated bytes are not cleared.
+ * @param[in] allocator         LazyStackAllocator that should be reset.
+ * @return Error enumeration code with `OK` indicating success and other values
+ *         indicate failure.
  *
- * @param[in] allocator  LazyStackAllocator that should be reset.
- * @return Error code, `OK` on success while other values indicate failure.
+ * @note All previous allocations from this allocator should be considered
+ *       invalid after reset.
  */
 [[nodiscard]] Error reset(LazyStackAllocator* allocator) noexcept;
 
 /**
- * @brief Records the current allocation state for later unwinding.
+ * @brief Records the current allocation state in a LIFO style pattern.
  *
  * @pre `allocator != nullptr`.
  * @pre `allocator->stack_depth < MAX_STACK_DEPTH`.
  *
- * @post The current allocation watermark is saved on the internal stack.
- *
- * @param[in] allocator  LazyStackAllocator whose state should be recorded.
- * @return Error code, `OK` on success while other values indicate failure.
+ * @param[in] allocator         LazyStackAllocator whose state should be recorded.
+ * @return Error enumeration code with `OK` indicating success and other values
+ *         indicate failure.
  */
 [[nodiscard]] Error record(LazyStackAllocator* allocator) noexcept;
 
 /**
- * @brief Unwinds allocations back to the last recorded state.
+ * @brief Unwind the allocator in a LIFO pattern to its previously recorded state
  *
  * @pre `allocator != nullptr`.
  * @pre `allocator->stack_depth > 0`.
  *
- * @post Allocations made after the last record are invalidated.
- * @post The allocator returns to the state at the time of the last record.
+ * @param[in] allocator         LazyStackAllocator that should be unwound.
+ * @return Error enumeration code with `OK` indicating success and other values
+ *         indicate failure.
  *
- * @param[in] allocator  LazyStackAllocator that should be unwound.
- * @return Error code, `OK` on success while other values indicate failure.
+ * @note When `unwind` is called, all allocations between the latest record and the
+ *       current unwind call, should be considered invalid.
  */
 [[nodiscard]] Error unwind(LazyStackAllocator* allocator) noexcept;
 

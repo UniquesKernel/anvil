@@ -18,7 +18,7 @@ namespace anvil::math {
  * @brief Two-dimensional vector
  *
  * `Vector2` represents a mathematical vector in 2D space with components
- * `x` and `y`, represented using single-precision (32-bit) floating-point arithmetic.
+ * `x` and `y`, stored as single-precision (32-bit) floating-point values.
  *
  * Supported operations:
  *      - Vector addition and subtraction
@@ -51,7 +51,7 @@ static_assert(sizeof(Vector2) == 8, "Vector2 holds two floating-point values of 
  * @brief Three-dimensional vector
  *
  * `Vector3` represents a mathematical vector in 3D space with components
- * `x`, `y`, and `z`, represented using single-precision (32-bit) floating-point arithmetic.
+ * `x`, `y`, and `z`, stored as single-precision (32-bit) floating-point values.
  *
  * Supported operations:
  *      - Vector addition and subtraction
@@ -214,13 +214,12 @@ inline bool operator==(const Vector3& a, const Vector3& b) {
 #pragma GCC diagnostic pop
 
 /**
- * @brief The cross product takes two `Vector3` values and produces a new vector
- *        that is perpendicular to both.
+ * @brief Compute the cross product of two `Vector3` values.
  *
- * @param[in] a         The first vector in the cross product
- * @param[in] b         The second vector in the cross product
+ * @param[in] a         The first vector in the cross product.
+ * @param[in] b         The second vector in the cross product.
  *
- * @return A `Vector3` perpendicular to both `a` and `b`
+ * @return A `Vector3` that is perpendicular to both `a` and `b`.
  *
  * @note The cross product is only defined in three dimensions.
  */
