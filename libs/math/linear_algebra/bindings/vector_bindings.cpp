@@ -1,11 +1,11 @@
-#include "math/vector.hpp"
+#include "math/linear_algebra/vector.hpp"
 #include <pybind11/detail/common.h>
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
 PYBIND11_MODULE(math_module, module) {
-        module.doc() = "Vector module";
+        module.doc() = "Linear algebra vector module";
         py::class_<anvil::math::Vector2>(module, "Vector2")
             .def(py::init([](const float& a, const float& b) { return anvil::math::Vector2{a, b}; }))
             .def_property(

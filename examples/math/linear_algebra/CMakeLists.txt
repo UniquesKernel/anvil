@@ -1,0 +1,5 @@
+add_executable(vector2_example vector2_example.cpp)
+target_link_libraries(vector2_example PRIVATE math_linear_algebra)
+
+add_executable(vector3_example vector3_example.cpp)
+target_link_libraries(vector3_example PRIVATE math_linear_algebra)

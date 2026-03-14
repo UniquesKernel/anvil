@@ -28,8 +28,8 @@ Error anvil::graphic::create(Canvas* const canvas_out, const unsigned long width
                 return ALLOCATOR_CREATE_ERR;
         }
 
-        canvas_out->buffer = (char*)(memory::scratch_allocator::alloc(canvas_out->allocator, height * width,
-                                                                      alignof(unsigned long)));
+        canvas_out->buffer =
+            (char*)(memory::scratch_allocator::alloc(canvas_out->allocator, height * width, alignof(unsigned long)));
 
         if (!canvas_out->buffer) {
                 const Error CLEANUP_ERROR = memory::scratch_allocator::destroy(&canvas_out->allocator);

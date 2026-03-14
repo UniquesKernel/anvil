@@ -1,4 +1,4 @@
-#include "math/vector.hpp"
+#include "math/linear_algebra/vector.hpp"
 
 namespace anvil::math {
 

@@ -6,6 +6,7 @@ set(MODULE_SOURCE
     src/lazy_stack_allocator.cpp
     src/scratch_allocator.cpp
     src/stack_allocator.cpp
+  src/resizable_buffer.cpp
     src/utility.cpp
 )
 
@@ -14,6 +15,8 @@ add_library(${MODULE_NAME} SHARED ${MODULE_SOURCE}) # Release Target
 target_compile_options(memory PRIVATE
     -include ${CMAKE_SOURCE_DIR}/include/memory/memory_policy.hpp
 )
+
+target_link_libraries(${MODULE_NAME} math)
 
 ## =================== Set Compiler Options ===================
 
@@ -62,7 +65,7 @@ if(BUILD_TESTING)
     )
     
     # Link against Python libraries explicitly
-    target_link_libraries(anvil_memory PRIVATE Python3::Python)
+    target_link_libraries(anvil_memory PRIVATE Python3::Python math)
     target_compile_options(anvil_memory PRIVATE -O0 -g)
 
     # Copy the module to the test directory for easy importing

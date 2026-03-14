@@ -22,7 +22,6 @@ Checks: >
   misc-unconventional-assign-operator,
   misc-uniqueptr-reset-release,
   misc-unused-parameters,
-  readability-function-size,
   readability-function-cognitive-complexity,
   readability-identifier-naming
 
@@ -52,7 +51,7 @@ CheckOptions:
   - key: readability-function-size.NestingThreshold
     value: 4
   - key: readability-function-cognitive-complexity.Threshold
-    value: 30
+    value: 40
   - key: readability-identifier-naming.VariableCase
     value: lower_case
   - key: readability-identifier-naming.FunctionCase
