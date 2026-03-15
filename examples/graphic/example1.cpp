@@ -2,10 +2,10 @@
 #include "graphic/canvas.hpp"
 #include <cstdio>
 
-static constexpr unsigned long WIDTH  = 800;
-static constexpr unsigned long HEIGHT = 400;
+static constexpr anvil::u64 WIDTH  = 800;
+static constexpr anvil::u64 HEIGHT = 400;
 
-int                            main(void) {
+int                         main(void) {
         anvil::graphic::Canvas canvas;
 
         if (anvil::graphic::create(&canvas, WIDTH, HEIGHT, ' ') != OK) {

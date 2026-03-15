@@ -1,12 +1,12 @@
 #ifndef ANVIL_ERROR_STATUS_HPP
 #define ANVIL_ERROR_STATUS_HPP
 
-#include <cstdint>
+#include "anvil/types.hpp"
 
 /**
  * @brief A list of error codes that can be used to indicate program errors
  */
-enum Error : std::uint8_t {
+enum Error : anvil::u8 {
         OK                 = 0,
         INVALID_DIMENSIONS = 1,
         INVALID_ARGUMENTS  = 2,

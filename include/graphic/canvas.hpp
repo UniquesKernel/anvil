@@ -8,13 +8,14 @@
 #ifndef ANVIL_GRAPHIC_CANVAS_HPP
 #define ANVIL_GRAPHIC_CANVAS_HPP
 
+#include "anvil/types.hpp"
 #include "error/status.hpp"
 #include "memory/scratch_allocator.hpp"
 
 namespace anvil::graphic {
 
-static const unsigned long MAX_WIDTH  = 1920;
-static const unsigned long MAX_HEIGHT = 1080;
+static const u64 MAX_WIDTH  = 1920;
+static const u64 MAX_HEIGHT = 1080;
 
 /**
  * @brief Canvas for rendering ASCII graphics
@@ -29,16 +30,16 @@ static const unsigned long MAX_HEIGHT = 1080;
  * ### Fields
  * | Name       | Type                  | Size          |
  * |------------|-----------------------|---------------|
- * | height     | unsigned long         | 8 bytes       |
- * | width      | unsigned long         | 8 bytes       |
+ * | height     | u64                   | 8 bytes       |
+ * | width      | u64                   | 8 bytes       |
  * | buffer     | char*                 | 8 bytes       |
  * | allocator  | ScratchAllocator*     | 8 bytes       |
  *
  * **Total Size:** 32 bytes
  */
 struct Canvas {
-        unsigned long                                height    = 0;
-        unsigned long                                width     = 0;
+        u64                                          height    = 0;
+        u64                                          width     = 0;
         char*                                        buffer    = nullptr;
         memory::scratch_allocator::ScratchAllocator* allocator = nullptr;
 };
@@ -60,7 +61,7 @@ static_assert(sizeof(Canvas) == 32, "Canvas size must be 32 bytes"); // NOLINT
  *
  * @return `Error` code enumeration with OK indicating a successful initialization
  */
-Error create(Canvas* canvas_out, unsigned long width, unsigned long height, char fill_char);
+Error create(Canvas* canvas_out, u64 width, u64 height, char fill_char);
 
 /**
  * @brief Set the value of the buffer index to `character`
@@ -76,7 +77,7 @@ Error create(Canvas* canvas_out, unsigned long width, unsigned long height, char
  *
  * @return `Error` code enumeration with OK indicating a successful write
  */
-Error set(Canvas* canvas_out, unsigned long index, char character);
+Error set(Canvas* canvas_out, u64 index, char character);
 
 Error destroy(Canvas* canvas_out);
 

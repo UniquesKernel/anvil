@@ -20,6 +20,7 @@
 #ifndef ANVIL_MEMORY_ALLOCATION_HPP
 #define ANVIL_MEMORY_ALLOCATION_HPP
 
+#include "anvil/types.hpp"
 #include "error/status.hpp"
 
 namespace anvil::memory {
@@ -41,17 +42,17 @@ namespace anvil::memory {
  * Field            | Type   | Size (Bytes)   | Description
  * ---------------- | ------ | -------------- | -------------------------------------------------
  * base             | void*  | sizeof(void*)  | Pointer to the start of the originally allocated memory mapping
- * virtual_capacity | size_t | sizeof(size_t) | Total virtual memory capacity allocated (lazy) or total size (eager)
- * capacity         | size_t | sizeof(size_t) | Current committed/writable byte capacity from mapping base
- * page_count       | size_t | sizeof(size_t) | Number of committed pages (`capacity / PAGE_SIZE`)
+ * virtual_capacity | u64    | sizeof(u64)    | Total virtual memory capacity allocated (lazy) or total size (eager)
+ * capacity         | u64    | sizeof(u64)    | Current committed/writable byte capacity from mapping base
+ * page_count       | u64    | sizeof(u64)    | Number of committed pages (`capacity / PAGE_SIZE`)
  *
  * @note On 64-bit systems: sizeof(Metadata) = 4 * 8 = 32 bytes
  */
 struct Metadata {
-        void*       base;             ///< Original mmap base address
-        std::size_t virtual_capacity; ///< Total reserved virtual memory
-        std::size_t capacity;         ///< Current committed capacity
-        std::size_t page_count;       ///< Number of committed pages
+        void* base;             ///< Original mmap base address
+        u64   virtual_capacity; ///< Total reserved virtual memory
+        u64   capacity;         ///< Current committed capacity
+        u64   page_count;       ///< Number of committed pages
 };
 static_assert(sizeof(Metadata) == 32, "Metadata should be 32 bytes (4 * 8 bytes on 64-bit systems)"); // NOLINT
 static_assert(alignof(Metadata) == alignof(void*), "Metadata should have the natural alignment of a void pointer");
@@ -76,7 +77,7 @@ static_assert(alignof(Metadata) == alignof(void*), "Metadata should have the nat
  * @return Error enumerated code where `OK` indicate success and other values indicate
  *         an error.
  */
-[[nodiscard]] Error anvil_memory_alloc_lazy(void** mem_out, std::size_t capacity, std::size_t alignment) noexcept;
+[[nodiscard]] Error anvil_memory_alloc_lazy(void** mem_out, u64 capacity, u64 alignment) noexcept;
 
 /**
  * @brief Allocates writable memory.
@@ -98,7 +99,7 @@ static_assert(alignof(Metadata) == alignof(void*), "Metadata should have the nat
  * @return Error enumerated code where `OK` indicate success and other values indicate
  *               errors.
  */
-[[nodiscard]] Error anvil_memory_alloc_eager(void** mem_out, std::size_t capacity, std::size_t alignment) noexcept;
+[[nodiscard]] Error anvil_memory_alloc_eager(void** mem_out, u64 capacity, u64 alignment) noexcept;
 
 /**
  * @brief Deallocate memory, allocated by both the eager and lazy allocation methods.
@@ -132,7 +133,7 @@ static_assert(alignof(Metadata) == alignof(void*), "Metadata should have the nat
  * @return Error enumerated code where `OK` indicate success and other values indicate
  *         failure.
  */
-[[nodiscard]] Error anvil_memory_commit(void* ptr, std::size_t commit_size) noexcept;
+[[nodiscard]] Error anvil_memory_commit(void* ptr, u64 commit_size) noexcept;
 
 } // namespace anvil::memory
 

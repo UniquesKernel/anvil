@@ -1,3 +1,4 @@
+#include "anvil/types.hpp"
 #include "math/linear_algebra/vector.hpp"
 #include <cstdio>
 
@@ -36,9 +37,9 @@ void negation_example() {
 }
 
 void dot_product_example() {
-        const Vector2 VEC{1.0F, 2};
-        const Vector2 VEC2{3.0F, 4.0F};
-        const float   DOT_PRODUCT = VEC * VEC2;
+        const Vector2    VEC{1.0F, 2};
+        const Vector2    VEC2{3.0F, 4.0F};
+        const anvil::f32 DOT_PRODUCT = VEC * VEC2;
 
         printf("VEC: (%.2f, %.2f)\n", VEC.x, VEC.y);
         printf("VEC2: (%.2f, %.2f)\n", VEC2.x, VEC2.y);
@@ -47,9 +48,9 @@ void dot_product_example() {
 }
 
 void scalar_product_example() {
-        const Vector2 VEC{1.0F, 2};
-        const float   SCALAR         = 3.0F;
-        const Vector2 SCALAR_PRODUCT = SCALAR * VEC;
+        const Vector2    VEC{1.0F, 2};
+        const anvil::f32 SCALAR         = 3.0F;
+        const Vector2    SCALAR_PRODUCT = SCALAR * VEC;
 
         printf("VEC: (%.2f, %.2f)\n", VEC.x, VEC.y);
         printf("SCALAR: %.2f\n", SCALAR);

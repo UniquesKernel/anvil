@@ -8,7 +8,7 @@
 #include <cstring>
 
 namespace anvil::memory::resizable_buffer {
-Error create(ResizableBuffer** buffer_out, unsigned long capacity, unsigned long alignment) noexcept {
+Error create(ResizableBuffer** buffer_out, u64 capacity, u64 alignment) noexcept {
         REQUIRE(buffer_out != nullptr, NULL_PARAMETER);
         REQUIRE(*buffer_out == nullptr, INVALID_ARGUMENTS);
         REQUIRE(capacity > 0, INVALID_ARGUMENTS);
@@ -18,9 +18,9 @@ Error create(ResizableBuffer** buffer_out, unsigned long capacity, unsigned long
         REQUIRE(alignment >= MIN_ALIGNMENT, INVALID_ARGUMENTS);
         REQUIRE(alignment <= MAX_ALIGNMENT, INVALID_ARGUMENTS);
 
-        const size_t TOTAL_MEMORY_NEEDED = capacity + sizeof(ResizableBuffer);
+        const u64 TOTAL_MEMORY_NEEDED = capacity + sizeof(ResizableBuffer);
 
-        void*        mem                 = nullptr;
+        void*     mem                 = nullptr;
         if (anvil::memory::anvil_memory_alloc_eager(&mem, TOTAL_MEMORY_NEEDED, alignment) != OK) {
                 return OUT_OF_MEMORY;
         }
@@ -60,7 +60,7 @@ Error destroy(ResizableBuffer** buffer) noexcept {
         return OK;
 }
 
-void* resize(ResizableBuffer** buffer_out, unsigned long new_size) noexcept {
+void* resize(ResizableBuffer** buffer_out, u64 new_size) noexcept {
         REQUIRE(buffer_out != nullptr, nullptr);
         REQUIRE((*buffer_out) != nullptr, nullptr);
         REQUIRE((*buffer_out)->base != nullptr, nullptr);
@@ -78,8 +78,8 @@ void* resize(ResizableBuffer** buffer_out, unsigned long new_size) noexcept {
                 return nullptr;
         }
 
-        const unsigned long TRANSFER_SIZE = math::comparison::min((*buffer_out)->capacity, new_size);
-        new_buffer->base                  = memcpy(new_buffer->base, (*buffer_out)->base, TRANSFER_SIZE);
+        const u64 TRANSFER_SIZE = math::comparison::min((*buffer_out)->capacity, new_size);
+        new_buffer->base        = memcpy(new_buffer->base, (*buffer_out)->base, TRANSFER_SIZE);
 
         if (destroy(buffer_out) != OK) {
                 INVARIANT(destroy(&new_buffer) == OK);

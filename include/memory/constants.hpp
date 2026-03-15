@@ -9,7 +9,7 @@
 #ifndef ANVIL_MEMORY_CONSTANTS_HPP
 #define ANVIL_MEMORY_CONSTANTS_HPP
 
-#include <cstddef>
+#include "anvil/types.hpp"
 #include <cstdint>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -20,32 +20,32 @@ namespace anvil::memory {
  * @brief The size of a memory page on any given architecture - evaluate once
  * at program initialization.
  */
-static const std::size_t PAGE_SIZE       = (size_t)(sysconf(_SC_PAGESIZE));
+static const u64 PAGE_SIZE       = (u64)(sysconf(_SC_PAGESIZE));
 
 /**
  * @brief The maximum allowed alignment for any given memory allocation.
  */
-inline const std::size_t MAX_ALIGNMENT   = PAGE_SIZE >> 1;
+inline const u64 MAX_ALIGNMENT   = PAGE_SIZE >> 1;
 
 /**
  * @brief The minimum allowed alignment for any given memory allocation.
  */
-inline const std::size_t MIN_ALIGNMENT   = 1;
+inline const u64 MIN_ALIGNMENT   = 1;
 
 /**
  * @brief The maximum allowed stack depth of a stack allocator of any given type.
  */
-inline const std::size_t MAX_STACK_DEPTH = 64;
+inline const u64 MAX_STACK_DEPTH = 64;
 
 /**
  * @brief The maximum total memory allocation allowed by any given allocator.
  */
-inline const std::size_t MAX_CAPACITY    = SIZE_MAX / 2;
+inline const u64 MAX_CAPACITY    = static_cast<u64>(-1) / 2;
 
 /**
  * @brief The number of bites required to shift one memory page in any direction.
  */
-inline const std::size_t PAGE_SHIFT      = (unsigned long)(__builtin_ctzl(PAGE_SIZE));
+inline const u64 PAGE_SHIFT      = (u64)(__builtin_ctzl(PAGE_SIZE));
 
 } // namespace anvil::memory
 #endif // ANVIL_MEMORY_CONSTANTS_HPP

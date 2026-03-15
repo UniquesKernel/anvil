@@ -15,6 +15,7 @@
 
 #ifndef ANVIL_MEMORY_STACK_ALLOCATOR_HPP
 #define ANVIL_MEMORY_STACK_ALLOCATOR_HPP
+#include "anvil/types.hpp"
 #include "constants.hpp"
 #include "error/status.hpp"
 
@@ -42,19 +43,19 @@ namespace anvil::memory::stack_allocator {
  * Field       | Type     | Size (Bytes)      | Description
  * ----------- | -------- | ----------------- | -------------------------------------------------
  * base        | void*    | sizeof(void*)     | Pointer to the start of the usable memory region
- * capacity    | size_t   | sizeof(size_t)    | Total capacity of usable memory in bytes
- * allocated   | size_t   | sizeof(size_t)    | Current number of bytes allocated from the stack allocator
- * stack_depth | size_t   | sizeof(size_t)    | Current depth of the record/unwind stack
- * stack       | size_t[] | MAX_STACK_DEPTH*8 | Allocation checkpoints for record/unwind operations
+ * capacity    | u64      | sizeof(u64)       | Total capacity of usable memory in bytes
+ * allocated   | u64      | sizeof(u64)       | Current number of bytes allocated from the stack allocator
+ * stack_depth | u64      | sizeof(u64)       | Current depth of the record/unwind stack
+ * stack       | u64[]    | MAX_STACK_DEPTH*8 | Allocation checkpoints for record/unwind operations
  *
  * Total size: 544 bytes
  */
 struct StackAllocator {
-        void*  base;                                  ///< Start of usable memory region
-        size_t capacity;                              ///< Total usable capacity in bytes
-        size_t allocated;                             ///< Number of bytes currently handed out from the usable region
-        size_t stack_depth;                           ///< Current record/unwind stack depth
-        size_t stack[anvil::memory::MAX_STACK_DEPTH]; ///< Array of allocation checkpoints
+        void* base;                                  ///< Start of usable memory region
+        u64   capacity;                              ///< Total usable capacity in bytes
+        u64   allocated;                             ///< Number of bytes currently handed out from the usable region
+        u64   stack_depth;                           ///< Current record/unwind stack depth
+        u64   stack[anvil::memory::MAX_STACK_DEPTH]; ///< Array of allocation checkpoints
 };
 static_assert(sizeof(StackAllocator) == 544, "StackAllocator size must be 544 bytes"); // NOLINT
 static_assert(alignof(StackAllocator) == alignof(void*), "StackAllocator alignment must match void* alignment");
@@ -78,7 +79,7 @@ static_assert(alignof(StackAllocator) == alignof(void*), "StackAllocator alignme
  *
  * @return Error enumeration code `OK` on success with other values indicating failure.
  */
-[[nodiscard]] Error create(StackAllocator** allocator_out, std::size_t capacity, std::size_t alignment) noexcept;
+[[nodiscard]] Error create(StackAllocator** allocator_out, u64 capacity, u64 alignment) noexcept;
 
 /**
  * @brief Null out an allocator and return the underlying memory to the Operating System.
@@ -109,7 +110,7 @@ static_assert(alignof(StackAllocator) == alignof(void*), "StackAllocator alignme
  *
  * @return Pointer to the allocated memory, or `nullptr` on failure.
  */
-[[nodiscard]] void* alloc(StackAllocator* allocator, std::size_t allocation_size, std::size_t alignment) noexcept;
+[[nodiscard]] void* alloc(StackAllocator* allocator, u64 allocation_size, u64 alignment) noexcept;
 
 /**
  * @brief Reset the allocator to it's initialization state.

@@ -11,6 +11,10 @@ target_include_directories(memory_example
   ${CMAKE_SOURCE_DIR}/include
 )
 target_link_libraries(memory_example PRIVATE memory)
+# --- ADD THIS BLOCK ---
+# Tell the compiler it is allowed to use AVX2 hardware instructions
+target_compile_options(memory_example PRIVATE -mavx2)
+# ----------------------
 
 # Second executable - -O3 only, no warnings/checks
 add_executable(memory_example_malloc malloc_example.cpp)
@@ -19,6 +23,7 @@ target_compile_options(memory_example_malloc PRIVATE
     -O3           # Maximum optimization
     -w            # Disable ALL warnings
     -DNDEBUG      # Disable asserts
+    -mavx2
 )
 
 target_include_directories(memory_example_malloc

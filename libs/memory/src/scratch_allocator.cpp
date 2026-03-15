@@ -4,14 +4,12 @@
 #include "internal/utility.hpp"
 #include "memory/constants.hpp"
 #include "memory/memory_allocation.hpp"
-#include <cstddef>
 #include <cstdint>
-#include <cstdio>
 
 namespace anvil::memory::scratch_allocator {
 
 [[nodiscard]]
-Error create(ScratchAllocator** allocator_out, const std::size_t capacity, const std::size_t alignment) noexcept {
+Error create(ScratchAllocator** allocator_out, const u64 capacity, const u64 alignment) noexcept {
         REQUIRE(allocator_out != nullptr, NULL_PARAMETER);
         REQUIRE(*allocator_out == nullptr, INVALID_ARGUMENTS);
         REQUIRE(capacity > 0, INVALID_ARGUMENTS);
@@ -21,9 +19,9 @@ Error create(ScratchAllocator** allocator_out, const std::size_t capacity, const
         REQUIRE(alignment >= MIN_ALIGNMENT, INVALID_ARGUMENTS);
         REQUIRE(alignment <= MAX_ALIGNMENT, INVALID_ARGUMENTS);
 
-        const size_t TOTAL_MEMORY_NEEDED = capacity + sizeof(ScratchAllocator);
+        const u64 TOTAL_MEMORY_NEEDED = capacity + sizeof(ScratchAllocator);
 
-        void*        mem                 = nullptr;
+        void*     mem                 = nullptr;
         if (anvil::memory::anvil_memory_alloc_eager(&mem, TOTAL_MEMORY_NEEDED, alignment) != OK) {
                 return OUT_OF_MEMORY;
         }
@@ -52,7 +50,7 @@ Error destroy(ScratchAllocator** allocator) noexcept {
 }
 
 [[nodiscard]]
-void* alloc(ScratchAllocator* const allocator, const size_t allocation_size, const size_t alignment) noexcept {
+void* alloc(ScratchAllocator* const allocator, const u64 allocation_size, const u64 alignment) noexcept {
         REQUIRE(allocator != nullptr, nullptr);
         REQUIRE(allocation_size > 0, nullptr);
         REQUIRE(allocation_size <= MAX_CAPACITY, nullptr);
@@ -64,9 +62,9 @@ void* alloc(ScratchAllocator* const allocator, const size_t allocation_size, con
 
         const uintptr_t CURRENT_ADDR     = (uintptr_t)(allocator->base) + allocator->allocated;
         const uintptr_t ALIGNED_ADDR     = (CURRENT_ADDR + (alignment - 1)) & ~(alignment - 1);
-        const size_t    OFFSET           = ALIGNED_ADDR - CURRENT_ADDR;
+        const u64       OFFSET           = ALIGNED_ADDR - CURRENT_ADDR;
 
-        const size_t    TOTAL_ALLOCATION = allocation_size + OFFSET;
+        const u64       TOTAL_ALLOCATION = allocation_size + OFFSET;
 
         if (TOTAL_ALLOCATION > allocator->capacity - allocator->allocated) [[unlikely]] {
                 return nullptr;

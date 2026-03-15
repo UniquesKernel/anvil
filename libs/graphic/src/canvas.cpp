@@ -5,8 +5,7 @@
 #include <cstring>
 
 [[nodiscard]]
-Error anvil::graphic::create(Canvas* const canvas_out, const unsigned long width, const unsigned long height,
-                             const char fill_char = ' ') {
+Error anvil::graphic::create(Canvas* const canvas_out, const u64 width, const u64 height, const char fill_char = ' ') {
         REQUIRE(canvas_out != nullptr, NULL_PARAMETER);
         REQUIRE(canvas_out->allocator == nullptr, INVALID_ARGUMENTS);
         REQUIRE(canvas_out->buffer == nullptr, INVALID_ARGUMENTS);
@@ -22,14 +21,14 @@ Error anvil::graphic::create(Canvas* const canvas_out, const unsigned long width
         canvas_out->allocator = nullptr;
 
         const Error ALLOCATOR_CREATE_ERR =
-            memory::scratch_allocator::create(&canvas_out->allocator, height * width, alignof(unsigned long));
+            memory::scratch_allocator::create(&canvas_out->allocator, height * width, alignof(u64));
 
         if (ALLOCATOR_CREATE_ERR != OK) {
                 return ALLOCATOR_CREATE_ERR;
         }
 
         canvas_out->buffer =
-            (char*)(memory::scratch_allocator::alloc(canvas_out->allocator, height * width, alignof(unsigned long)));
+            (char*)(memory::scratch_allocator::alloc(canvas_out->allocator, height * width, alignof(u64)));
 
         if (!canvas_out->buffer) {
                 const Error CLEANUP_ERROR = memory::scratch_allocator::destroy(&canvas_out->allocator);
@@ -43,7 +42,7 @@ Error anvil::graphic::create(Canvas* const canvas_out, const unsigned long width
 }
 
 [[nodiscard]]
-Error anvil::graphic::set(Canvas* const canvas_out, const unsigned long index, const char character) {
+Error anvil::graphic::set(Canvas* const canvas_out, const u64 index, const char character) {
         REQUIRE(canvas_out != nullptr, NULL_PARAMETER);
         REQUIRE(canvas_out->buffer != nullptr, NULL_PARAMETER);
         REQUIRE(index < (canvas_out->width * canvas_out->height), INVALID_ARGUMENTS);

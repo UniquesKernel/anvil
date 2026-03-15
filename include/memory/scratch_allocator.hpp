@@ -15,8 +15,8 @@
 
 #ifndef ANVIL_MEMORY_SCRATCH_ALLOCATOR_HPP
 #define ANVIL_MEMORY_SCRATCH_ALLOCATOR_HPP
+#include "anvil/types.hpp"
 #include "error/status.hpp"
-#include <cstddef>
 
 namespace anvil::memory::scratch_allocator {
 
@@ -38,15 +38,15 @@ namespace anvil::memory::scratch_allocator {
  * Field     | Type   | Size (Bytes)   | Description
  * --------- | ------ | -------------- | ---------------------------------------------------------
  * base      | void*  | sizeof(void*)  | Pointer to the start of the usable memory region
- * capacity  | size_t | sizeof(size_t) | Total capacity of the scratch allocator in bytes
- * allocated | size_t | sizeof(size_t) | Current number of bytes allocated from the scratch allocator
+ * capacity  | u64    | sizeof(u64)    | Total capacity of the scratch allocator in bytes
+ * allocated | u64    | sizeof(u64)    | Current number of bytes allocated from the scratch allocator
  *
  * Total size: 24 bytes
  */
 struct ScratchAllocator {
-        void*       base;      ///< Start of usable memory region
-        std::size_t capacity;  ///< Total usable capacity in bytes
-        std::size_t allocated; ///< Number of bytes currently handed out from the usable region
+        void* base;      ///< Start of usable memory region
+        u64   capacity;  ///< Total usable capacity in bytes
+        u64   allocated; ///< Number of bytes currently handed out from the usable region
 };
 static_assert(sizeof(ScratchAllocator) == 24, "ScratchAllocator size must be 24 bytes"); // NOLINT
 static_assert(alignof(ScratchAllocator) == alignof(void*), "ScratchAllocator alignment must match void* alignment");
@@ -70,7 +70,7 @@ static_assert(alignof(ScratchAllocator) == alignof(void*), "ScratchAllocator ali
  *
  * @return Error enumeration code `OK` on success with other values indicating failure.
  */
-[[nodiscard]] Error create(ScratchAllocator** allocator_out, std::size_t capacity, std::size_t alignment) noexcept;
+[[nodiscard]] Error create(ScratchAllocator** allocator_out, u64 capacity, u64 alignment) noexcept;
 
 /**
  * @brief Null out an allocator and return the underlying memory to the Operating System.
@@ -101,7 +101,7 @@ static_assert(alignof(ScratchAllocator) == alignof(void*), "ScratchAllocator ali
  *
  * @return Pointer to the allocated memory, or `nullptr` on failure.
  */
-[[nodiscard]] void* alloc(ScratchAllocator* allocator, std::size_t allocation_size, std::size_t alignment) noexcept;
+[[nodiscard]] void* alloc(ScratchAllocator* allocator, u64 allocation_size, u64 alignment) noexcept;
 
 /**
  * @brief Reset the allocator to it's initialization state.

@@ -2,11 +2,11 @@
 
 namespace anvil::math::comparison {
 
-unsigned long min(const unsigned long left, const unsigned long right) {
+u64 min(const u64 left, const u64 right) {
         return (left < right) ? left : right;
 }
 
-unsigned long max(const unsigned long left, const unsigned long right) {
+u64 max(const u64 left, const u64 right) {
         return (left <= right) ? right : left;
 }
 } // namespace anvil::math::comparison
