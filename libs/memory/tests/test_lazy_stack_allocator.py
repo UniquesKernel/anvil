@@ -15,7 +15,7 @@ from anvil_memory.stack_allocator import (
     stack_allocator_unwind,
 )
 from anvil_memory import Error, MAX_STACK_DEPTH, ptr_to_int
-from hypothesis import strategies as st, reproduce_failure
+from hypothesis import strategies as st
 from hypothesis.stateful import (
     RuleBasedStateMachine,
     initialize,
@@ -33,6 +33,7 @@ def allocator_config(draw):
 
     capacity = draw(st.integers(min_value=1, max_value=2**24))
     return (capacity, alignment)
+
 
 class DifferentialAllocatorModel(RuleBasedStateMachine):
     """Differential testing: lazy-stack and stack allocators should behave identically."""

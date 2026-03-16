@@ -6,7 +6,7 @@ set(MODULE_SOURCE
     src/lazy_stack_allocator.cpp
     src/scratch_allocator.cpp
     src/stack_allocator.cpp
-  src/resizable_buffer.cpp
+    src/resizable_buffer.cpp
     src/utility.cpp
 )
 

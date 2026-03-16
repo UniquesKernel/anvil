@@ -24,7 +24,7 @@ void                  bind_scratch_allocator(pybind11::module_& module) { // NOL
                             return py::make_tuple(ERR, py::none());
                     }
                     return py::make_tuple(ERR,
-                                                           py::capsule(allocator, "anvil::memory::scratch_allocator::ScratchAllocator"));
+                                          py::capsule(allocator, "anvil::memory::scratch_allocator::ScratchAllocator"));
             },
             py::arg("capacity"), py::arg("alignment"));
 
@@ -80,7 +80,7 @@ void                  bind_scratch_allocator(pybind11::module_& module) { // NOL
                             anvil::memory::scratch_allocator::ScratchAllocator* null_alloc = nullptr;
 
                             allocation = (char*)(anvil::memory::scratch_allocator::alloc(null_alloc, allocation_size,
-                                                                                                          alignment));
+                                                                                         alignment));
 
                             if (allocation == nullptr) {
                                     return py::make_tuple(py::none(), OK);

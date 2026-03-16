@@ -2,7 +2,7 @@
 #include "error/assert.hpp"
 #include "error/status.hpp"
 #include "internal/utility.hpp"
-#include "math/comparison/minmax.hpp"
+#include "math/comparison/comparison.hpp"
 #include "memory/constants.hpp"
 #include "memory/memory_allocation.hpp"
 #include <cstring>
