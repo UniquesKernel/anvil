@@ -1,7 +1,7 @@
 #include "memory/memory_allocation.hpp"
 #include "error/assert.hpp"
 #include "error/status.hpp"
-#include "internal/utility.hpp"
+#include "math/comparison/comparison.hpp"
 #include "memory/constants.hpp"
 #include <cstdint>
 #include <sys/mman.h>
@@ -12,7 +12,7 @@ Error anvil_memory_alloc_lazy(void** mem_out, const u64 capacity, const u64 alig
         REQUIRE(*mem_out == nullptr, NULL_PARAMETER);
         REQUIRE(capacity > 0, INVALID_ARGUMENTS);
         REQUIRE(capacity <= MAX_CAPACITY, INVALID_ARGUMENTS);
-        REQUIRE(is_power_of_two(alignment), INVALID_ARGUMENTS);
+        REQUIRE(anvil::math::comparison::is_power_of_two(alignment), INVALID_ARGUMENTS);
         REQUIRE(anvil::memory::MIN_ALIGNMENT <= alignment, INVALID_ARGUMENTS);
         REQUIRE(alignment <= anvil::memory::MAX_ALIGNMENT, INVALID_ARGUMENTS);
 
@@ -54,7 +54,7 @@ Error anvil_memory_alloc_eager(void** mem_out, const u64 capacity, const u64 ali
         REQUIRE(*mem_out == nullptr, NULL_PARAMETER);
         REQUIRE(capacity > 0, INVALID_ARGUMENTS);
         REQUIRE(capacity <= MAX_CAPACITY, INVALID_ARGUMENTS);
-        REQUIRE(is_power_of_two(alignment), INVALID_ARGUMENTS);
+        REQUIRE(anvil::math::comparison::is_power_of_two(alignment), INVALID_ARGUMENTS);
         REQUIRE(anvil::memory::MIN_ALIGNMENT <= alignment, INVALID_ARGUMENTS);
         REQUIRE(alignment <= anvil::memory::MAX_ALIGNMENT, INVALID_ARGUMENTS);
 

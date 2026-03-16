@@ -1,7 +1,7 @@
 #include "memory/stack_allocator.hpp"
 #include "error/assert.hpp"
 #include "error/status.hpp"
-#include "internal/utility.hpp"
+#include "math/comparison/comparison.hpp"
 #include "memory/constants.hpp"
 #include "memory/memory_allocation.hpp"
 #include <cstdint>
@@ -15,7 +15,7 @@ Error create(StackAllocator** allocator_out, const u64 capacity, const u64 align
         REQUIRE(capacity > 0, INVALID_ARGUMENTS);
         REQUIRE(capacity <= MAX_CAPACITY, INVALID_ARGUMENTS);
         REQUIRE(capacity >= alignment, INVALID_ARGUMENTS);
-        REQUIRE(is_power_of_two(alignment), INVALID_ARGUMENTS);
+        REQUIRE(anvil::math::comparison::is_power_of_two(alignment), INVALID_ARGUMENTS);
         REQUIRE(alignment >= MIN_ALIGNMENT, INVALID_ARGUMENTS);
         REQUIRE(alignment <= MAX_ALIGNMENT, INVALID_ARGUMENTS);
 
@@ -67,7 +67,7 @@ void* alloc(StackAllocator* const allocator, const u64 allocation_size, const u6
         REQUIRE(allocator != nullptr, nullptr);
         REQUIRE(allocation_size > 0, nullptr);
         REQUIRE(allocation_size <= MAX_CAPACITY, nullptr);
-        REQUIRE(is_power_of_two(alignment), nullptr);
+        REQUIRE(anvil::math::comparison::is_power_of_two(alignment), nullptr);
         REQUIRE(MIN_ALIGNMENT <= alignment, nullptr);
         REQUIRE(alignment <= MAX_ALIGNMENT, nullptr);
 

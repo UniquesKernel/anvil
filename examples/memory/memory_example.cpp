@@ -20,7 +20,7 @@ int main(void) {
             nullptr;
 
         // 1/16th the allocations! We align to 64 bytes (the exact size of a CPU Cache Line)
-        const Error ERR = anvil::memory::resizable_buffer::create(&allocator, ALLOC_SIZE, 64);
+        const Error ERR = anvil::memory::resizable_buffer::create(&allocator, ALLOC_SIZE, 32);
 
         if (ERR != OK) {
                 printf("ERROR: %i\n", ERR);
@@ -28,20 +28,20 @@ int main(void) {
         }
 
         // --- ILP SETUP (Two parallel tracks) ---
-        __m256i     v_sum1 = _mm256_setzero_si256();
-        __m256i     v_sum2 = _mm256_setzero_si256();
+        __m256i             v_sum1 = _mm256_setzero_si256();
+        __m256i             v_sum2 = _mm256_setzero_si256();
 
         // Track 1: [0, 1, 2, 3, 4, 5, 6, 7]
-        __m256i     v_i1   = _mm256_set_epi32(7, 6, 5, 4, 3, 2, 1, 0);
+        alignas(32) __m256i v_i1   = _mm256_set_epi32(7, 6, 5, 4, 3, 2, 1, 0);
         // Track 2: [8, 9, 10, 11, 12, 13, 14, 15]
-        __m256i     v_i2   = _mm256_set_epi32(15, 14, 13, 12, 11, 10, 9, 8);
+        alignas(32) __m256i v_i2   = _mm256_set_epi32(15, 14, 13, 12, 11, 10, 9, 8);
 
         // Step is now 16
-        __m256i     v_step = _mm256_set1_epi32(16);
+        __m256i             v_step = _mm256_set1_epi32(16);
 
         // --- UNROLLED LOOP ---
         // Total iterations: 625,000
-        anvil::i32* ptr    = (anvil::i32*)(anvil::memory::resizable_buffer::data(allocator));
+        anvil::i32*         ptr    = (anvil::i32*)(anvil::memory::resizable_buffer::data(allocator));
         if (ptr == nullptr) [[unlikely]] {
                 return 1;
         }
@@ -66,7 +66,7 @@ int main(void) {
         // Combine track 2 into track 1
         v_sum1 = _mm256_add_epi32(v_sum1, v_sum2);
 
-        anvil::i32 sums[8];
+        alignas(32) anvil::i32 sums[8];
         _mm256_storeu_si256((__m256i*)sums, v_sum1);
 
         anvil::i64 final_sum = 0;

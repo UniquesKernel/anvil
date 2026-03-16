@@ -7,7 +7,6 @@ set(MODULE_SOURCE
     src/scratch_allocator.cpp
     src/stack_allocator.cpp
     src/resizable_buffer.cpp
-    src/utility.cpp
 )
 
 add_library(${MODULE_NAME} SHARED ${MODULE_SOURCE}) # Release Target

@@ -1,7 +1,6 @@
 #include "memory/resizable_buffer.hpp"
 #include "error/assert.hpp"
 #include "error/status.hpp"
-#include "internal/utility.hpp"
 #include "math/comparison/comparison.hpp"
 #include "memory/constants.hpp"
 #include "memory/memory_allocation.hpp"
@@ -14,7 +13,7 @@ Error create(ResizableBuffer** buffer_out, u64 capacity, u64 alignment) noexcept
         REQUIRE(capacity > 0, INVALID_ARGUMENTS);
         REQUIRE(capacity <= MAX_CAPACITY, INVALID_ARGUMENTS);
         REQUIRE(capacity >= alignment, INVALID_ARGUMENTS);
-        REQUIRE(is_power_of_two(alignment), INVALID_ARGUMENTS);
+        REQUIRE(anvil::math::comparison::is_power_of_two(alignment), INVALID_ARGUMENTS);
         REQUIRE(alignment >= MIN_ALIGNMENT, INVALID_ARGUMENTS);
         REQUIRE(alignment <= MAX_ALIGNMENT, INVALID_ARGUMENTS);
 
@@ -42,7 +41,7 @@ void* data(const ResizableBuffer* const buffer) noexcept {
         REQUIRE(buffer->base != nullptr, nullptr);
         REQUIRE(buffer->capacity > 0, nullptr);
         REQUIRE(buffer->capacity <= MAX_CAPACITY, nullptr);
-        REQUIRE(is_power_of_two(buffer->alignment), nullptr);
+        REQUIRE(anvil::math::comparison::is_power_of_two(buffer->alignment), nullptr);
         REQUIRE(buffer->alignment >= MIN_ALIGNMENT, nullptr);
         REQUIRE(buffer->alignment <= MAX_ALIGNMENT, nullptr);
 
@@ -68,7 +67,7 @@ void* resize(ResizableBuffer** buffer_out, u64 new_size) noexcept {
         REQUIRE((*buffer_out)->capacity <= MAX_CAPACITY, nullptr);
         REQUIRE(new_size > 0, nullptr);
         REQUIRE(new_size <= MAX_CAPACITY, nullptr);
-        REQUIRE(is_power_of_two((*buffer_out)->alignment), nullptr);
+        REQUIRE(anvil::math::comparison::is_power_of_two((*buffer_out)->alignment), nullptr);
         REQUIRE((*buffer_out)->alignment >= MIN_ALIGNMENT, nullptr);
         REQUIRE((*buffer_out)->alignment <= MAX_ALIGNMENT, nullptr);
 

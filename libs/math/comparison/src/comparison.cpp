@@ -32,4 +32,9 @@ bool is_nan(f32 num) {
         return (bits & EXPONENT_BIT_MASK) == EXPONENT_BIT_MASK && (bits & MANTISSA_BIT_MASK) != 0;
 }
 
+[[gnu::pure]]
+bool is_power_of_two(const anvil::u64 x) noexcept {
+        return x != 0 && ((x & (x - 1)) == 0);
+}
+
 } // namespace anvil::math::comparison

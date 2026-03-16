@@ -13,7 +13,7 @@ target_include_directories(memory_example
 target_link_libraries(memory_example PRIVATE memory)
 # --- ADD THIS BLOCK ---
 # Tell the compiler it is allowed to use AVX2 hardware instructions
-target_compile_options(memory_example PRIVATE -mavx2)
+target_compile_options(memory_example PRIVATE -mavx2 -w)
 # ----------------------
 
 # Second executable - -O3 only, no warnings/checks
