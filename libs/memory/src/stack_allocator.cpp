@@ -8,7 +8,6 @@
 
 namespace anvil::memory::stack_allocator {
 
-[[nodiscard]]
 Error create(StackAllocator** allocator_out, const u64 capacity, const u64 alignment) noexcept {
         REQUIRE(allocator_out != nullptr, NULL_PARAMETER);
         REQUIRE(*allocator_out == nullptr, INVALID_ARGUMENTS);
@@ -39,7 +38,6 @@ Error create(StackAllocator** allocator_out, const u64 capacity, const u64 align
         return OK;
 }
 
-[[nodiscard]]
 Error destroy(StackAllocator** allocator) noexcept {
         REQUIRE(allocator != nullptr, NULL_PARAMETER);
         REQUIRE(*allocator != nullptr, NULL_PARAMETER);
@@ -50,7 +48,6 @@ Error destroy(StackAllocator** allocator) noexcept {
         return OK;
 }
 
-[[nodiscard]]
 Error reset(StackAllocator* const allocator) noexcept {
         REQUIRE(allocator != nullptr, NULL_PARAMETER);
         INVARIANT(allocator->base != nullptr);
@@ -62,7 +59,6 @@ Error reset(StackAllocator* const allocator) noexcept {
         return OK;
 }
 
-[[nodiscard]]
 void* alloc(StackAllocator* const allocator, const u64 allocation_size, const u64 alignment) noexcept {
         REQUIRE(allocator != nullptr, nullptr);
         REQUIRE(allocation_size > 0, nullptr);
@@ -88,7 +84,6 @@ void* alloc(StackAllocator* const allocator, const u64 allocation_size, const u6
         return (void*)(ALIGNED_ADDR);
 }
 
-[[nodiscard]]
 Error record(StackAllocator* const allocator) noexcept {
         REQUIRE(allocator != nullptr, NULL_PARAMETER);
         INVARIANT(allocator->base != nullptr);
@@ -101,7 +96,6 @@ Error record(StackAllocator* const allocator) noexcept {
         return OK;
 }
 
-[[nodiscard]]
 Error unwind(StackAllocator* const allocator) noexcept {
         REQUIRE(allocator != nullptr, NULL_PARAMETER);
         INVARIANT(allocator->base != nullptr);

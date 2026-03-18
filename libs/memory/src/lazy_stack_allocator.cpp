@@ -8,7 +8,6 @@
 
 namespace anvil::memory::lazy_stack_allocator {
 
-[[nodiscard]]
 Error create(LazyStackAllocator** allocator_out, const u64 capacity, const u64 alignment) noexcept {
         REQUIRE(allocator_out != nullptr, NULL_PARAMETER);
         REQUIRE(*allocator_out == nullptr, INVALID_ARGUMENTS);
@@ -38,7 +37,6 @@ Error create(LazyStackAllocator** allocator_out, const u64 capacity, const u64 a
         return OK;
 }
 
-[[nodiscard]]
 Error destroy(LazyStackAllocator** allocator) noexcept {
         REQUIRE(allocator != nullptr, NULL_PARAMETER);
         REQUIRE(*allocator != nullptr, NULL_PARAMETER);
@@ -49,7 +47,6 @@ Error destroy(LazyStackAllocator** allocator) noexcept {
         return OK;
 }
 
-[[nodiscard]]
 Error reset(LazyStackAllocator* const allocator) noexcept {
         REQUIRE(allocator != nullptr, NULL_PARAMETER);
         INVARIANT(allocator->base != nullptr);
@@ -60,7 +57,6 @@ Error reset(LazyStackAllocator* const allocator) noexcept {
         return OK;
 }
 
-[[nodiscard]]
 void* alloc(LazyStackAllocator* const allocator, const u64 allocation_size, const u64 alignment) noexcept {
         REQUIRE(allocator != nullptr, nullptr);
         REQUIRE(allocation_size > 0, nullptr);
@@ -95,7 +91,6 @@ void* alloc(LazyStackAllocator* const allocator, const u64 allocation_size, cons
         return (void*)(ALIGNED_ADDR);
 }
 
-[[nodiscard]]
 Error record(LazyStackAllocator* const allocator) noexcept {
         REQUIRE(allocator != nullptr, NULL_PARAMETER);
         INVARIANT(allocator->base != nullptr);
@@ -108,7 +103,6 @@ Error record(LazyStackAllocator* const allocator) noexcept {
         return OK;
 }
 
-[[nodiscard]]
 Error unwind(LazyStackAllocator* const allocator) noexcept {
         REQUIRE(allocator != nullptr, NULL_PARAMETER);
         INVARIANT(allocator->base != nullptr);

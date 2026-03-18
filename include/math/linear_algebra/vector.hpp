@@ -41,33 +41,33 @@ struct Vector3 {
 };
 static_assert(sizeof(Vector3) == 12, "Vector3 holds three floating-point values of 12 bytes total"); // NOLINT
 
-inline Vector2 operator+(const Vector2& a, const Vector2& b) {
+[[gnu::const, nodiscard]] inline Vector2 operator+(const Vector2& a, const Vector2& b) {
         return {a.x + b.x, a.y + b.y};
 }
 
-inline Vector2 operator-(const Vector2& a, const Vector2& b) {
+[[gnu::const, nodiscard]] inline Vector2 operator-(const Vector2& a, const Vector2& b) {
         return {a.x - b.x, a.y - b.y};
 }
 
-inline Vector2 operator-(const Vector2& a) {
+[[gnu::const, nodiscard]] inline Vector2 operator-(const Vector2& a) {
         return {-a.x, -a.y};
 }
 
-inline f32 operator*(const Vector2& a, const Vector2& b) {
+[[gnu::const, nodiscard]] inline f32 operator*(const Vector2& a, const Vector2& b) {
         return (a.x * b.x) + (a.y * b.y);
 }
 
-inline Vector2 operator*(const f32 scalar, const Vector2& a) {
+[[gnu::const, nodiscard]] inline Vector2 operator*(const f32 scalar, const Vector2& a) {
         return {a.x * scalar, a.y * scalar};
 }
 
-inline Vector2 operator*(const Vector2& a, const f32 scalar) {
+[[gnu::const, nodiscard]] inline Vector2 operator*(const Vector2& a, const f32 scalar) {
         return scalar * a;
 }
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
-inline bool operator==(const Vector2& a, const Vector2& b) {
+[[gnu::const, nodiscard]] inline bool operator==(const Vector2& a, const Vector2& b) {
         const f32 EPSILON = 1e-4F;
 
         const f32 DIFF_X  = std::abs((a - b).x);
@@ -80,33 +80,33 @@ inline bool operator==(const Vector2& a, const Vector2& b) {
 }
 #pragma GCC diagnostic pop
 
-inline Vector3 operator+(const Vector3& a, const Vector3& b) {
+[[gnu::const, nodiscard]] inline Vector3 operator+(const Vector3& a, const Vector3& b) {
         return {a.x + b.x, a.y + b.y, a.z + b.z};
 }
 
-inline Vector3 operator-(const Vector3& a, const Vector3& b) {
+[[gnu::const, nodiscard]] inline Vector3 operator-(const Vector3& a, const Vector3& b) {
         return {a.x - b.x, a.y - b.y, a.z - b.z};
 }
 
-inline Vector3 operator-(const Vector3& a) {
+[[gnu::const, nodiscard]] inline Vector3 operator-(const Vector3& a) {
         return {-a.x, -a.y, -a.z};
 }
 
-inline f32 operator*(const Vector3& a, const Vector3& b) {
+[[gnu::const, nodiscard]] inline f32 operator*(const Vector3& a, const Vector3& b) {
         return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
 }
 
-inline Vector3 operator*(const f32 scalar, const Vector3& a) {
+[[gnu::const, nodiscard]] inline Vector3 operator*(const f32 scalar, const Vector3& a) {
         return {a.x * scalar, a.y * scalar, a.z * scalar};
 }
 
-inline Vector3 operator*(const Vector3& a, const f32 scalar) {
+[[gnu::const, nodiscard]] inline Vector3 operator*(const Vector3& a, const f32 scalar) {
         return scalar * a;
 }
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
-inline bool operator==(const Vector3& a, const Vector3& b) {
+[[gnu::const, nodiscard]] inline bool operator==(const Vector3& a, const Vector3& b) {
         const f32 EPSILON = 1e-4F;
 
         const f32 DIFF_X  = std::abs((a - b).x);
@@ -122,7 +122,7 @@ inline bool operator==(const Vector3& a, const Vector3& b) {
 }
 #pragma GCC diagnostic pop
 
-Vector3 cross_product(Vector3 a, Vector3 b);
+[[gnu::const, nodiscard]] Vector3 cross_product(const Vector3 a, const Vector3 b);
 
 } // namespace anvil::math
 

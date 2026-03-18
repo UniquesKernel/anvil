@@ -3,27 +3,22 @@
 
 namespace anvil::math::comparison {
 
-[[gnu::const]]
-u64 max(const u64 a, const u64 b) {
+u64 max(const u64 a, const u64 b) noexcept {
         return (a <= b) ? b : a;
 }
 
-[[gnu::const]]
-f32 max(const f32 a, const f32 b) {
+f32 max(const f32 a, const f32 b) noexcept {
         return (a <= b) ? b : a;
 }
 
-[[gnu::const]]
-u64 min(const u64 a, const u64 b) {
+u64 min(const u64 a, const u64 b) noexcept {
         return (a < b) ? a : b;
 }
 
-[[gnu::const]]
-f32 min(const f32 a, const f32 b) {
+f32 min(const f32 a, const f32 b) noexcept {
         return (a < b) ? a : b;
 }
 
-[[gnu::const]]
 FloatType classify(const f32 num) noexcept {
         u32 bits;
         std::memcpy(&bits, &num, sizeof(bits));
@@ -35,7 +30,7 @@ FloatType classify(const f32 num) noexcept {
         return (FloatType)((is_signed << 2) | (is_special << 1) | (is_special & is_nan));
 }
 
-[[gnu::const]] bool is_power_of_two(const anvil::u64 x) noexcept {
+bool is_power_of_two(const anvil::u64 x) noexcept {
         return x != 0 && ((x & (x - 1)) == 0);
 }
 

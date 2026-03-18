@@ -4,7 +4,6 @@
 #include "memory/scratch_allocator.hpp"
 #include <cstring>
 
-[[nodiscard]]
 Error anvil::graphic::create(Canvas* const canvas_out, const u64 width, const u64 height, const char fill_char = ' ') {
         REQUIRE(canvas_out != nullptr, NULL_PARAMETER);
         REQUIRE(canvas_out->allocator == nullptr, INVALID_ARGUMENTS);
@@ -41,7 +40,6 @@ Error anvil::graphic::create(Canvas* const canvas_out, const u64 width, const u6
         return OK;
 }
 
-[[nodiscard]]
 Error anvil::graphic::set(Canvas* const canvas_out, const u64 index, const char character) {
         REQUIRE(canvas_out != nullptr, NULL_PARAMETER);
         REQUIRE(canvas_out->buffer != nullptr, NULL_PARAMETER);
@@ -51,7 +49,6 @@ Error anvil::graphic::set(Canvas* const canvas_out, const u64 index, const char 
         return OK;
 }
 
-[[nodiscard]]
 Error anvil::graphic::destroy(Canvas* const canvas_out) {
         REQUIRE(canvas_out != nullptr, NULL_PARAMETER);
         INVARIANT(canvas_out->buffer != nullptr);

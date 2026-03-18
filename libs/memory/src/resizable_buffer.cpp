@@ -48,7 +48,6 @@ void* data(const ResizableBuffer* const buffer) noexcept {
         return buffer->base;
 }
 
-[[nodiscard]]
 Error destroy(ResizableBuffer** buffer) noexcept {
         REQUIRE(buffer != nullptr, NULL_PARAMETER);
         REQUIRE(*buffer != nullptr, NULL_PARAMETER);

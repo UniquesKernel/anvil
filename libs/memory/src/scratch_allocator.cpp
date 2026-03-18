@@ -8,7 +8,6 @@
 
 namespace anvil::memory::scratch_allocator {
 
-[[nodiscard]]
 Error create(ScratchAllocator** allocator_out, const u64 capacity, const u64 alignment) noexcept {
         REQUIRE(allocator_out != nullptr, NULL_PARAMETER);
         REQUIRE(*allocator_out == nullptr, INVALID_ARGUMENTS);
@@ -38,7 +37,6 @@ Error create(ScratchAllocator** allocator_out, const u64 capacity, const u64 ali
         return OK;
 }
 
-[[nodiscard]]
 Error destroy(ScratchAllocator** allocator) noexcept {
         REQUIRE(allocator != nullptr, NULL_PARAMETER);
         REQUIRE(*allocator != nullptr, NULL_PARAMETER);
@@ -49,7 +47,6 @@ Error destroy(ScratchAllocator** allocator) noexcept {
         return OK;
 }
 
-[[nodiscard]]
 void* alloc(ScratchAllocator* const allocator, const u64 allocation_size, const u64 alignment) noexcept {
         REQUIRE(allocator != nullptr, nullptr);
         REQUIRE(allocation_size > 0, nullptr);
@@ -74,7 +71,6 @@ void* alloc(ScratchAllocator* const allocator, const u64 allocation_size, const 
         return (void*)(ALIGNED_ADDR);
 }
 
-[[nodiscard]]
 Error reset(ScratchAllocator* const allocator) noexcept {
         REQUIRE(allocator != nullptr, NULL_PARAMETER);
         INVARIANT(allocator->base);

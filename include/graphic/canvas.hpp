@@ -61,7 +61,7 @@ static_assert(sizeof(Canvas) == 32, "Canvas size must be 32 bytes"); // NOLINT
  *
  * @return `Error` code enumeration with OK indicating a successful initialization
  */
-Error create(Canvas* canvas_out, u64 width, u64 height, char fill_char);
+[[nodiscard]] Error create(Canvas* canvas_out, u64 width, u64 height, char fill_char);
 
 /**
  * @brief Set the value of the buffer index to `character`
@@ -77,9 +77,9 @@ Error create(Canvas* canvas_out, u64 width, u64 height, char fill_char);
  *
  * @return `Error` code enumeration with OK indicating a successful write
  */
-Error set(Canvas* canvas_out, u64 index, char character);
+[[nodiscard]] Error set(Canvas* canvas_out, u64 index, char character);
 
-Error destroy(Canvas* canvas_out);
+[[nodiscard]] Error destroy(Canvas* canvas_out);
 
 } // namespace anvil::graphic
 
