@@ -1,5 +1,7 @@
 from anvil_math.math_comparison import max_int, min_int
+from anvil_math.math_classify import classify, FloatType
 from hypothesis import given, strategies as st
+import math
 
 MAX_UINT64 = 2**64 - 1
 
@@ -27,3 +29,18 @@ def test_max_int_returns_highest(pair):
     assert result >= a
     assert result >= b
     assert result == a or result == b
+
+@given(x=st.floats(width=32, allow_nan=True, allow_infinity=True))
+def test_classify(x):
+    result = classify(x)
+    sign = math.copysign(1.0, x)
+
+    if math.isnan(x):
+        assert result == (FloatType.POS_NAN if sign >= 0 else FloatType.NEG_NAN)
+    elif math.isinf(x):
+        assert result == (FloatType.POS_INF if sign >= 0 else FloatType.NEG_INF)
+    elif math.isfinite(x):
+        # This now correctly excludes inf and nan
+        assert result == (FloatType.POS_FINITE if sign >= 0 else FloatType.NEG_FINITE)
+    else:
+        assert False

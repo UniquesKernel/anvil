@@ -24,6 +24,7 @@ if (BUILD_TESTING)
     pybind11_add_module(${TEST_MODULE}
     bindings/comparison_bindings.cpp 
     bindings/minmax_bindings.cpp
+    bindings/classify.cpp
     ${MODULE_SOURCE}
   )
 
@@ -51,7 +52,7 @@ if (BUILD_TESTING)
 
   add_test(
     NAME minmax_pytest
-    COMMAND ${Python3_EXECUTABLE} -m pytest -q "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_minmax.py"
+    COMMAND ${Python3_EXECUTABLE} -m pytest -q "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_comparison.py"
      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/tests"
   )
 endif()

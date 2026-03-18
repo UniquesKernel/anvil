@@ -8,16 +8,46 @@
 
 namespace anvil::math::comparison {
 
-u64  min(u64 left, u64 right);
-u64  max(u64 left, u64 right);
+/**
+ * @brief returns the smaller of two 64 bit integers
+ *
+ * @param[in] a
+ * @param[in] b
+ */
+u64       min(u64 a, u64 b);
 
-f32  min(f32 left, f32 right);
-f32  max(f32 left, f32 right);
+/**
+ * @brief returns the larger of two 64 bit integers
+ *
+ * @param[in] a
+ * @param[in] b
+ */
+u64       max(u64 a, u64 b);
 
-bool is_nan(f32 num);
-bool is_inf(f32 num);
+/**
+ * @brief returns the smaller of two 32 bit floats
+ *
+ * @param[in] a
+ * @param[in] b
+ */
+f32       min(f32 a, f32 b);
 
-bool is_power_of_two(anvil::u64 x) noexcept;
+/**
+ * @brief returns the larger of two 32 bit floats
+ *
+ * @param[in] a
+ * @param[in] b
+ */
+f32       max(f32 a, f32 b);
+
+/**
+ */
+FloatType classify(anvil::f32 num) noexcept;
+
+/**
+ */
+bool      is_power_of_two(anvil::u64 x) noexcept;
+
 } // namespace anvil::math::comparison
 
 #endif // !ANVIL_MATH_COMPARISON_MINMAX_HPP

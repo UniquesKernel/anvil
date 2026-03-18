@@ -3,6 +3,7 @@
 
 #include <pybind11/pybind11.h>
 
-void bind_comparison(pybind11::module_& module);
+void bind_minmax(pybind11::module_& module);
+void bind_classify(pybind11::module_& module);
 
 #endif // !ANVIL_MATH_COMPARISON_BINDINGS_HPP

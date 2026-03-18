@@ -27,6 +27,16 @@ static_assert(sizeof(i8) == 1, "Anvil requires signed char to be 8 bits");
 static_assert(sizeof(f64) == 8, "Anvil requires double to be 64 bits");
 static_assert(sizeof(f32) == 4, "Anvil requires float to be 32 bits");
 
+enum FloatType : u8 {
+        POS_FINITE = 0, // signed = 0, special = 0, is_nan = 0
+        POS_INF    = 2, // signed = 0, special = 1, is_nan = 0
+        POS_NAN    = 3, // signed = 0, special = 1, is_nan = 1
+        NEG_FINITE = 4, // signed = 1, special = 0, is_nan = 0
+        NEG_INF    = 6, // signed = 1, special = 1, is_nan = 0
+        NEG_NAN    = 7, // signed = 1, special = 1, is_nan = 1
+};
+static_assert(sizeof(FloatType) == sizeof(u8), "Anvil requires FloatType to be 8 bits");
+
 } // namespace anvil
 
 #endif // ANVIL_TYPES_HPP

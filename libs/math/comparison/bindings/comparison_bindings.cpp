@@ -6,5 +6,6 @@ namespace py = pybind11;
 PYBIND11_MODULE(anvil_math, module) {
         module.doc() = "Anvil Mathematics Module";
 
-        bind_comparison(module);
+        bind_minmax(module);
+        bind_classify(module);
 }

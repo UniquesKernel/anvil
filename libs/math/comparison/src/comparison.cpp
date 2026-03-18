@@ -4,36 +4,38 @@
 namespace anvil::math::comparison {
 
 [[gnu::const]]
-u64 max(const u64 left, const u64 right) {
-        return (left <= right) ? right : left;
+u64 max(const u64 a, const u64 b) {
+        return (a <= b) ? b : a;
 }
 
 [[gnu::const]]
-f32 max(const f32 left, const f32 right) {
-        return (left <= right) ? right : left;
+f32 max(const f32 a, const f32 b) {
+        return (a <= b) ? b : a;
 }
 
 [[gnu::const]]
-u64 min(const u64 left, const u64 right) {
-        return (left < right) ? left : right;
+u64 min(const u64 a, const u64 b) {
+        return (a < b) ? a : b;
 }
 
 [[gnu::const]]
-f32 min(const f32 left, const f32 right) {
-        return (left < right) ? left : right;
+f32 min(const f32 a, const f32 b) {
+        return (a < b) ? a : b;
 }
 
 [[gnu::const]]
-bool is_nan(f32 num) {
-        u32       bits;
-        const u32 EXPONENT_BIT_MASK = 0x7F800000;
-        const u32 MANTISSA_BIT_MASK = 0x7FFFFF;
-        memcpy(&bits, &num, sizeof(num));
-        return (bits & EXPONENT_BIT_MASK) == EXPONENT_BIT_MASK && (bits & MANTISSA_BIT_MASK) != 0;
+FloatType classify(const f32 num) noexcept {
+        u32 bits;
+        std::memcpy(&bits, &num, sizeof(bits));
+
+        u32 is_signed  = bits >> 31;
+        u32 is_special = ((bits & 0x7F800000) == 0x7F800000);
+        u32 is_nan     = ((bits & 0x007FFFFF) != 0);
+
+        return (FloatType)((is_signed << 2) | (is_special << 1) | (is_special & is_nan));
 }
 
-[[gnu::pure]]
-bool is_power_of_two(const anvil::u64 x) noexcept {
+[[gnu::const]] bool is_power_of_two(const anvil::u64 x) noexcept {
         return x != 0 && ((x & (x - 1)) == 0);
 }
 
