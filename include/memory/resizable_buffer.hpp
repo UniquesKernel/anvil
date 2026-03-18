@@ -12,10 +12,10 @@ struct ResizableBuffer {
         u64   alignment; ///< Alignment of the memory region
 };
 
-[[nodiscard]] Error  create(ResizableBuffer** buffer_out, u64 capacity, u64 alignment) noexcept;
-[[gnu::pure, nodiscard]] void*  data(const ResizableBuffer* buffer) noexcept;
-[[nodiscard]] Error  destroy(ResizableBuffer** buffer_out) noexcept;
-[[nodiscard]] void*  resize(ResizableBuffer** buffer, u64 new_size) noexcept;
+[[nodiscard]] Error            create(ResizableBuffer** buffer_out, u64 capacity, u64 alignment) noexcept;
+[[gnu::pure, nodiscard]] void* data(const ResizableBuffer* buffer) noexcept;
+[[nodiscard]] Error            destroy(ResizableBuffer** buffer_out) noexcept;
+[[nodiscard]] void*            resize(ResizableBuffer** buffer, u64 new_size) noexcept;
 
 } // namespace anvil::memory::resizable_buffer
 

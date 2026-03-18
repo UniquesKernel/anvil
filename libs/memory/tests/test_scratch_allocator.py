@@ -1,4 +1,4 @@
-from anvil_memory.scratch_allocator import scratch_allocator_create, scratch_allocator_destroy, scratch_allocator_reset, scratch_allocator_alloc 
+from anvil_memory.scratch_allocator import scratch_allocator_create, scratch_allocator_destroy, scratch_allocator_reset, scratch_allocator_alloc, scratch_allocator_write, scratch_allocator_read
 from anvil_memory import Error, MAX_ALIGNMENT, MIN_ALIGNMENT, ptr_to_int
 from hypothesis.stateful import RuleBasedStateMachine, initialize, precondition, rule, invariant
 from hypothesis import strategies as st
@@ -76,11 +76,25 @@ class ScratchAllocatorModel(RuleBasedStateMachine):
 
         if (self.isValid == False):
             assert ptr is None
-            return 
+            return
 
         if ptr:
             self.allocations.append((ptr, allocation_size, alignment))
             self.allocated = self.allocated + allocation_size
+
+    @rule(data=st.data())
+    @precondition(lambda self: self.isValid and len(self.allocations) > 0)
+    def write_to_allocation(self, data):
+        idx = data.draw(st.integers(min_value=0, max_value=len(self.allocations) - 1))
+        ptr, allocation_size, _ = self.allocations[idx]
+
+        payload = bytes(i & 0xFF for i in range(allocation_size))
+        err = scratch_allocator_write(ptr, payload)
+        assert err == Error.OK
+
+        err, result = scratch_allocator_read(ptr, allocation_size)
+        assert err == Error.OK
+        assert result == payload, "Write/read mismatch"
 
     @rule()
     @precondition(lambda self: self.allocator is not None)

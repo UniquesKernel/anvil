@@ -6,8 +6,8 @@
 #include <immintrin.h>
 
 namespace {
-void cleanup_allocator(anvil::memory::resizable_buffer::ResizableBuffer** allocator) {
-        (void)anvil::memory::resizable_buffer::destroy(allocator);
+void cleanup_allocator(anvil::memory::scratch_allocator::ScratchAllocator** allocator) {
+        (void)anvil::memory::scratch_allocator::destroy(allocator);
 }
 } // namespace
 
@@ -16,11 +16,11 @@ int main(void) {
         // Now requesting 64 bytes (16 integers) per allocation
         const anvil::u64                            ALLOC_SIZE = 64;
 
-        __attribute__((cleanup(cleanup_allocator))) anvil::memory::resizable_buffer::ResizableBuffer* allocator =
+        __attribute__((cleanup(cleanup_allocator))) anvil::memory::scratch_allocator::ScratchAllocator* allocator =
             nullptr;
 
         // 1/16th the allocations! We align to 64 bytes (the exact size of a CPU Cache Line)
-        const Error ERR = anvil::memory::resizable_buffer::create(&allocator, ALLOC_SIZE, 32);
+        const Error ERR = anvil::memory::scratch_allocator::create(&allocator, NUM_ALLOCS * ALLOC_SIZE, 32);
 
         if (ERR != OK) {
                 printf("ERROR: %i\n", ERR);
@@ -38,15 +38,14 @@ int main(void) {
 
         // Step is now 16
         __m256i             v_step = _mm256_set1_epi32(16);
-
         // --- UNROLLED LOOP ---
         // Total iterations: 625,000
-        anvil::i32*         ptr    = (anvil::i32*)(anvil::memory::resizable_buffer::data(allocator));
-        if (ptr == nullptr) [[unlikely]] {
-                return 1;
-        }
-
         for (anvil::i64 i = 0; i < NUM_ALLOCS; i += 16) {
+                anvil::i32* ptr = (anvil::i32*)(anvil::memory::scratch_allocator::alloc(allocator, ALLOC_SIZE, 32));
+                if (ptr == nullptr) [[unlikely]] {
+                        return 1;
+                }
+
                 // Allocate 64 bytes, aligned to a 64-byte cache line
 
                 // Write 16 integers. CPU will pipeline these stores!

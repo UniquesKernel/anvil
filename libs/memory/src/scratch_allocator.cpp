@@ -18,10 +18,12 @@ Error create(ScratchAllocator** allocator_out, const u64 capacity, const u64 ali
         REQUIRE(alignment >= MIN_ALIGNMENT, INVALID_ARGUMENTS);
         REQUIRE(alignment <= MAX_ALIGNMENT, INVALID_ARGUMENTS);
 
-        const u64 TOTAL_MEMORY_NEEDED = capacity + sizeof(ScratchAllocator);
+        const u64 ALLOCATOR_ALIGNMENT = alignof(ScratchAllocator);
+        const u64 TRUE_ALIGNMENT      = anvil::math::comparison::max(alignment, ALLOCATOR_ALIGNMENT);
+        const u64 TOTAL_MEMORY_NEEDED = capacity + sizeof(ScratchAllocator) + TRUE_ALIGNMENT - 1;
 
         void*     mem                 = nullptr;
-        if (anvil::memory::anvil_memory_alloc_eager(&mem, TOTAL_MEMORY_NEEDED, alignment) != OK) {
+        if (anvil::memory::anvil_memory_alloc_eager(&mem, TOTAL_MEMORY_NEEDED, TRUE_ALIGNMENT) != OK) {
                 return OUT_OF_MEMORY;
         }
 

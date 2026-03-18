@@ -21,8 +21,8 @@ int main(void) {
 
         // --- UNROLLED LOOP ---
         // Total iterations: 625,000
-        anvil::i32*      ptr        = (anvil::i32*)(malloc(ALLOC_SIZE));
         for (anvil::i32 i = 0; i < NUM_ALLOCS; i += 16) {
+                anvil::i32* ptr = (anvil::i32*)(malloc(ALLOC_SIZE));
                 // Allocate 64 bytes, aligned to a 64-byte cache line
 
                 if (ptr == nullptr) [[unlikely]] {
@@ -40,8 +40,8 @@ int main(void) {
                 // Increment both tracks
                 v_i1   = _mm256_add_epi32(v_i1, v_step);
                 v_i2   = _mm256_add_epi32(v_i2, v_step);
+                free(ptr);
         }
-        free(ptr);
 
         // --- HORIZONTAL ADDITION ---
         // Combine track 2 into track 1

@@ -1,4 +1,4 @@
-from anvil_memory.stack_allocator import stack_allocator_create, stack_allocator_destroy, stack_allocator_alloc, stack_allocator_reset, stack_allocator_record, stack_allocator_unwind
+from anvil_memory.stack_allocator import stack_allocator_create, stack_allocator_destroy, stack_allocator_alloc, stack_allocator_reset, stack_allocator_record, stack_allocator_unwind, stack_allocator_write, stack_allocator_read
 from anvil_memory import Error, MAX_STACK_DEPTH, ptr_to_int, MAX_ALIGNMENT, MIN_ALIGNMENT
 from hypothesis.stateful import RuleBasedStateMachine, rule, initialize, precondition, invariant
 from hypothesis import strategies as st
@@ -139,9 +139,23 @@ class StackAllocatorModel(RuleBasedStateMachine):
         self.epoch -= 1
         self.allocated -= epoch_size
 
+    @rule(data=st.data())
+    @precondition(lambda self: self.isValid and len(self.allocations) > 0)
+    def write_to_allocation(self, data):
+        idx = data.draw(st.integers(min_value=0, max_value=len(self.allocations) - 1))
+        ptr, allocation_size, _, _ = self.allocations[idx]
+
+        payload = bytes(i & 0xFF for i in range(allocation_size))
+        err = stack_allocator_write(ptr, payload)
+        assert err == Error.OK
+
+        err, result = stack_allocator_read(ptr, allocation_size)
+        assert err == Error.OK
+        assert result == payload, "Write/read mismatch"
+
     @rule()
     @precondition(lambda self: self.allocator is not None)
-    def destroy(self): 
+    def destroy(self):
         err = stack_allocator_destroy(self.allocator)
         if (self.isValid == True):
             assert err == Error.OK

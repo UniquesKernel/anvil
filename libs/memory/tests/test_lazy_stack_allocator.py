@@ -2,17 +2,21 @@ from anvil_memory.lazy_stack_allocator import (
     lazy_stack_allocator_alloc,
     lazy_stack_allocator_create,
     lazy_stack_allocator_destroy,
+    lazy_stack_allocator_read,
     lazy_stack_allocator_record,
     lazy_stack_allocator_reset,
     lazy_stack_allocator_unwind,
+    lazy_stack_allocator_write,
 )
 from anvil_memory.stack_allocator import (
     stack_allocator_alloc,
     stack_allocator_create,
     stack_allocator_destroy,
+    stack_allocator_read,
     stack_allocator_record,
     stack_allocator_reset,
     stack_allocator_unwind,
+    stack_allocator_write,
 )
 from anvil_memory import Error, MAX_STACK_DEPTH, ptr_to_int
 from hypothesis import strategies as st
@@ -201,6 +205,26 @@ class DifferentialAllocatorModel(RuleBasedStateMachine):
         self.stack_allocations = self.stack_allocations[:allocation_count]
         self.epoch -= 1
         self.allocated -= epoch_size
+
+    @rule(data=st.data())
+    @precondition(lambda self: self.isValid and len(self.lazy_allocations) > 0)
+    def write_to_allocation(self, data):
+        idx = data.draw(st.integers(min_value=0, max_value=len(self.lazy_allocations) - 1))
+        lazy_ptr, allocation_size, _, _ = self.lazy_allocations[idx]
+        stack_ptr, _, _, _ = self.stack_allocations[idx]
+
+        payload = bytes(i & 0xFF for i in range(allocation_size))
+        lazy_err = lazy_stack_allocator_write(lazy_ptr, payload)
+        stack_err = stack_allocator_write(stack_ptr, payload)
+        assert lazy_err == Error.OK
+        assert stack_err == Error.OK
+
+        lazy_read_err, lazy_result = lazy_stack_allocator_read(lazy_ptr, allocation_size)
+        stack_read_err, stack_result = stack_allocator_read(stack_ptr, allocation_size)
+        assert lazy_read_err == Error.OK
+        assert stack_read_err == Error.OK
+        assert lazy_result == payload, "Lazy stack write/read mismatch"
+        assert stack_result == payload, "Stack write/read mismatch"
 
     @rule()
     @precondition(

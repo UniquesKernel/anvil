@@ -1,5 +1,6 @@
 #include "error/status.hpp"
 #include "memory/stack_allocator.hpp"
+#include <cstring>
 #include <pybind11/cast.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
@@ -129,4 +130,30 @@ void bind_stack_allocator(pybind11::module_& module) { // NOLINT
                     return anvil::memory::stack_allocator::unwind(alloc);
             },
             py::arg("allocator"));
+
+        m.def(
+            "stack_allocator_write",
+            [](py::capsule& allocation, py::bytes data) -> Error {
+                    char* ptr = (char*)(allocation.get_pointer());
+                    if (ptr == nullptr || ptr == (char*)0x1) {
+                            return NULL_PARAMETER;
+                    }
+
+                    std::string_view sv(data);
+                    std::memcpy(ptr, sv.data(), sv.size());
+                    return OK;
+            },
+            py::arg("allocation"), py::arg("data"));
+
+        m.def(
+            "stack_allocator_read",
+            [](py::capsule& allocation, const anvil::u64 size) -> py::tuple {
+                    char* ptr = (char*)(allocation.get_pointer());
+                    if (ptr == nullptr || ptr == (char*)0x1) {
+                            return py::make_tuple(NULL_PARAMETER, py::none());
+                    }
+
+                    return py::make_tuple(OK, py::bytes(ptr, size));
+            },
+            py::arg("allocation"), py::arg("size"));
 }

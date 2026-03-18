@@ -30,6 +30,7 @@ def test_max_int_returns_highest(pair):
     assert result >= b
     assert result == a or result == b
 
+
 @given(x=st.floats(width=32, allow_nan=True, allow_infinity=True))
 def test_classify(x):
     result = classify(x)
@@ -40,7 +41,6 @@ def test_classify(x):
     elif math.isinf(x):
         assert result == (FloatType.POS_INF if sign >= 0 else FloatType.NEG_INF)
     elif math.isfinite(x):
-        # This now correctly excludes inf and nan
         assert result == (FloatType.POS_FINITE if sign >= 0 else FloatType.NEG_FINITE)
     else:
         assert False

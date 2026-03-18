@@ -16,9 +16,12 @@ Error anvil_memory_alloc_lazy(void** mem_out, const u64 capacity, const u64 alig
         REQUIRE(anvil::memory::MIN_ALIGNMENT <= alignment, INVALID_ARGUMENTS);
         REQUIRE(alignment <= anvil::memory::MAX_ALIGNMENT, INVALID_ARGUMENTS);
 
-        u64 total_size = capacity + sizeof(Metadata) + alignment - 1;
-        total_size     = (total_size + (PAGE_SIZE - 1U)) & ~(PAGE_SIZE - 1U);
-        void* base     = mmap(nullptr, total_size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+        const u64 METADATA_ALIGNMENT = alignof(Metadata);
+        const u64 TRUE_ALIGNMENT     = anvil::math::comparison::max(METADATA_ALIGNMENT, alignment);
+
+        u64       total_size         = capacity + sizeof(Metadata) + TRUE_ALIGNMENT - 1;
+        total_size                   = (total_size + (PAGE_SIZE - 1U)) & ~(PAGE_SIZE - 1U);
+        void* base                   = mmap(nullptr, total_size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
         if (base == MAP_FAILED) {
                 return OUT_OF_MEMORY;
@@ -37,7 +40,7 @@ Error anvil_memory_alloc_lazy(void** mem_out, const u64 capacity, const u64 alig
         }
 
         const uintptr_t ADDR         = (uintptr_t)(base) + sizeof(Metadata);
-        const uintptr_t ALIGNED_ADDR = (ADDR + (alignment - 1)) & ~(alignment - 1);
+        const uintptr_t ALIGNED_ADDR = (ADDR + (TRUE_ALIGNMENT - 1)) & ~(TRUE_ALIGNMENT - 1);
 
         Metadata*       metadata     = (Metadata*)(ALIGNED_ADDR - sizeof(Metadata));
         metadata->base               = base;
@@ -58,9 +61,12 @@ Error anvil_memory_alloc_eager(void** mem_out, const u64 capacity, const u64 ali
         REQUIRE(anvil::memory::MIN_ALIGNMENT <= alignment, INVALID_ARGUMENTS);
         REQUIRE(alignment <= anvil::memory::MAX_ALIGNMENT, INVALID_ARGUMENTS);
 
-        u64 total_size = capacity + sizeof(Metadata) + alignment - 1;
-        total_size     = (total_size + (PAGE_SIZE - 1U)) & ~(PAGE_SIZE - 1U);
-        void* base     = mmap(nullptr, total_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+        const u64 METADATA_ALIGNMENT = alignof(Metadata);
+        const u64 TRUE_ALIGNMENT     = anvil::math::comparison::max(METADATA_ALIGNMENT, alignment);
+
+        u64       total_size         = capacity + sizeof(Metadata) + TRUE_ALIGNMENT - 1;
+        total_size                   = (total_size + (PAGE_SIZE - 1U)) & ~(PAGE_SIZE - 1U);
+        void* base = mmap(nullptr, total_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
         if (base == MAP_FAILED) {
                 return OUT_OF_MEMORY;
@@ -74,7 +80,7 @@ Error anvil_memory_alloc_eager(void** mem_out, const u64 capacity, const u64 ali
                 (void)madvise(base, total_size, MADV_HUGEPAGE);
         }
         const uintptr_t ADDR         = (uintptr_t)(base) + sizeof(Metadata);
-        const uintptr_t ALIGNED_ADDR = (ADDR + (alignment - 1U)) & ~(alignment - 1U);
+        const uintptr_t ALIGNED_ADDR = (ADDR + (TRUE_ALIGNMENT - 1U)) & ~(TRUE_ALIGNMENT - 1U);
 
         // NOTE: (UniquesKernel) since anvil_memory_dealloc relies on the virtual capacity for correct deallocation of
         // memory the virtual capacity to total_size. In eager allocation the virtual capacity is rather meaningless.
