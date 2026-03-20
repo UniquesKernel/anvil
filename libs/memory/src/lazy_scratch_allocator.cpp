@@ -1,4 +1,4 @@
-#include "memory/scratch_allocator.hpp"
+#include "memory/lazy_scratch_allocator.hpp"
 #include "error/assert.hpp"
 #include "error/status.hpp"
 #include "math/comparison/comparison.hpp"
@@ -6,9 +6,9 @@
 #include "memory/memory_allocation.hpp"
 #include <cstdint>
 
-namespace anvil::memory::scratch_allocator {
+namespace anvil::memory::lazy_scratch_allocator {
 
-Error create(ScratchAllocator** allocator_out, const u64 capacity, const u64 alignment) noexcept {
+Error create(LazyScratchAllocator** allocator_out, const u64 capacity, const u64 alignment) noexcept {
         REQUIRE(allocator_out != nullptr, NULL_PARAMETER);
         REQUIRE(*allocator_out == nullptr, INVALID_ARGUMENTS);
         REQUIRE(capacity > 0, INVALID_ARGUMENTS);
@@ -18,18 +18,17 @@ Error create(ScratchAllocator** allocator_out, const u64 capacity, const u64 ali
         REQUIRE(alignment >= MIN_ALIGNMENT, INVALID_ARGUMENTS);
         REQUIRE(alignment <= MAX_ALIGNMENT, INVALID_ARGUMENTS);
 
-        const u64 ALLOCATOR_ALIGNMENT = alignof(ScratchAllocator);
-        const u64 TRUE_ALIGNMENT      = anvil::math::comparison::max(alignment, ALLOCATOR_ALIGNMENT);
-        const u64 TOTAL_MEMORY_NEEDED = capacity + sizeof(ScratchAllocator) + TRUE_ALIGNMENT - 1;
+        const u64 ALLOCATOR_ALIGNMENT = alignof(LazyScratchAllocator);
+        const u64 TRUE_ALIGNMENT      = anvil::math::comparison::max(ALLOCATOR_ALIGNMENT, alignment);
+        const u64 TOTAL_MEMORY_NEEDED = capacity + sizeof(LazyScratchAllocator) + TRUE_ALIGNMENT - 1;
 
         void*     mem                 = nullptr;
-        if (anvil::memory::anvil_memory_alloc_eager(&mem, TOTAL_MEMORY_NEEDED, TRUE_ALIGNMENT) != OK) [[unlikely]] {
+        if (anvil::memory::anvil_memory_alloc_lazy(&mem, TOTAL_MEMORY_NEEDED, TRUE_ALIGNMENT) != OK) {
                 return OUT_OF_MEMORY;
         }
+        *allocator_out               = (LazyScratchAllocator*)(mem);
 
-        *allocator_out               = (ScratchAllocator*)(mem);
-
-        const uintptr_t RAW_BASE     = (uintptr_t)(*allocator_out) + sizeof(ScratchAllocator);
+        const uintptr_t RAW_BASE     = (uintptr_t)(*allocator_out) + sizeof(LazyScratchAllocator);
         const uintptr_t ALIGNED_BASE = (RAW_BASE + (alignment - 1)) & ~(alignment - 1);
 
         (*allocator_out)->base       = (void*)(ALIGNED_BASE);
@@ -39,7 +38,7 @@ Error create(ScratchAllocator** allocator_out, const u64 capacity, const u64 ali
         return OK;
 }
 
-Error destroy(ScratchAllocator** allocator) noexcept {
+Error destroy(LazyScratchAllocator** allocator) noexcept {
         REQUIRE(allocator != nullptr, NULL_PARAMETER);
         REQUIRE(*allocator != nullptr, NULL_PARAMETER);
 
@@ -49,7 +48,7 @@ Error destroy(ScratchAllocator** allocator) noexcept {
         return OK;
 }
 
-void* alloc(ScratchAllocator* const allocator, const u64 allocation_size, const u64 alignment) noexcept {
+void* alloc(LazyScratchAllocator* const allocator, const u64 allocation_size, const u64 alignment) noexcept {
         REQUIRE(allocator != nullptr, nullptr);
         REQUIRE(allocation_size > 0, nullptr);
         REQUIRE(allocation_size <= MAX_CAPACITY, nullptr);
@@ -57,30 +56,39 @@ void* alloc(ScratchAllocator* const allocator, const u64 allocation_size, const 
         REQUIRE(MIN_ALIGNMENT <= alignment, nullptr);
         REQUIRE(alignment <= MAX_ALIGNMENT, nullptr);
 
+        INVARIANT(allocator->base != nullptr);
         INVARIANT(allocator->allocated <= allocator->capacity);
 
         const uintptr_t CURRENT_ADDR     = (uintptr_t)(allocator->base) + allocator->allocated;
         const uintptr_t ALIGNED_ADDR     = (CURRENT_ADDR + (alignment - 1)) & ~(alignment - 1);
         const u64       OFFSET           = ALIGNED_ADDR - CURRENT_ADDR;
-
         const u64       TOTAL_ALLOCATION = allocation_size + OFFSET;
 
         if (TOTAL_ALLOCATION > allocator->capacity - allocator->allocated) [[unlikely]] {
                 return nullptr;
         }
 
+        Metadata* metadata     = (Metadata*)((uintptr_t)(allocator) - sizeof(Metadata));
+        const u64 TOTAL_NEEDED = (ALIGNED_ADDR + allocation_size) - (uintptr_t)(metadata->base);
+
+        if (TOTAL_NEEDED > metadata->capacity) {
+                const u64 ADDITIONAL_COMMIT = TOTAL_NEEDED - metadata->capacity;
+                if (anvil_memory_commit(allocator, ADDITIONAL_COMMIT) != OK) {
+                        return nullptr;
+                }
+        }
+
         allocator->allocated += TOTAL_ALLOCATION;
         return (void*)(ALIGNED_ADDR);
 }
 
-Error reset(ScratchAllocator* const allocator) noexcept {
+Error reset(LazyScratchAllocator* const allocator) noexcept {
         REQUIRE(allocator != nullptr, NULL_PARAMETER);
-        INVARIANT(allocator->base);
+        INVARIANT(allocator->base != nullptr);
 
-        // memset(allocator->base, 0x0, allocator->allocated);
         allocator->allocated = 0;
 
         return OK;
 }
 
-} // namespace anvil::memory::scratch_allocator
+} // namespace anvil::memory::lazy_scratch_allocator

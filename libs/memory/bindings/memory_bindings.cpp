@@ -8,6 +8,7 @@
 void bind_scratch_allocator(pybind11::module_& module);
 void bind_stack_allocator(pybind11::module_& module);
 void bind_lazy_stack_allocator(pybind11::module_& module);
+void bind_lazy_scratch_allocator(pybind11::module_& module);
 
 namespace py = pybind11;
 
@@ -17,6 +18,7 @@ PYBIND11_MODULE(anvil_memory, m) {
         bind_scratch_allocator(m);
         bind_stack_allocator(m);
         bind_lazy_stack_allocator(m);
+        bind_lazy_scratch_allocator(m);
 
         // Error codes
         py::enum_<Error>(m, "Error")
