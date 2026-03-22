@@ -20,7 +20,7 @@
 #include "constants.hpp"
 #include "error/status.hpp"
 
-namespace anvil::memory::lazy_stack_allocator {
+namespace anvil::memory {
 
 /**
  * @brief Representation of a lazy stack allocator with record/unwind capability.
@@ -164,6 +164,6 @@ static_assert(alignof(LazyStackAllocator) == alignof(void*), "LazyStackAllocator
  */
 [[nodiscard]] Error unwind(LazyStackAllocator* allocator) noexcept;
 
-} // namespace anvil::memory::lazy_stack_allocator
+} // namespace anvil::memory
 
 #endif // ANVIL_MEMORY_LAZY_STACK_ALLOCATOR_HPP

@@ -41,7 +41,7 @@ struct Canvas {
         u64                                          height    = 0;
         u64                                          width     = 0;
         char*                                        buffer    = nullptr;
-        memory::scratch_allocator::ScratchAllocator* allocator = nullptr;
+        memory::ScratchAllocator* allocator = nullptr;
 };
 
 static_assert(sizeof(Canvas) == 32, "Canvas size must be 32 bytes"); // NOLINT

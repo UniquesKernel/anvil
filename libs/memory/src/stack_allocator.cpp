@@ -6,7 +6,7 @@
 #include "memory/memory_allocation.hpp"
 #include <cstdint>
 
-namespace anvil::memory::stack_allocator {
+namespace anvil::memory {
 
 Error create(StackAllocator** allocator_out, const u64 capacity, const u64 alignment) noexcept {
         REQUIRE(allocator_out != nullptr, NULL_PARAMETER);
@@ -111,4 +111,4 @@ Error unwind(StackAllocator* const allocator) noexcept {
         return OK;
 }
 
-} // namespace anvil::memory::stack_allocator
+} // namespace anvil::memory

@@ -100,7 +100,7 @@ Error anvil_memory_dealloc(void* ptr) noexcept {
         Metadata* metadata = (Metadata*)((uintptr_t)(ptr) - sizeof(Metadata));
         INVARIANT(metadata->base != nullptr);
         INVARIANT(metadata->virtual_capacity > 0);
-        INVARIANT(munmap(metadata->base, metadata->virtual_capacity) == 0);
+        munmap(metadata->base, metadata->virtual_capacity);
 
         return OK;
 }

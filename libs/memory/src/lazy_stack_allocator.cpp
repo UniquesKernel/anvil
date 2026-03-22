@@ -6,7 +6,7 @@
 #include "memory/memory_allocation.hpp"
 #include <cstdint>
 
-namespace anvil::memory::lazy_stack_allocator {
+namespace anvil::memory {
 
 Error create(LazyStackAllocator** allocator_out, const u64 capacity, const u64 alignment) noexcept {
         REQUIRE(allocator_out != nullptr, NULL_PARAMETER);
@@ -118,4 +118,4 @@ Error unwind(LazyStackAllocator* const allocator) noexcept {
         return OK;
 }
 
-} // namespace anvil::memory::lazy_stack_allocator
+} // namespace anvil::memory

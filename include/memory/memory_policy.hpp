@@ -2,7 +2,6 @@
 #define ANVIL_MEMORY_POLICY_HPP
 
 #include <cstdlib>
-#include <cstring>
 
 /**
  * Creates an error if `malloc` and related functions are used in

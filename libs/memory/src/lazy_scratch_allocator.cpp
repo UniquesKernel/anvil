@@ -6,7 +6,7 @@
 #include "memory/memory_allocation.hpp"
 #include <cstdint>
 
-namespace anvil::memory::lazy_scratch_allocator {
+namespace anvil::memory {
 
 Error create(LazyScratchAllocator** allocator_out, const u64 capacity, const u64 alignment) noexcept {
         REQUIRE(allocator_out != nullptr, NULL_PARAMETER);
@@ -91,4 +91,4 @@ Error reset(LazyScratchAllocator* const allocator) noexcept {
         return OK;
 }
 
-} // namespace anvil::memory::lazy_scratch_allocator
+} // namespace anvil::memory

@@ -2,6 +2,7 @@
 #define ANVIL_ERROR_ASSERT_HPP
 
 #include <cstdlib>
+#include <utility>
 
 /**
  *  @brief A requirement characterizes a condition that must hold under correct usage
@@ -47,5 +48,7 @@
                         abort();                                                                                       \
                 }                                                                                                      \
         } while (0)
+
+#define force_check(func, ...) ([]() [[nodiscard]] { return func(__VA_ARGS__); }())
 
 #endif // !ANVIL_ERROR_ASSERT_HPP

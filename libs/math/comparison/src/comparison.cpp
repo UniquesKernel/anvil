@@ -23,11 +23,11 @@ FloatType classify(const f32 num) noexcept {
         u32 bits;
         std::memcpy(&bits, &num, sizeof(bits));
 
-        u32 is_signed  = bits >> 31;
-        u32 is_special = ((bits & 0x7F800000) == 0x7F800000);
-        u32 is_nan     = ((bits & 0x007FFFFF) != 0);
+        u32 is_signed  = bits >> 31U;
+        u32 is_special = ((bits & 0x7F800000U) == 0x7F800000U);
+        u32 is_nan     = ((bits & 0x007FFFFFU) != 0);
 
-        return (FloatType)((is_signed << 2) | (is_special << 1) | (is_special & is_nan));
+        return (FloatType)((is_signed << 2U) | (is_special << 1U) | (is_special & is_nan));
 }
 
 bool is_power_of_two(const anvil::u64 x) noexcept {

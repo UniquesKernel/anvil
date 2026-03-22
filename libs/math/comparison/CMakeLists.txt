@@ -21,15 +21,15 @@ if (BUILD_TESTING)
 
   anvil_find_pybind11()
   set(TEST_MODULE anvil_math)
-    pybind11_add_module(${TEST_MODULE}
-    bindings/comparison_bindings.cpp 
+  pybind11_add_module(${TEST_MODULE}
+    bindings/comparison_bindings.cpp
     bindings/minmax_bindings.cpp
     bindings/classify.cpp
     ${MODULE_SOURCE}
   )
 
   set_target_properties(${TEST_MODULE} PROPERTIES
-     CXX_CLANG_TIDY "" 
+     CXX_CLANG_TIDY ""
      CXX_CPPCHECK ""
   )
 
@@ -51,7 +51,7 @@ if (BUILD_TESTING)
   )
 
   add_test(
-    NAME minmax_pytest
+    NAME comparison_pytest
     COMMAND ${Python3_EXECUTABLE} -m pytest -q "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_comparison.py"
      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/tests"
   )

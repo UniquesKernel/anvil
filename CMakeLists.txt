@@ -12,16 +12,16 @@ anvil_enable_static_analysis_root()
 
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
-        set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+  set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
 endif()
 
 if(BUILD_TESTING)
-        enable_testing()
-        if(DEFINED Python3_EXECUTABLE)
-                set(Python3_ROOT_DIR "${Python3_EXECUTABLE}")
-        endif()
-        find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
-        message(STATUS "Using Python 3 Interpreter: ${Python3_EXECUTABLE}")
+  enable_testing()
+  if(DEFINED Python3_EXECUTABLE)
+    set(Python3_ROOT_DIR "${Python3_EXECUTABLE}")
+  endif()
+  find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+  message(STATUS "Using Python 3 Interpreter: ${Python3_EXECUTABLE}")
 endif()
 
 add_subdirectory(libs/math)
@@ -29,8 +29,10 @@ add_subdirectory(libs/graphic)
 add_subdirectory(libs/memory)
 add_subdirectory(examples)
 
+include(install)
+
 if(CMAKE_EXPORT_COMPILE_COMMANDS)
-        file(CREATE_LINK
+  file(CREATE_LINK
     "${CMAKE_BINARY_DIR}/compile_commands.json"
     "${CMAKE_SOURCE_DIR}/compile_commands.json"
     SYMBOLIC

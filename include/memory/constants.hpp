@@ -10,7 +10,6 @@
 #define ANVIL_MEMORY_CONSTANTS_HPP
 
 #include "anvil/types.hpp"
-#include <cstdint>
 #include <sys/mman.h>
 #include <unistd.h>
 
@@ -25,7 +24,7 @@ static const u64 PAGE_SIZE       = (u64)(sysconf(_SC_PAGESIZE));
 /**
  * @brief The maximum allowed alignment for any given memory allocation.
  */
-inline const u64 MAX_ALIGNMENT   = PAGE_SIZE >> 1;
+inline const u64 MAX_ALIGNMENT   = PAGE_SIZE >> 1U;
 
 /**
  * @brief The minimum allowed alignment for any given memory allocation.

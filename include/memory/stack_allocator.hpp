@@ -19,7 +19,7 @@
 #include "constants.hpp"
 #include "error/status.hpp"
 
-namespace anvil::memory::stack_allocator {
+namespace anvil::memory {
 
 /**
  * @brief Representation of a stack allocator with record/unwind capability.
@@ -154,6 +154,6 @@ static_assert(alignof(StackAllocator) == alignof(void*), "StackAllocator alignme
  */
 [[nodiscard]] Error unwind(StackAllocator* allocator) noexcept;
 
-} // namespace anvil::memory::stack_allocator
+} // namespace anvil::memory
 
 #endif // ANVIL_MEMORY_STACK_ALLOCATOR_HPP

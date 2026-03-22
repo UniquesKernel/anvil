@@ -4,6 +4,7 @@
 #include "math/comparison/comparison.hpp"
 #include "memory/constants.hpp"
 #include "memory/memory_allocation.hpp"
+#include <cstdint>
 #include <cstring>
 
 namespace anvil::memory::resizable_buffer {

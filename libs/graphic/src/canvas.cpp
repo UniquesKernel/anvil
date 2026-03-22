@@ -20,17 +20,17 @@ Error anvil::graphic::create(Canvas* const canvas_out, const u64 width, const u6
         canvas_out->allocator = nullptr;
 
         const Error ALLOCATOR_CREATE_ERR =
-            memory::scratch_allocator::create(&canvas_out->allocator, height * width, alignof(u64));
+            memory::create(&canvas_out->allocator, height * width, alignof(u64));
 
         if (ALLOCATOR_CREATE_ERR != OK) {
                 return ALLOCATOR_CREATE_ERR;
         }
 
         canvas_out->buffer =
-            (char*)(memory::scratch_allocator::alloc(canvas_out->allocator, height * width, alignof(u64)));
+            (char*)(memory::alloc(canvas_out->allocator, height * width, alignof(u64)));
 
         if (!canvas_out->buffer) {
-                const Error CLEANUP_ERROR = memory::scratch_allocator::destroy(&canvas_out->allocator);
+                const Error CLEANUP_ERROR = memory::destroy(&canvas_out->allocator);
                 INVARIANT(CLEANUP_ERROR == OK);
                 return OUT_OF_MEMORY;
         }
@@ -54,7 +54,7 @@ Error anvil::graphic::destroy(Canvas* const canvas_out) {
         INVARIANT(canvas_out->buffer != nullptr);
         INVARIANT(canvas_out->allocator != nullptr);
 
-        INVARIANT(anvil::memory::scratch_allocator::destroy(&canvas_out->allocator) == OK);
+        INVARIANT(anvil::memory::destroy(&canvas_out->allocator) == OK);
         canvas_out->height    = 0;
         canvas_out->width     = 0;
         canvas_out->buffer    = nullptr;

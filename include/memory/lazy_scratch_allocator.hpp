@@ -18,7 +18,7 @@
 #include "anvil/types.hpp"
 #include "error/status.hpp"
 
-namespace anvil::memory::lazy_scratch_allocator {
+namespace anvil::memory {
 
 /**
  * @brief Representation of a lazy linear scratch allocator.
@@ -123,6 +123,6 @@ static_assert(alignof(LazyScratchAllocator) == alignof(void*),
  */
 [[nodiscard]] Error reset(LazyScratchAllocator* allocator) noexcept;
 
-} // namespace anvil::memory::lazy_scratch_allocator
+} // namespace anvil::memory
 
 #endif // ANVIL_MEMORY_LAZY_SCRATCH_ALLOCATOR_HPP

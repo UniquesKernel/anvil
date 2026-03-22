@@ -17,9 +17,9 @@ function(anvil_find_pybind11)
 endfunction()
 
 function(anvil_set_strict_warnings target_name)
-    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-        # Common flags for both GCC and Clang
-        target_compile_options(${target_name} PRIVATE
+  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    # Common flags for both GCC and Clang
+    target_compile_options(${target_name} PRIVATE
             -Wall -Wextra -Wpedantic -Werror
             -pedantic-errors
             -Wconversion -Wsign-conversion
@@ -47,16 +47,16 @@ function(anvil_set_strict_warnings target_name)
             -O3
         )
 
-        # Runtime fortification (both compilers)
-        target_compile_definitions(${target_name} PRIVATE
+    # Runtime fortification (both compilers)
+    target_compile_definitions(${target_name} PRIVATE
             _FORTIFY_SOURCE=2
             _GLIBCXX_ASSERTIONS
         )
-    endif()
+  endif()
 
-    # GCC-specific flags
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        target_compile_options(${target_name} PRIVATE
+  # GCC-specific flags
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(${target_name} PRIVATE
             -Wduplicated-cond
             -Wduplicated-branches
             -Wlogical-op
@@ -64,11 +64,11 @@ function(anvil_set_strict_warnings target_name)
             -Warray-bounds=2  # GCC supports level 2
             -Wuseless-cast
         )
-    endif()
+  endif()
 
-    # Clang-specific flags
-    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        target_compile_options(${target_name} PRIVATE
+  # Clang-specific flags
+  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    target_compile_options(${target_name} PRIVATE
             -Wunreachable-code
             -Wunreachable-code-break
             -Wunreachable-code-return
@@ -78,7 +78,7 @@ function(anvil_set_strict_warnings target_name)
             -Wcomma
             -Wover-aligned
         )
-    endif()
+  endif()
 endfunction()
 
 function(anvil_enable_static_analysis_root)
@@ -86,11 +86,11 @@ function(anvil_enable_static_analysis_root)
   find_program(CLANG_TIDY_EXE NAMES clang-tidy)
   if(CLANG_TIDY_EXE)
     set(CMAKE_C_CLANG_TIDY
-      "${CLANG_TIDY_EXE};--config-file=${CMAKE_SOURCE_DIR}/.clang-tidy;--warnings-as-errors=*;--extra-arg=-Wno-unknown-warning-option;--extra-arg=-Wno-error=unknown-warning-option"
+      "${CLANG_TIDY_EXE};--config-file=${CMAKE_SOURCE_DIR}/.clang-tidy;--warnings-as-errors=*;--extra-arg=-Wno-unknown-warning-option;--extra-arg=-Wno-error=unknown-warning-option;-checks=bugprone-unused-return-value"
         PARENT_SCOPE
     )
     set(CMAKE_CXX_CLANG_TIDY
-      "${CLANG_TIDY_EXE};--config-file=${CMAKE_SOURCE_DIR}/.clang-tidy;--warnings-as-errors=*;--extra-arg=-Wno-unknown-warning-option;--extra-arg=-Wno-error=unknown-warning-option"
+      "${CLANG_TIDY_EXE};--config-file=${CMAKE_SOURCE_DIR}/.clang-tidy;--warnings-as-errors=*;--extra-arg=-Wno-unknown-warning-option;--extra-arg=-Wno-error=unknown-warning-option;-checks=bugprone-unused-return-value"
         PARENT_SCOPE
     )
     message(STATUS "clang-tidy enabled for all targets")

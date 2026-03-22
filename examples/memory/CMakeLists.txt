@@ -11,18 +11,15 @@ target_include_directories(memory_example
   ${CMAKE_SOURCE_DIR}/include
 )
 target_link_libraries(memory_example PRIVATE memory)
-# --- ADD THIS BLOCK ---
-# Tell the compiler it is allowed to use AVX2 hardware instructions
-target_compile_options(memory_example PRIVATE -mavx2 -w)
-# ----------------------
 
-# Second executable - -O3 only, no warnings/checks
+target_compile_options(memory_example PRIVATE -mavx2 -w)
+
 add_executable(memory_example_malloc malloc_example.cpp)
 
 target_compile_options(memory_example_malloc PRIVATE
-    -O3           # Maximum optimization
-    -w            # Disable ALL warnings
-    -DNDEBUG      # Disable asserts
+    -O3
+    -w
+    -DNDEBUG
     -mavx2
 )
 
@@ -32,12 +29,10 @@ target_include_directories(memory_example_malloc
 )
 target_link_libraries(memory_example_malloc PRIVATE memory)
 
-# Disable clang-tidy for this target
 set_target_properties(memory_example_malloc PROPERTIES
     CXX_CLANG_TIDY ""
 )
 
-# stack
 add_executable(stack_example stack_memory.cpp)
 
 anvil_set_strict_warnings(${MODULE_NAME})
@@ -47,8 +42,6 @@ target_include_directories(stack_example
   ${CMAKE_SOURCE_DIR}/include
 )
 target_link_libraries(stack_example PRIVATE memory)
-
-# lazy stack
 
 add_executable(lazy_stack_example lazy_stack_memory.cpp)
 

@@ -6,7 +6,7 @@
 #include "memory/memory_allocation.hpp"
 #include <cstdint>
 
-namespace anvil::memory::scratch_allocator {
+namespace anvil::memory {
 
 Error create(ScratchAllocator** allocator_out, const u64 capacity, const u64 alignment) noexcept {
         REQUIRE(allocator_out != nullptr, NULL_PARAMETER);
@@ -83,4 +83,4 @@ Error reset(ScratchAllocator* const allocator) noexcept {
         return OK;
 }
 
-} // namespace anvil::memory::scratch_allocator
+} // namespace anvil::memory

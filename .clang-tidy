@@ -4,6 +4,11 @@ Checks: >
   bugprone-*,
   -bugprone-casting-through-void,
   -bugprone-easily-swappable-parameters,
+  hicpp-*,
+  -hicpp-no-array-decay,
+  -hicpp-vararg,
+  -hicpp-avoid-c-arrays,
+  -hicpp-use-auto,
   cert-*,
   -cert-exp05-cpp,
   cppcoreguidelines-narrowing-conversions,
@@ -31,6 +36,12 @@ CheckOptions:
   - key: cppcoreguidelines-narrowing-conversions.WarnOnFloatingPointNarrowingConversion
     value: 1
   - key: cppcoreguidelines-narrowing-conversions.WarnOnEquivalentBitWidth
+    value: 1
+  - key: bugprone-unused-return-value.CheckedReturnTypes
+    value: '.*'
+  - key: bugprone-unused-return-value.CheckedFunctions 
+    value: '.*'
+  - key: bugprone-unused-return-value.AllowCastToVoid
     value: 1
   - key: bugprone-switch-missing-default-case.EnableForSwitch
     value: 1
