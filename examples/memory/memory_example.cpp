@@ -13,12 +13,10 @@ void cleanup_allocator(anvil::memory::ScratchAllocator** allocator) {
 
 int main(void) {
         const anvil::i32                            NUM_ALLOCS                                 = 1024;
-        // Now requesting 64 bytes (16 integers) per allocation
         const anvil::i32                            ALLOC_SIZE                                 = 64;
 
         __attribute__((cleanup(cleanup_allocator))) anvil::memory::ScratchAllocator* allocator = nullptr;
 
-        // 1/16th the allocations! We align to 64 bytes (the exact size of a CPU Cache Line)
         const Error ERR = anvil::memory::create(&allocator, ((anvil::u64)NUM_ALLOCS * ALLOC_SIZE), 64);
 
         if (ERR != OK) {
@@ -35,10 +33,7 @@ int main(void) {
         // Track 2: [8, 9, 10, 11, 12, 13, 14, 15]
         alignas(32) __m256i v_i2           = _mm256_set_epi32(16, 15, 14, 13, 12, 11, 10, 9);
 
-        // Step is now 16
         __m256i             v_step         = _mm256_set1_epi32(16);
-        // --- UNROLLED LOOP ---
-        // Total iterations: 625,000
         int                 count          = NUM_ALLOCS / 16;
         unsigned long long  starting_count = __rdtsc();
         while (count--) {
@@ -48,17 +43,12 @@ int main(void) {
                         return 1;
                 }
 
-                // Allocate 64 bytes, aligned to a 64-byte cache line
-
-                // Write 16 integers. CPU will pipeline these stores!
                 _mm256_store_si256((__m256i*)ptr, v_i1);
                 _mm256_store_si256((__m256i*)(ptr + 8), v_i2); // ptr + 8 ints = 32 bytes forward
 
-                // CPU will route these to different execution ports simultaneously
                 v_sum1 = _mm256_add_epi32(v_sum1, v_i1);
                 v_sum2 = _mm256_add_epi32(v_sum2, v_i2);
 
-                // Increment both tracks
                 v_i1   = _mm256_add_epi32(v_i1, v_step);
                 v_i2   = _mm256_add_epi32(v_i2, v_step);
                 // (void)anvil::memory::reset(allocator);

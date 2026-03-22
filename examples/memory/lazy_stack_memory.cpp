@@ -13,7 +13,6 @@ int main(void) {
         const anvil::i32                            NUM_ALLOCS = 10000000;
         const anvil::u64                            ALLOC_SIZE = 8; // tiny allocations
 
-        // Create allocator with enough space
         __attribute__((cleanup(cleanup_allocator))) anvil::memory::LazyStackAllocator* allocator = nullptr;
         const Error ERR = anvil::memory::create(&allocator, ALLOC_SIZE * NUM_ALLOCS, alignof(anvil::i32));
 
@@ -22,7 +21,6 @@ int main(void) {
                 return 1;
         }
 
-        // Benchmark: many tiny allocations
         anvil::i32 sum = 0;
         for (anvil::i32 i = 0; i < NUM_ALLOCS; i++) {
                 anvil::i32* ptr = (anvil::i32*)(anvil::memory::alloc(allocator, ALLOC_SIZE, alignof(anvil::i32)));

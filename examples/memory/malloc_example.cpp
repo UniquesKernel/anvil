@@ -20,26 +20,20 @@ int main(void) {
         // Step is now 16
         __m256i            v_step         = _mm256_set1_epi32(16);
         unsigned long long starting_count = __rdtsc();
-        // --- UNROLLED LOOP ---
         std::vector<void*> ptr_arr;
         ptr_arr.reserve(NUM_ALLOCS);
-        // Total iterations: 625,000
         for (anvil::i32 i = 0; i < NUM_ALLOCS; i += 16) {
                 anvil::i32* ptr = (anvil::i32*)(malloc(ALLOC_SIZE));
-                // Allocate 64 bytes, aligned to a 64-byte cache line
                 if (ptr == nullptr) [[unlikely]] {
                         return 1;
                 }
 
-                // Write 16 integers. CPU will pipeline these stores!
                 _mm256_store_si256((__m256i*)ptr, v_i1);
                 _mm256_store_si256((__m256i*)(ptr + 8), v_i2); // ptr + 8 ints = 32 bytes forward
 
-                // CPU will route these to different execution ports simultaneously
                 v_sum1 = _mm256_add_epi32(v_sum1, v_i1);
                 v_sum2 = _mm256_add_epi32(v_sum2, v_i2);
 
-                // Increment both tracks
                 v_i1   = _mm256_add_epi32(v_i1, v_step);
                 v_i2   = _mm256_add_epi32(v_i2, v_step);
                 ptr_arr.push_back(ptr);

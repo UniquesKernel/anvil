@@ -1,5 +1,3 @@
-# =================== Variables ==========================
-
 set(MODULE_NAME memory)
 set(MODULE_SOURCE
     src/memory_allocation.cpp
@@ -10,15 +8,13 @@ set(MODULE_SOURCE
     src/resizable_buffer.cpp
 )
 
-add_library(${MODULE_NAME} STATIC ${MODULE_SOURCE})
+add_library(${MODULE_NAME} SHARED ${MODULE_SOURCE})
 
 target_compile_options(memory PRIVATE
     -include ${CMAKE_SOURCE_DIR}/include/memory/memory_policy.hpp
 )
 
 target_link_libraries(${MODULE_NAME} math)
-
-## =================== Set Compiler Options ===================
 
 target_include_directories(${MODULE_NAME}
   PUBLIC
@@ -29,7 +25,6 @@ target_include_directories(${MODULE_NAME}
 anvil_set_strict_warnings(${MODULE_NAME})
 
 if(BUILD_TESTING)
-  # Find Python with Development component (required for pybind11)
   find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 
   # Find pybind11
@@ -49,7 +44,6 @@ if(BUILD_TESTING)
     message(FATAL_ERROR "pybind11 not found. Install with: pip install pybind11")
   endif()
 
-  # Create Python module using pybind11
   pybind11_add_module(anvil_memory
       bindings/memory_bindings.cpp
       bindings/lazy_stack_bindings.cpp
@@ -65,7 +59,6 @@ if(BUILD_TESTING)
             ${CMAKE_CURRENT_SOURCE_DIR}/src
     )
 
-  # Link against Python libraries explicitly
   target_link_libraries(anvil_memory PRIVATE Python3::Python math)
   target_compile_options(anvil_memory PRIVATE -O0 -g)
 

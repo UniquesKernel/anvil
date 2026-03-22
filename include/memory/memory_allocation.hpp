@@ -8,9 +8,7 @@
  * keeping memory contigous as it grows, leading to better cache locality as
  * memory usage grows.
  *
- * @note The computational model employed herein adheres to the principle of
- *       fail-fast semantics, wherein erroneous program states precipitate
- *       immediate termination.
+ * @note Follows fail-fast design; programmer errors cause immediate abort.
  *
  * @note The memory regions allocated through this interface are not inherently
  *       thread-safe and require explicit synchronization primitives to ensure
@@ -110,8 +108,7 @@ static_assert(alignof(Metadata) == alignof(void*), "Metadata should have the nat
  * @pre ptr != nullptr
  * @pre ptr must reference memory allocated by anvil_memory_alloc_lazy or anvil_memory_alloc_eager
  *
- * @param[in] ptr        Address denoting the commencement of the memory region
- *                       to be returned to the computational environment.
+ * @param[in] ptr        Pointer to the memory region to deallocate.
  * @return Error enumerated code where `OK` indicate success and other values indicate
  *         failure.
  */
@@ -127,7 +124,7 @@ static_assert(alignof(Metadata) == alignof(void*), "Metadata should have the nat
  * @pre `commit_size > 0`
  * @pre `commit_size <= MAX_CAPACITY`
  *
- * @param[in] ptr           Address denoting the commencement of the memory region
+ * @param[in] ptr           Pointer to the memory region to expand.
  * @param[in] commit_size   Size in bytes of additional physical memory to commit.
  *
  * @return Error enumerated code where `OK` indicate success and other values indicate

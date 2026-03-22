@@ -92,7 +92,6 @@ static_assert(alignof(LazyScratchAllocator) == alignof(void*),
 /**
  * @brief Allocate a contiguous region of memory from the allocator's backing memory buffer.
  *
- * Allocate a contiguous region of memory from the allocator's backing memory buffer.
  * Physical memory is committed on demand, in page-sized increments.
  *
  * @pre `allocator != nullptr`.

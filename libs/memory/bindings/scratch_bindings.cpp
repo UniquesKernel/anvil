@@ -15,7 +15,6 @@ void                  bind_scratch_allocator(pybind11::module_& module) { // NOL
 
         m.doc() = "Anvil memory management library";
 
-        // ========== ScratchAllocator ==========
         m.def(
             "scratch_allocator_create",
             [](const anvil::u64 capacity, const anvil::u64 alignment) -> py::tuple {

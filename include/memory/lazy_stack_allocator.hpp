@@ -105,8 +105,7 @@ static_assert(alignof(LazyStackAllocator) == alignof(void*), "LazyStackAllocator
 /**
  * @brief Allocate a contiguous region of memory from the allocator's backing memory buffer.
  *
- * Allocate a contiguous region of memory from the allocator's backing memory buffer.
- * The memory is lazy allocated, in the granularity of one page segments.
+ * Physical memory is committed on demand, in page-sized increments.
  *
  * @pre `allocator != nullptr`.
  * @pre `0 < allocation_size <= MAX_CAPACITY`.
