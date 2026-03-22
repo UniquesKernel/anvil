@@ -9,8 +9,8 @@
 #define ANVIL_GRAPHIC_CANVAS_HPP
 
 #include "anvil/types.hpp"
-#include "error/status.hpp"
-#include "memory/scratch_allocator.hpp"
+#include "anvil/error/status.hpp"
+#include "anvil/memory/scratch_allocator.hpp"
 
 namespace anvil::graphic {
 

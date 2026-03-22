@@ -1,6 +1,6 @@
 #include "anvil/types.hpp"
-#include "error/status.hpp"
-#include "memory/lazy_stack_allocator.hpp"
+#include "anvil/error/status.hpp"
+#include "anvil/memory/lazy_stack_allocator.hpp"
 #include <cstdio>
 
 namespace {

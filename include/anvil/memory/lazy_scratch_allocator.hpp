@@ -1,35 +1,35 @@
 /**
- * @file scratch_allocator.hpp
- * @brief Linear scratch allocator interface for temporary memory allocation.
+ * @file lazy_scratch_allocator.hpp
+ * @brief Lazy scratch allocator with on-demand physical memory commitment.
  *
- * This header defines a linear scratch allocator that eagerly maps physical
- * memory for a contiguous region and serves fast sequential allocations from
- * that region. The allocator is intended for temporary allocations that are
- * invalidated in bulk with `reset`.
+ * This header defines a linear scratch allocator that reserves a contiguous
+ * virtual address space and commits physical pages on demand as allocations
+ * advance. Like the eager scratch allocator, it serves fast sequential
+ * allocations that are invalidated in bulk with `reset`.
  *
  * @note All functions in this module follow fail-fast design; programmer errors
- *       immediate abort.
+ *       cause immediate abort.
  * @note This allocator is NOT thread-safe and requires external
  *       synchronization for concurrent use.
  */
 
-#ifndef ANVIL_MEMORY_SCRATCH_ALLOCATOR_HPP
-#define ANVIL_MEMORY_SCRATCH_ALLOCATOR_HPP
+#ifndef ANVIL_MEMORY_LAZY_SCRATCH_ALLOCATOR_HPP
+#define ANVIL_MEMORY_LAZY_SCRATCH_ALLOCATOR_HPP
 #include "anvil/types.hpp"
-#include "error/status.hpp"
+#include "anvil/error/status.hpp"
 
 namespace anvil::memory {
 
 /**
- * @brief Representation of a linear scratch allocator.
+ * @brief Representation of a lazy linear scratch allocator.
  *
- * The scratch allocator manages a contiguous region of physical memory.
- * Each allocation takes the next available bytes from that region, so memory
- * is handed out in order until the allocator is reset. The scratch allocator
- * is intended for temporary allocations that are invalidated in bulk by
+ * The lazy scratch allocator manages a contiguous virtual address space.
+ * All allocations are linear and partition the contiguous buffer, lazily
+ * committing additional physical memory when required. The allocator is
+ * intended for temporary allocations that are invalidated in bulk by
  * calling `reset`.
  *
- * Memory layout: [ScratchAllocator metadata][usable memory region]
+ * Memory layout: [LazyScratchAllocator metadata][usable memory region]
  *
  * @invariant base != nullptr (after successful initialization)
  * @invariant capacity > 0
@@ -43,18 +43,20 @@ namespace anvil::memory {
  *
  * Total size: 24 bytes
  */
-struct ScratchAllocator {
+struct LazyScratchAllocator {
         void* base;      ///< Start of usable memory region
         u64   capacity;  ///< Total usable capacity in bytes
         u64   allocated; ///< Number of bytes currently handed out from the usable region
 };
-static_assert(sizeof(ScratchAllocator) == 24, "ScratchAllocator size must be 24 bytes"); // NOLINT
-static_assert(alignof(ScratchAllocator) == alignof(void*), "ScratchAllocator alignment must match void* alignment");
+static_assert(sizeof(LazyScratchAllocator) == 24, "LazyScratchAllocator size must be 24 bytes"); // NOLINT
+static_assert(alignof(LazyScratchAllocator) == alignof(void*),
+              "LazyScratchAllocator alignment must match void* alignment");
 
 /**
- * @brief Initialize a scratch allocator.
+ * @brief Initialize a lazy scratch allocator.
  *
- * Initialize a scratch allocator using a contiguous region of memory.
+ * Reserves a virtual address range without committing physical memory up front.
+ * Physical pages are committed on demand as allocations advance.
  *
  * @pre `allocator_out != nullptr`.
  * @pre `*allocator_out == nullptr`.
@@ -65,12 +67,12 @@ static_assert(alignof(ScratchAllocator) == alignof(void*), "ScratchAllocator ali
  * @pre `MIN_ALIGNMENT <= alignment <= MAX_ALIGNMENT`.
  *
  * @param[out] allocator_out Output location that receives the created allocator.
- * @param[in] capacity       The amount of usable memory to manage (bytes).
- * @param[in] alignment      Alignment of all memory allocated from the ScratchAllocator.
+ * @param[in] capacity       The amount of usable memory to reserve (bytes).
+ * @param[in] alignment      Alignment of all memory allocated from the LazyScratchAllocator.
  *
  * @return Error enumeration code `OK` on success with other values indicating failure.
  */
-[[nodiscard]] Error create(ScratchAllocator** allocator_out, u64 capacity, u64 alignment) noexcept;
+[[nodiscard]] Error create(LazyScratchAllocator** allocator_out, u64 capacity, u64 alignment) noexcept;
 
 /**
  * @brief Null out an allocator and return the underlying memory to the Operating System.
@@ -85,39 +87,41 @@ static_assert(alignof(ScratchAllocator) == alignof(void*), "ScratchAllocator ali
  * @param[out] allocator        The allocator that should be destroyed.
  * @return Error enumeration code where `OK` indicates success and other values indicate failure.
  */
-[[nodiscard]] Error destroy(ScratchAllocator** allocator) noexcept;
+[[nodiscard]] Error destroy(LazyScratchAllocator** allocator) noexcept;
 
 /**
  * @brief Allocate a contiguous region of memory from the allocator's backing memory buffer.
+ *
+ * Physical memory is committed on demand, in page-sized increments.
  *
  * @pre `allocator != nullptr`.
  * @pre `0 < allocation_size <= MAX_CAPACITY`.
  * @pre `alignment` is a power of two.
  * @pre `MIN_ALIGNMENT <= alignment <= MAX_ALIGNMENT`.
  *
- * @param[in] allocator        ScratchAllocator from which the allocation should be made.
+ * @param[in] allocator        LazyScratchAllocator from which the allocation should be made.
  * @param[in] allocation_size  Size in bytes of the requested allocation.
  * @param[in] alignment        Alignment of the returned memory region.
  *
  * @return Pointer to the allocated memory, or `nullptr` on failure.
  */
-[[nodiscard]] void* alloc(ScratchAllocator* allocator, u64 allocation_size, u64 alignment) noexcept;
+[[nodiscard]] void* alloc(LazyScratchAllocator* allocator, u64 allocation_size, u64 alignment) noexcept;
 
 /**
- * @brief Reset the allocator to it's initialization state.
+ * @brief Reset the allocator to its initialization state.
  *
  * @pre `allocator != nullptr`.
  * @pre `allocator->base != nullptr`.
  *
- * @param[in] allocator         ScratchAllocator that should be reset.
+ * @param[in] allocator         LazyScratchAllocator that should be reset.
  * @return Error enumeration code with `OK` indicating success and other values
- *         indicate failure.
+ *         indicating failure.
  *
  * @note All previous allocations from this allocator should be considered
  *       invalid after reset.
  */
-[[nodiscard]] Error reset(ScratchAllocator* allocator) noexcept;
+[[nodiscard]] Error reset(LazyScratchAllocator* allocator) noexcept;
 
 } // namespace anvil::memory
 
-#endif // ANVIL_MEMORY_SCRATCH_ALLOCATOR_HPP
+#endif // ANVIL_MEMORY_LAZY_SCRATCH_ALLOCATOR_HPP

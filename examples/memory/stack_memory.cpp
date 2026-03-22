@@ -1,7 +1,7 @@
 #include "anvil/types.hpp"
-#include "error/assert.hpp"
-#include "error/status.hpp"
-#include "memory/stack_allocator.hpp"
+#include "anvil/error/assert.hpp"
+#include "anvil/error/status.hpp"
+#include "anvil/memory/stack_allocator.hpp"
 #include <cstdio>
 
 namespace {

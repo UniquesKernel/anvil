@@ -1,6 +1,6 @@
 #include "anvil/types.hpp"
-#include "error/status.hpp"
-#include "memory/scratch_allocator.hpp"
+#include "anvil/error/status.hpp"
+#include "anvil/memory/scratch_allocator.hpp"
 #include <cstdio>
 #include <cstring>
 #include <immintrin.h>

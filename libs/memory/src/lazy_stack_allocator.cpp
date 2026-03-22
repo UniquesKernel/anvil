@@ -1,9 +1,9 @@
-#include "memory/lazy_stack_allocator.hpp"
-#include "error/assert.hpp"
-#include "error/status.hpp"
-#include "math/comparison/comparison.hpp"
-#include "memory/constants.hpp"
-#include "memory/memory_allocation.hpp"
+#include "anvil/memory/lazy_stack_allocator.hpp"
+#include "anvil/error/assert.hpp"
+#include "anvil/error/status.hpp"
+#include "anvil/math/comparison/comparison.hpp"
+#include "anvil/memory/constants.hpp"
+#include "anvil/memory/memory_allocation.hpp"
 #include <cstdint>
 
 namespace anvil::memory {

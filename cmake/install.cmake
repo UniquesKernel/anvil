@@ -9,7 +9,7 @@ add_library(anvil STATIC
 
 target_include_directories(anvil
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
@@ -18,7 +18,7 @@ install(TARGETS anvil
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
@@ -29,7 +29,7 @@ install(EXPORT anvilTargets
 )
 
 configure_package_config_file(
-    ${CMAKE_SOURCE_DIR}/cmake/anvilConfig.cmake.in
+    ${PROJECT_SOURCE_DIR}/cmake/anvilConfig.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/anvilConfig.cmake
     INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/anvil
 )

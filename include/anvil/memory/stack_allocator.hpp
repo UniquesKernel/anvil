@@ -17,7 +17,7 @@
 #define ANVIL_MEMORY_STACK_ALLOCATOR_HPP
 #include "anvil/types.hpp"
 #include "constants.hpp"
-#include "error/status.hpp"
+#include "anvil/error/status.hpp"
 
 namespace anvil::memory {
 

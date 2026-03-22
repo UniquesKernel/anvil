@@ -1,17 +1,17 @@
 set(MODULE_NAME math_linear_algebra)
 set(MODULE_SOURCE src/vector.cpp)
 
-include(${CMAKE_SOURCE_DIR}/cmake/Functions.cmake)
+include(${PROJECT_SOURCE_DIR}/cmake/Functions.cmake)
 
 add_library(${MODULE_NAME} STATIC ${MODULE_SOURCE})
 
 target_compile_options(${MODULE_NAME} PRIVATE
-  -include ${CMAKE_SOURCE_DIR}/include/memory/memory_policy.hpp
+  -include ${PROJECT_SOURCE_DIR}/include/anvil/memory/memory_policy.hpp
 )
 
 target_include_directories(${MODULE_NAME}
   PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
 
@@ -32,7 +32,7 @@ if(BUILD_TESTING)
 
   target_include_directories(math_module
     PRIVATE
-      ${CMAKE_SOURCE_DIR}/include
+      ${PROJECT_SOURCE_DIR}/include
   )
 
   target_link_libraries(math_module PRIVATE Python3::Python)

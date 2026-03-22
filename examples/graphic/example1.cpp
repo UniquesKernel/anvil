@@ -1,5 +1,5 @@
-#include "error/status.hpp"
-#include "graphic/canvas.hpp"
+#include "anvil/error/status.hpp"
+#include "anvil/graphic/canvas.hpp"
 #include <cstdio>
 
 static constexpr anvil::u64 WIDTH  = 800;

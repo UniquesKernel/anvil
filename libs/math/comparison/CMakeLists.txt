@@ -1,17 +1,17 @@
 set(MODULE_NAME math_comparison)
 set(MODULE_SOURCE src/comparison.cpp)
 
-include(${CMAKE_SOURCE_DIR}/cmake/Functions.cmake)
+include(${PROJECT_SOURCE_DIR}/cmake/Functions.cmake)
 
 add_library(${MODULE_NAME} STATIC ${MODULE_SOURCE})
 
 target_compile_options(${MODULE_NAME} PRIVATE
-  -include ${CMAKE_SOURCE_DIR}/include/memory/memory_policy.hpp
+  -include ${PROJECT_SOURCE_DIR}/include/anvil/memory/memory_policy.hpp
 )
 
 target_include_directories(${MODULE_NAME}
   PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
 
@@ -34,7 +34,7 @@ if (BUILD_TESTING)
   )
 
   target_include_directories(${TEST_MODULE} PRIVATE
-    ${CMAKE_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src
   )
 

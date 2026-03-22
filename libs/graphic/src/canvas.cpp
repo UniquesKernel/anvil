@@ -1,7 +1,7 @@
-#include "graphic/canvas.hpp"
-#include "error/assert.hpp"
-#include "error/status.hpp"
-#include "memory/scratch_allocator.hpp"
+#include "anvil/graphic/canvas.hpp"
+#include "anvil/error/assert.hpp"
+#include "anvil/error/status.hpp"
+#include "anvil/memory/scratch_allocator.hpp"
 #include <cstring>
 
 Error anvil::graphic::create(Canvas* const canvas_out, const u64 width, const u64 height, const char fill_char = ' ') {

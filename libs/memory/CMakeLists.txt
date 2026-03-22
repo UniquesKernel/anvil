@@ -8,17 +8,17 @@ set(MODULE_SOURCE
     src/resizable_buffer.cpp
 )
 
-add_library(${MODULE_NAME} SHARED ${MODULE_SOURCE})
+add_library(${MODULE_NAME} STATIC ${MODULE_SOURCE})
 
 target_compile_options(memory PRIVATE
-    -include ${CMAKE_SOURCE_DIR}/include/memory/memory_policy.hpp
+    -include ${PROJECT_SOURCE_DIR}/include/anvil/memory/memory_policy.hpp
 )
 
 target_link_libraries(${MODULE_NAME} math)
 
 target_include_directories(${MODULE_NAME}
   PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
 
@@ -55,7 +55,7 @@ if(BUILD_TESTING)
 
   target_include_directories(anvil_memory
         PRIVATE
-            ${CMAKE_SOURCE_DIR}/include
+            ${PROJECT_SOURCE_DIR}/include
             ${CMAKE_CURRENT_SOURCE_DIR}/src
     )
 
@@ -76,7 +76,7 @@ if(BUILD_TESTING)
     )
 
   set_tests_properties(scratch_allocator_pytest PROPERTIES
-      ENVIRONMENT "HYPOTHESIS_MAX_EXAMPLES=1000;PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tests:${CMAKE_SOURCE_DIR}/libs"
+      ENVIRONMENT "HYPOTHESIS_MAX_EXAMPLES=1000;PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tests:${PROJECT_SOURCE_DIR}/libs"
     )
 
   add_test(
@@ -86,7 +86,7 @@ if(BUILD_TESTING)
     )
 
   set_tests_properties(stack_allocator_pytest PROPERTIES
-      ENVIRONMENT "HYPOTHESIS_MAX_EXAMPLES=1000;PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tests:${CMAKE_SOURCE_DIR}/libs"
+      ENVIRONMENT "HYPOTHESIS_MAX_EXAMPLES=1000;PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tests:${PROJECT_SOURCE_DIR}/libs"
     )
 
   add_test(
@@ -96,7 +96,7 @@ if(BUILD_TESTING)
     )
 
   set_tests_properties(lazy_stack_allocator_pytest PROPERTIES
-      ENVIRONMENT "HYPOTHESIS_MAX_EXAMPLES=1000;PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tests:${CMAKE_SOURCE_DIR}/libs"
+      ENVIRONMENT "HYPOTHESIS_MAX_EXAMPLES=1000;PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tests:${PROJECT_SOURCE_DIR}/libs"
     )
 
   add_test(
@@ -106,7 +106,7 @@ if(BUILD_TESTING)
     )
 
   set_tests_properties(lazy_scratch_allocator_pytest PROPERTIES
-      ENVIRONMENT "HYPOTHESIS_MAX_EXAMPLES=1000;PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tests:${CMAKE_SOURCE_DIR}/libs"
+      ENVIRONMENT "HYPOTHESIS_MAX_EXAMPLES=1000;PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tests:${PROJECT_SOURCE_DIR}/libs"
     )
 endif()
 
