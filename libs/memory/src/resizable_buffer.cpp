@@ -18,10 +18,12 @@ Error create(ResizableBuffer** buffer_out, u64 capacity, u64 alignment) noexcept
         REQUIRE(alignment >= MIN_ALIGNMENT, INVALID_ARGUMENTS);
         REQUIRE(alignment <= MAX_ALIGNMENT, INVALID_ARGUMENTS);
 
-        const u64 TOTAL_MEMORY_NEEDED = capacity + sizeof(ResizableBuffer);
+        const u64 BUFFER_ALIGNMENT    = alignof(ResizableBuffer);
+        const u64 TRUE_ALIGNMENT      = anvil::math::comparison::max(alignment, BUFFER_ALIGNMENT);
+        const u64 TOTAL_MEMORY_NEEDED = capacity + sizeof(ResizableBuffer) + TRUE_ALIGNMENT - 1;
 
         void*     mem                 = nullptr;
-        if (anvil::memory::anvil_memory_alloc_eager(&mem, TOTAL_MEMORY_NEEDED, alignment) != OK) {
+        if (anvil::memory::anvil_memory_alloc_eager(&mem, TOTAL_MEMORY_NEEDED, TRUE_ALIGNMENT) != OK) {
                 return OUT_OF_MEMORY;
         }
 
