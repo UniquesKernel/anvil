@@ -548,7 +548,8 @@ static void run(const char *cmd) {
 static void compile_source(Project *p, CCFamily fam,
                             const char *src, const char *obj,
                             const char *extra_flags,
-                            int suppress_werror) {
+                            int suppress_werror,
+                            const char *ext_inc_flags) {
     char warn[4096] = {0};
     append_warn_flags(warn, sizeof(warn), fam);
 
@@ -561,14 +562,16 @@ static void compile_source(Project *p, CCFamily fam,
     const char *inc_flag = dir_exists("include") ? "-I include " : "";
 
     char cmd[16384];
+    /* FIXED: Added explicit spaces around the injected flags to prevent merging */
     int n = snprintf(cmd, sizeof(cmd),
-        "%s -std=%s -O2 %s %s %s"
+        "%s -std=%s -O2 %s %s %s %s "  /* Added space after last %s */
         "-MMD -MF %s "
         "-c %s -o %s",
         p->compiler, p->std,
         warn,
         (p->werror && !suppress_werror) ? "-Werror" : "",
         inc_flag,
+        ext_inc_flags ? ext_inc_flags : "",
         dep_path,
         src, obj);
 
@@ -579,9 +582,7 @@ static void compile_source(Project *p, CCFamily fam,
     int ret = system(cmd);
     if (ret != 0)
         die("compilation failed for %s (exit %d)", src, ret);
-}
-
-/* ── lib root from src dir ─────────────────────────────────────────────── */
+}/* ── lib root from src dir ─────────────────────────────────────────────── */
 
 static char *lib_root(const char *src) {
     /* strip last path component */
@@ -635,7 +636,6 @@ static void build_lib(Project *p, CCFamily fam, size_t idx, int single_lib, int 
     Lib *l = &p->libs[idx];
     char *srcdir = lib_src_dir(p, l);
 
-    /* grouping lib: no src dir → skip compilation */
     if (!dir_exists(srcdir)) {
         free(srcdir);
         return;
@@ -654,7 +654,8 @@ static void build_lib(Project *p, CCFamily fam, size_t idx, int single_lib, int 
         char *opath = path_join(".build/obj", oname);
         free(oname);
 
-        compile_source(p, fam, sources.items[i], opath, pic ? "-fPIC" : NULL, 0);
+        /* Pass NULL for external includes to keep strict warnings on your code */
+        compile_source(p, fam, sources.items[i], opath, pic ? "-fPIC" : NULL, 0, NULL);
         sarr_push(&objects, opath);
         free(opath);
     }
@@ -666,7 +667,6 @@ static void build_lib(Project *p, CCFamily fam, size_t idx, int single_lib, int 
         return;
     }
 
-    /* check for main entry in single_lib mode */
     int has_main = 0;
     if (single_lib) {
         const char *mains[] = {"src/main.c","src/main.cpp","src/main.cc", NULL};
@@ -679,7 +679,6 @@ static void build_lib(Project *p, CCFamily fam, size_t idx, int single_lib, int 
     char lib_path[PATH_MAX];
 
     if (single_lib && has_main) {
-        /* produce executable */
         mkdirp(".build/bin");
         snprintf(lib_path, sizeof(lib_path), ".build/bin/%s", p->name);
         char *obj_list = xstrdup("");
@@ -733,7 +732,8 @@ static void build_exe(Project *p, CCFamily fam, size_t idx) {
         char *oname = obj_name(sources.items[i]);
         char *opath = path_join(".build/obj", oname);
         free(oname);
-        compile_source(p, fam, sources.items[i], opath, NULL, 0);
+        /* Strict warnings for app sources */
+        compile_source(p, fam, sources.items[i], opath, NULL, 0, NULL);
         sarr_push(&objects, opath);
         free(opath);
     }
@@ -745,7 +745,6 @@ static void build_exe(Project *p, CCFamily fam, size_t idx) {
         return;
     }
 
-    /* collect transitive dep closure across all deps */
     int *visited = calloc(p->nlibs, sizeof(int));
     if (!visited) die("out of memory");
     StrArr link_libs = {0};
@@ -917,19 +916,19 @@ static void build_bindings(Project *p, CCFamily fam,
 
     const char *extra = NULL;
     char extra_buf[256] = {0};
-
-    char py_inc[1024] = {0};
-    char pb11_inc[1024] = {0};
+    char ext_inc_buf[2048] = {0};
 
     if (bt == BIND_PYBIND11) {
-        /* check pybind11 installed */
         char *pb = get_pybind11_includes(p->python);
         if (!pb) die("pybind11 not found; try: pip install pybind11");
         char *pyinc = get_python_includes(p->python);
-        snprintf(py_inc, sizeof(py_inc), "-I%s", pyinc ? pyinc : "");
-        snprintf(pb11_inc, sizeof(pb11_inc), "-I%s", pb);
+        
+        /* FIX: Use -isystem to suppress warnings in external headers */
+        snprintf(ext_inc_buf, sizeof(ext_inc_buf), "-isystem %s -isystem %s", 
+                 pb, pyinc ? pyinc : "");
+        
         snprintf(extra_buf, sizeof(extra_buf),
-                 "-fPIC -fexceptions -frtti %s %s", py_inc, pb11_inc);
+                 "-fPIC -fexceptions -frtti");
         extra = extra_buf;
         free(pb);
         free(pyinc);
@@ -939,7 +938,6 @@ static void build_bindings(Project *p, CCFamily fam,
         extra = "-fPIC";
     }
 
-    /* collect binding sources (flat, not recursive per spec) */
     DIR *d = opendir(binddir);
     if (!d) return;
 
@@ -956,7 +954,8 @@ static void build_bindings(Project *p, CCFamily fam,
         char *opath = path_join(".build/obj", oname);
         free(oname);
 
-        compile_source(p, fam, src, opath, extra, 1 /* suppress werror */);
+        /* Pass ext_inc_buf to silence external warnings */
+        compile_source(p, fam, src, opath, extra, 1, ext_inc_buf);
         sarr_push(&bind_objs, opath);
         free(opath);
         free(src);
@@ -968,17 +967,14 @@ static void build_bindings(Project *p, CCFamily fam,
         return;
     }
 
-    /* build link args: lib + transitive closure in reverse topo order */
     int *visited = calloc(p->nlibs, sizeof(int));
     StrArr link_libs = {0};
     dep_closure(p, lib_idx, visited, &link_libs);
     free(visited);
 
-    /* build -L and -l flags */
     char link_args[8192] = {0};
     snprintf(link_args, sizeof(link_args), "-L.build/lib");
     for (size_t i = link_libs.count; i-- > 0;) {
-        /* only link libs that have a .a */
         char apath[PATH_MAX];
         snprintf(apath, sizeof(apath), ".build/lib/lib%s.a", link_libs.items[i]);
         if (file_exists(apath)) {
@@ -989,7 +985,6 @@ static void build_bindings(Project *p, CCFamily fam,
     }
     sarr_free(&link_libs);
 
-    /* determine output filename */
     char *ext = get_ext_suffix(p->python);
     char so_name[PATH_MAX];
     char *pyldflags = get_python_ldflags(p->python);
@@ -1000,7 +995,6 @@ static void build_bindings(Project *p, CCFamily fam,
         snprintf(so_name, sizeof(so_name), ".build/lib/lib%s%s", lib_name, ext);
     }
 
-    /* build object list */
     char obj_list[8192] = {0};
     for (size_t i = 0; i < bind_objs.count; i++) {
         strncat(obj_list, " ", sizeof(obj_list)-strlen(obj_list)-1);
@@ -1019,7 +1013,6 @@ static void build_bindings(Project *p, CCFamily fam,
     free(ext);
     free(pyldflags);
 
-    /* copy .so into tests/ dir */
     char tests_dir[PATH_MAX];
     snprintf(tests_dir, sizeof(tests_dir), "%s/tests", root);
     if (dir_exists(tests_dir)) {
@@ -1111,7 +1104,6 @@ static void cmd_test(Project *p) {
     CCFamily fam = compiler_family(p->compiler);
     int total = 0, passed = 0;
 
-    /* topo_sort is safe here: cmd_build has already populated p->libs */
     size_t *order = topo_sort(p);
 
     for (size_t i = 0; i < p->nlibs; i++) {
@@ -1130,7 +1122,6 @@ static void cmd_test(Project *p) {
             continue;
         }
 
-        /* build transitive link args */
         int *visited = calloc(p->nlibs, sizeof(int));
         StrArr link_libs = {0};
         dep_closure(p, idx, visited, &link_libs);
@@ -1151,7 +1142,6 @@ static void cmd_test(Project *p) {
 
         mkdirp(".build/bin/tests");
 
-        /* native tests: each .c/.cpp file → binary */
         DIR *d = opendir(testsdir);
         if (d) {
             struct dirent *e;
@@ -1162,9 +1152,9 @@ static void cmd_test(Project *p) {
                 char *opath = path_join(".build/obj", oname);
                 free(oname);
 
-                compile_source(p, fam, src, opath, NULL, 0);
+                /* Maintain strictness for project tests */
+                compile_source(p, fam, src, opath, NULL, 0, NULL);
 
-                /* strip extension for binary name */
                 char binname[256];
                 strncpy(binname, e->d_name, sizeof(binname)-1);
                 binname[sizeof(binname)-1] = '\0';
@@ -1198,18 +1188,12 @@ static void cmd_test(Project *p) {
             closedir(d);
         }
 
-        /* Python tests: run each test_*.py file as a separate invocation,
-         * mirroring how CMake registers one ctest target per file so that
-         * results are reported individually and execution can be parallelised
-         * by the caller (e.g. make -j / ctest -j). */
         DIR *d2 = opendir(testsdir);
         int checked_pytest = 0;
         if (d2) {
             struct dirent *e;
-            /* collect names first so we can sort for deterministic order */
             StrArr pyfiles = {0};
             while ((e = readdir(d2)) != NULL) {
-                /* only test_*.py files — skip conftest.py and friends */
                 if (strncmp(e->d_name, "test_", 5) != 0) continue;
                 const char *dot = strrchr(e->d_name, '.');
                 if (!dot || strcmp(dot, ".py") != 0) continue;
