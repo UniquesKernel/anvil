@@ -465,7 +465,7 @@ static const char *WARN_COMMON =
     "-Wmissing-declarations -Wmissing-noreturn "
     "-Wvla -Wstrict-overflow=2 -Wfloat-equal -Wundef "
     "-Wpointer-arith -Wwrite-strings "
-    "-fstack-protector-strong";
+    "-fstack-protector-strong -O3";
 
 static const char *WARN_GCC =
     "-Wduplicated-cond -Wduplicated-branches "
@@ -1198,33 +1198,44 @@ static void cmd_test(Project *p) {
             closedir(d);
         }
 
-        /* Python tests */
-        /* check if any .py files exist */
+        /* Python tests: run each test_*.py file as a separate invocation,
+         * mirroring how CMake registers one ctest target per file so that
+         * results are reported individually and execution can be parallelised
+         * by the caller (e.g. make -j / ctest -j). */
         DIR *d2 = opendir(testsdir);
-        int has_py = 0;
+        int checked_pytest = 0;
         if (d2) {
             struct dirent *e;
+            /* collect names first so we can sort for deterministic order */
+            StrArr pyfiles = {0};
             while ((e = readdir(d2)) != NULL) {
+                /* only test_*.py files — skip conftest.py and friends */
+                if (strncmp(e->d_name, "test_", 5) != 0) continue;
                 const char *dot = strrchr(e->d_name, '.');
-                if (dot && strcmp(dot, ".py") == 0) { has_py = 1; break; }
+                if (!dot || strcmp(dot, ".py") != 0) continue;
+                sarr_push(&pyfiles, e->d_name);
             }
             closedir(d2);
-        }
 
-        if (has_py) {
-            /* check pytest available */
-            char check_cmd[512];
-            snprintf(check_cmd, sizeof(check_cmd),
-                "%s -m pytest --version > /dev/null 2>&1", p->python);
-            if (system(check_cmd) != 0)
-                die("pytest not found; try: pip install pytest");
-
-            char pytest_cmd[PATH_MAX + 256];
-            snprintf(pytest_cmd, sizeof(pytest_cmd),
-                "cd %s && %s -m pytest -v --tb=short .",
-                testsdir, p->python);
-            total++;
-            passed += run_test(pytest_cmd, "pytest");
+            if (pyfiles.count > 0) {
+                if (!checked_pytest) {
+                    char check_cmd[512];
+                    snprintf(check_cmd, sizeof(check_cmd),
+                        "%s -m pytest --version > /dev/null 2>&1", p->python);
+                    if (system(check_cmd) != 0)
+                        die("pytest not found; try: pip install pytest");
+                    checked_pytest = 1;
+                }
+                for (size_t pi = 0; pi < pyfiles.count; pi++) {
+                    char pytest_cmd[PATH_MAX + 256];
+                    snprintf(pytest_cmd, sizeof(pytest_cmd),
+                        "cd %s && %s -m pytest -v --tb=short %s",
+                        testsdir, p->python, pyfiles.items[pi]);
+                    total++;
+                    passed += run_test(pytest_cmd, pyfiles.items[pi]);
+                }
+            }
+            sarr_free(&pyfiles);
         }
 
         free(testsdir);
