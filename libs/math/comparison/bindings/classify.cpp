@@ -1,6 +1,6 @@
+#include "anvil/math/comparison/comparison.hpp"
 #include "anvil/types.hpp"
 #include "comparison.hpp"
-#include "anvil/math/comparison/comparison.hpp"
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;

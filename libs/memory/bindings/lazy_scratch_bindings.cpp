@@ -16,13 +16,11 @@ void bind_lazy_scratch_allocator(pybind11::module_& module) { // NOLINT
             "lazy_scratch_allocator_create",
             [](const anvil::u64 capacity, const anvil::u64 alignment) -> py::tuple {
                     anvil::memory::LazyScratchAllocator* allocator = nullptr;
-                    const anvil::Error ERR = anvil::memory::create(&allocator, capacity, alignment);
+                    const anvil::Error                   ERR = anvil::memory::create(&allocator, capacity, alignment);
                     if (ERR != anvil::OK) {
                             return py::make_tuple(ERR, py::none());
                     }
-                    return py::make_tuple(ERR,
-                                          py::capsule(allocator,
-                                                      "anvil::memory::LazyScratchAllocator"));
+                    return py::make_tuple(ERR, py::capsule(allocator, "anvil::memory::LazyScratchAllocator"));
             },
             py::arg("capacity"), py::arg("alignment"));
 
@@ -32,8 +30,7 @@ void bind_lazy_scratch_allocator(pybind11::module_& module) { // NOLINT
                     anvil::memory::LazyScratchAllocator* alloc =
                         (anvil::memory::LazyScratchAllocator*)(allocator.get_pointer());
 
-                    if (alloc == nullptr ||
-                        alloc == (anvil::memory::LazyScratchAllocator*)0x1) {
+                    if (alloc == nullptr || alloc == (anvil::memory::LazyScratchAllocator*)0x1) {
                             anvil::memory::LazyScratchAllocator* null_alloc = nullptr;
                             return anvil::memory::destroy(&null_alloc);
                     }
@@ -54,8 +51,7 @@ void bind_lazy_scratch_allocator(pybind11::module_& module) { // NOLINT
                     anvil::memory::LazyScratchAllocator* alloc =
                         (anvil::memory::LazyScratchAllocator*)(allocator.get_pointer());
 
-                    if (alloc == nullptr ||
-                        alloc == (anvil::memory::LazyScratchAllocator*)0x1) {
+                    if (alloc == nullptr || alloc == (anvil::memory::LazyScratchAllocator*)0x1) {
                             anvil::memory::LazyScratchAllocator* null_alloc = nullptr;
                             return anvil::memory::reset(null_alloc);
                     }
@@ -71,13 +67,10 @@ void bind_lazy_scratch_allocator(pybind11::module_& module) { // NOLINT
                         (anvil::memory::LazyScratchAllocator*)(allocator.get_pointer());
 
                     char* allocation = nullptr;
-                    if (alloc == nullptr ||
-                        alloc == (anvil::memory::LazyScratchAllocator*)0x1) {
+                    if (alloc == nullptr || alloc == (anvil::memory::LazyScratchAllocator*)0x1) {
                             anvil::memory::LazyScratchAllocator* null_alloc = nullptr;
 
-                            allocation =
-                                (char*)(anvil::memory::alloc(null_alloc, allocation_size,
-                                                                                     alignment));
+                            allocation = (char*)(anvil::memory::alloc(null_alloc, allocation_size, alignment));
 
                             if (allocation == nullptr) {
                                     return py::make_tuple(py::none(), anvil::OK);
@@ -85,8 +78,7 @@ void bind_lazy_scratch_allocator(pybind11::module_& module) { // NOLINT
                             return py::make_tuple(py::capsule(allocation, "char*"), anvil::OK);
                     }
 
-                    allocation =
-                        (char*)(anvil::memory::alloc(alloc, allocation_size, alignment));
+                    allocation = (char*)(anvil::memory::alloc(alloc, allocation_size, alignment));
 
                     if (allocation == nullptr) {
                             return py::make_tuple(py::none(), anvil::OK);

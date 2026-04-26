@@ -16,20 +16,18 @@ void bind_stack_allocator(pybind11::module_& module) { // NOLINT
             "stack_allocator_create",
             [](const anvil::u64 capacity, const anvil::u64 alignment) -> py::tuple {
                     anvil::memory::StackAllocator* allocator = nullptr;
-                    const anvil::Error ERR = anvil::memory::create(&allocator, capacity, alignment);
+                    const anvil::Error             ERR       = anvil::memory::create(&allocator, capacity, alignment);
                     if (ERR != anvil::OK) {
                             return py::make_tuple(ERR, py::none());
                     }
-                    return py::make_tuple(ERR,
-                                          py::capsule(allocator, "anvil::memory::StackAllocator"));
+                    return py::make_tuple(ERR, py::capsule(allocator, "anvil::memory::StackAllocator"));
             },
             py::arg("capacity"), py::arg("alignment"));
 
         m.def(
             "stack_allocator_destroy",
             [](py::capsule& allocator) {
-                    anvil::memory::StackAllocator* alloc =
-                        (anvil::memory::StackAllocator*)(allocator.get_pointer());
+                    anvil::memory::StackAllocator* alloc = (anvil::memory::StackAllocator*)(allocator.get_pointer());
 
                     if (alloc == nullptr || alloc == (anvil::memory::StackAllocator*)0x1) {
                             // NOTE: Rather than early return with the proper error code which would test the
@@ -54,8 +52,7 @@ void bind_stack_allocator(pybind11::module_& module) { // NOLINT
         m.def(
             "stack_allocator_reset",
             [](py::capsule& allocator) {
-                    anvil::memory::StackAllocator* alloc =
-                        (anvil::memory::StackAllocator*)(allocator.get_pointer());
+                    anvil::memory::StackAllocator* alloc = (anvil::memory::StackAllocator*)(allocator.get_pointer());
 
                     if (alloc == nullptr || alloc == (anvil::memory::StackAllocator*)0x1) {
                             anvil::memory::StackAllocator* null_alloc = nullptr;
@@ -69,15 +66,13 @@ void bind_stack_allocator(pybind11::module_& module) { // NOLINT
         m.def(
             "stack_allocator_alloc",
             [](py::capsule& allocator, const anvil::u64 allocation_size, const anvil::u64 alignment) -> py::tuple {
-                    anvil::memory::StackAllocator* alloc =
-                        (anvil::memory::StackAllocator*)(allocator.get_pointer());
+                    anvil::memory::StackAllocator* alloc = (anvil::memory::StackAllocator*)(allocator.get_pointer());
 
-                    char* allocation = nullptr;
+                    char*                          allocation = nullptr;
                     if (alloc == nullptr || alloc == (anvil::memory::StackAllocator*)0x1) {
                             anvil::memory::StackAllocator* null_alloc = nullptr;
 
-                            allocation =
-                                (char*)(anvil::memory::alloc(null_alloc, allocation_size, alignment));
+                            allocation = (char*)(anvil::memory::alloc(null_alloc, allocation_size, alignment));
 
                             if (allocation == nullptr) {
                                     return py::make_tuple(py::none(), anvil::OK);
@@ -98,8 +93,7 @@ void bind_stack_allocator(pybind11::module_& module) { // NOLINT
         m.def(
             "stack_allocator_record",
             [](py::capsule& allocator) {
-                    anvil::memory::StackAllocator* alloc =
-                        (anvil::memory::StackAllocator*)(allocator.get_pointer());
+                    anvil::memory::StackAllocator* alloc = (anvil::memory::StackAllocator*)(allocator.get_pointer());
 
                     if (alloc == nullptr || alloc == (anvil::memory::StackAllocator*)0x1) {
                             // NOTE: Rather than early return with the proper error code which would test the
@@ -116,8 +110,7 @@ void bind_stack_allocator(pybind11::module_& module) { // NOLINT
         m.def(
             "stack_allocator_unwind",
             [](py::capsule& allocator) {
-                    anvil::memory::StackAllocator* alloc =
-                        (anvil::memory::StackAllocator*)(allocator.get_pointer());
+                    anvil::memory::StackAllocator* alloc = (anvil::memory::StackAllocator*)(allocator.get_pointer());
 
                     if (alloc == nullptr || alloc == (anvil::memory::StackAllocator*)0x1) {
                             // NOTE: Rather than early return with the proper error code which would test the

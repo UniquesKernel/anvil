@@ -4,7 +4,8 @@
 #include "anvil/memory/scratch_allocator.hpp"
 #include <cstring>
 
-anvil::Error anvil::graphic::create(Canvas* const canvas_out, const u64 width, const u64 height, const char fill_char = ' ') {
+anvil::Error anvil::graphic::create(Canvas* const canvas_out, const u64 width, const u64 height,
+                                    const char fill_char = ' ') {
         REQUIRE(canvas_out != nullptr, anvil::NULL_PARAMETER);
         REQUIRE(canvas_out->allocator == nullptr, anvil::INVALID_ARGUMENTS);
         REQUIRE(canvas_out->buffer == nullptr, anvil::INVALID_ARGUMENTS);
@@ -15,19 +16,17 @@ anvil::Error anvil::graphic::create(Canvas* const canvas_out, const u64 width, c
         // NOTE: Validate height in range [1, MAX_HEIGHT]
         REQUIRE(height - 1 < MAX_HEIGHT, anvil::INVALID_DIMENSIONS);
 
-        canvas_out->width     = width;
-        canvas_out->height    = height;
-        canvas_out->allocator = nullptr;
+        canvas_out->width                       = width;
+        canvas_out->height                      = height;
+        canvas_out->allocator                   = nullptr;
 
-        const anvil::Error ALLOCATOR_CREATE_ERR =
-            memory::create(&canvas_out->allocator, height * width, alignof(u64));
+        const anvil::Error ALLOCATOR_CREATE_ERR = memory::create(&canvas_out->allocator, height * width, alignof(u64));
 
         if (ALLOCATOR_CREATE_ERR != anvil::OK) {
                 return ALLOCATOR_CREATE_ERR;
         }
 
-        canvas_out->buffer =
-            (char*)(memory::alloc(canvas_out->allocator, height * width, alignof(u64)));
+        canvas_out->buffer = (char*)(memory::alloc(canvas_out->allocator, height * width, alignof(u64)));
 
         if (!canvas_out->buffer) {
                 const anvil::Error CLEANUP_ERROR = memory::destroy(&canvas_out->allocator);

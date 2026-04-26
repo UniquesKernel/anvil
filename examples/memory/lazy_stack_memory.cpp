@@ -1,6 +1,6 @@
-#include "anvil/types.hpp"
 #include "anvil/error/status.hpp"
 #include "anvil/memory/lazy_stack_allocator.hpp"
+#include "anvil/types.hpp"
 #include <cstdio>
 
 namespace {
@@ -17,7 +17,6 @@ int main(void) {
         const anvil::Error ERR = anvil::memory::create(&allocator, ALLOC_SIZE * NUM_ALLOCS, alignof(anvil::i32));
 
         if (ERR != anvil::OK) {
-                printf("ERROR: %i\n", ERR);
                 return 1;
         }
 

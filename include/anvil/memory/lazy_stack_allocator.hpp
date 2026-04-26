@@ -16,9 +16,9 @@
 #ifndef ANVIL_MEMORY_LAZY_STACK_ALLOCATOR_HPP
 #define ANVIL_MEMORY_LAZY_STACK_ALLOCATOR_HPP
 
+#include "anvil/error/status.hpp"
 #include "anvil/types.hpp"
 #include "constants.hpp"
-#include "anvil/error/status.hpp"
 
 namespace anvil::memory {
 

@@ -1,8 +1,8 @@
 #ifndef ANVIL_MEMORY_RESIZABLE_BUFFER_HPP
 #define ANVIL_MEMORY_RESIZABLE_BUFFER_HPP
 
-#include "anvil/types.hpp"
 #include "anvil/error/status.hpp"
+#include "anvil/types.hpp"
 
 namespace anvil::memory::resizable_buffer {
 

@@ -8,9 +8,9 @@
 #ifndef ANVIL_GRAPHIC_CANVAS_HPP
 #define ANVIL_GRAPHIC_CANVAS_HPP
 
-#include "anvil/types.hpp"
 #include "anvil/error/status.hpp"
 #include "anvil/memory/scratch_allocator.hpp"
+#include "anvil/types.hpp"
 
 namespace anvil::graphic {
 
@@ -38,9 +38,9 @@ static const u64 MAX_HEIGHT = 1080;
  * **Total Size:** 32 bytes
  */
 struct Canvas {
-        u64                                          height    = 0;
-        u64                                          width     = 0;
-        char*                                        buffer    = nullptr;
+        u64                       height    = 0;
+        u64                       width     = 0;
+        char*                     buffer    = nullptr;
         memory::ScratchAllocator* allocator = nullptr;
 };
 

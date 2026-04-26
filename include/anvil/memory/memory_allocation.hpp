@@ -18,8 +18,8 @@
 #ifndef ANVIL_MEMORY_ALLOCATION_HPP
 #define ANVIL_MEMORY_ALLOCATION_HPP
 
-#include "anvil/types.hpp"
 #include "anvil/error/status.hpp"
+#include "anvil/types.hpp"
 
 namespace anvil::memory {
 

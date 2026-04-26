@@ -1,5 +1,5 @@
-#include "anvil/types.hpp"
 #include "anvil/math/linear_algebra/vector.hpp"
+#include "anvil/types.hpp"
 #include <cstdio>
 
 using namespace anvil::math;
