@@ -34,6 +34,8 @@ endif()
 add_subdirectory(libs/math)
 add_subdirectory(libs/graphic)
 add_subdirectory(libs/memory)
+add_subdirectory(libs/container)
+
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   add_subdirectory(examples)
 endif()

@@ -5,6 +5,7 @@ add_library(anvil STATIC
     $<TARGET_OBJECTS:math_linear_algebra>
     $<TARGET_OBJECTS:math_comparison>
     $<TARGET_OBJECTS:memory>
+    $<TARGET_OBJECTS:container>
     $<TARGET_OBJECTS:graphic>
 )
 

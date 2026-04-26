@@ -1,4 +1,4 @@
-#include "anvil/memory/resizable_buffer.hpp"
+#include "anvil/memory/resizeable_buffer.hpp"
 #include "anvil/error/assert.hpp"
 #include "anvil/error/status.hpp"
 #include "anvil/math/comparison/comparison.hpp"
@@ -7,8 +7,8 @@
 #include <cstdint>
 #include <cstring>
 
-namespace anvil::memory::resizable_buffer {
-Error create(ResizableBuffer** buffer_out, u64 capacity, u64 alignment) noexcept {
+namespace anvil::memory::resizeable_buffer {
+Error create(ResizeableBuffer** buffer_out, u64 capacity, u64 alignment) noexcept {
         REQUIRE(buffer_out != nullptr, NULL_PARAMETER);
         REQUIRE(*buffer_out == nullptr, INVALID_ARGUMENTS);
         REQUIRE(capacity > 0, INVALID_ARGUMENTS);
@@ -18,18 +18,18 @@ Error create(ResizableBuffer** buffer_out, u64 capacity, u64 alignment) noexcept
         REQUIRE(alignment >= MIN_ALIGNMENT, INVALID_ARGUMENTS);
         REQUIRE(alignment <= MAX_ALIGNMENT, INVALID_ARGUMENTS);
 
-        const u64 BUFFER_ALIGNMENT    = alignof(ResizableBuffer);
+        const u64 BUFFER_ALIGNMENT    = alignof(ResizeableBuffer);
         const u64 TRUE_ALIGNMENT      = anvil::math::comparison::max(alignment, BUFFER_ALIGNMENT);
-        const u64 TOTAL_MEMORY_NEEDED = capacity + sizeof(ResizableBuffer) + TRUE_ALIGNMENT - 1;
+        const u64 TOTAL_MEMORY_NEEDED = capacity + sizeof(ResizeableBuffer) + TRUE_ALIGNMENT - 1;
 
         void*     mem                 = nullptr;
         if (anvil::memory::anvil_memory_alloc_eager(&mem, TOTAL_MEMORY_NEEDED, TRUE_ALIGNMENT) != OK) {
                 return OUT_OF_MEMORY;
         }
 
-        *buffer_out                  = (ResizableBuffer*)(mem);
+        *buffer_out                  = (ResizeableBuffer*)(mem);
 
-        const uintptr_t RAW_BASE     = (uintptr_t)(*buffer_out) + sizeof(ResizableBuffer);
+        const uintptr_t RAW_BASE     = (uintptr_t)(*buffer_out) + sizeof(ResizeableBuffer);
         const uintptr_t ALIGNED_BASE = (RAW_BASE + (alignment - 1)) & ~(alignment - 1);
 
         (*buffer_out)->base          = (void*)(ALIGNED_BASE);
@@ -39,7 +39,7 @@ Error create(ResizableBuffer** buffer_out, u64 capacity, u64 alignment) noexcept
         return OK;
 }
 
-void* data(const ResizableBuffer* const buffer) noexcept {
+void* data(const ResizeableBuffer* const buffer) noexcept {
         REQUIRE(buffer != nullptr, nullptr);
         REQUIRE(buffer->base != nullptr, nullptr);
         REQUIRE(buffer->capacity > 0, nullptr);
@@ -51,7 +51,7 @@ void* data(const ResizableBuffer* const buffer) noexcept {
         return buffer->base;
 }
 
-Error destroy(ResizableBuffer** buffer) noexcept {
+Error destroy(ResizeableBuffer** buffer) noexcept {
         REQUIRE(buffer != nullptr, NULL_PARAMETER);
         REQUIRE(*buffer != nullptr, NULL_PARAMETER);
 
@@ -61,7 +61,7 @@ Error destroy(ResizableBuffer** buffer) noexcept {
         return OK;
 }
 
-void* resize(ResizableBuffer** buffer_out, u64 new_size) noexcept {
+void* resize(ResizeableBuffer** buffer_out, u64 new_size) noexcept {
         REQUIRE(buffer_out != nullptr, nullptr);
         REQUIRE((*buffer_out) != nullptr, nullptr);
         REQUIRE((*buffer_out)->base != nullptr, nullptr);
@@ -73,7 +73,7 @@ void* resize(ResizableBuffer** buffer_out, u64 new_size) noexcept {
         REQUIRE((*buffer_out)->alignment >= MIN_ALIGNMENT, nullptr);
         REQUIRE((*buffer_out)->alignment <= MAX_ALIGNMENT, nullptr);
 
-        ResizableBuffer* new_buffer = nullptr;
+        ResizeableBuffer* new_buffer = nullptr;
 
         if (create(&new_buffer, new_size, (*buffer_out)->alignment) != OK) {
                 return nullptr;
@@ -90,4 +90,4 @@ void* resize(ResizableBuffer** buffer_out, u64 new_size) noexcept {
         *buffer_out = new_buffer;
         return new_buffer->base;
 }
-} // namespace anvil::memory::resizable_buffer
+} // namespace anvil::memory::resizeable_buffer

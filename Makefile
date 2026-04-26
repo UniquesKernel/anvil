@@ -36,14 +36,14 @@ configure:
 	@cmake -B $(BUILD_DIR) $(CMAKE_OPTS) .
 
 build: configure
-	@cmake --build $(BUILD_DIR) -j$(nproc)
+	@cmake --build $(BUILD_DIR) -j$(shell nproc)
 
 debug:
 	@cmake -B $(DEBUG_DIR) $(CMAKE_OPTS) -DCMAKE_BUILD_TYPE=Debug .
-	@cmake --build $(DEBUG_DIR) -j$(nproc)
+	@cmake --build $(DEBUG_DIR) -j$(shell nproc)
 
 test: build
-	@cd $(BUILD_DIR) && ctest --output-on-failure
+	cd $(BUILD_DIR) && ctest -j$(shell nproc) --output-on-failure .
 
 docs:
 	@doxygen Doxyfile

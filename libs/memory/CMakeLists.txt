@@ -5,7 +5,7 @@ set(MODULE_SOURCE
     src/lazy_scratch_allocator.cpp
     src/scratch_allocator.cpp
     src/stack_allocator.cpp
-    src/resizable_buffer.cpp
+    src/resizeable_buffer.cpp
 )
 
 add_library(${MODULE_NAME} STATIC ${MODULE_SOURCE})
@@ -50,6 +50,7 @@ if(BUILD_TESTING)
       bindings/lazy_scratch_bindings.cpp
       bindings/scratch_bindings.cpp
       bindings/stack_bindings.cpp
+      bindings/resizeable_buffer_bindings.cpp
       ${MODULE_SOURCE}
     )
 
@@ -108,5 +109,16 @@ if(BUILD_TESTING)
   set_tests_properties(lazy_scratch_allocator_pytest PROPERTIES
       ENVIRONMENT "HYPOTHESIS_MAX_EXAMPLES=1000;PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tests:${PROJECT_SOURCE_DIR}/libs"
     )
+
+  add_test(
+      NAME resizeable_buffer_pytest
+      COMMAND ${Python3_EXECUTABLE} -m pytest -s -v "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_resizeable_buffer.py"
+      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/tests"
+    )
+
+  set_tests_properties(resizeable_buffer_pytest PROPERTIES
+      ENVIRONMENT "HYPOTHESIS_MAX_EXAMPLES=1000;PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tests:${PROJECT_SOURCE_DIR}/libs"
+    )
+
 endif()
 
