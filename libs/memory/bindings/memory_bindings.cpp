@@ -21,11 +21,11 @@ PYBIND11_MODULE(anvil_memory, m) {
         bind_lazy_scratch_allocator(m);
 
         // Error codes
-        py::enum_<Error>(m, "Error")
-            .value("OK", OK)
-            .value("INVALID_ARGUMENTS", INVALID_ARGUMENTS)
-            .value("NULL_PARAMETER", NULL_PARAMETER)
-            .value("OUT_OF_MEMORY", OUT_OF_MEMORY)
+        py::enum_<anvil::Error>(m, "Error")
+            .value("OK", anvil::OK)
+            .value("INVALID_ARGUMENTS", anvil::INVALID_ARGUMENTS)
+            .value("NULL_PARAMETER", anvil::NULL_PARAMETER)
+            .value("OUT_OF_MEMORY", anvil::OUT_OF_MEMORY)
             .export_values();
 
         // Constants

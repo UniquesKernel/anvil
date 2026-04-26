@@ -8,11 +8,11 @@ static constexpr anvil::u64 HEIGHT = 400;
 int                         main(void) {
         anvil::graphic::Canvas canvas;
 
-        if (anvil::graphic::create(&canvas, WIDTH, HEIGHT, ' ') != OK) {
+        if (anvil::graphic::create(&canvas, WIDTH, HEIGHT, ' ') != anvil::OK) {
                 return 1;
         }
 
-        if (anvil::graphic::set(&canvas, 0, 'a') != OK) {
+        if (anvil::graphic::set(&canvas, 0, 'a') != anvil::OK) {
                 printf("Failed\n");
         }
 

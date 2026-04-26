@@ -16,8 +16,8 @@ void bind_lazy_scratch_allocator(pybind11::module_& module) { // NOLINT
             "lazy_scratch_allocator_create",
             [](const anvil::u64 capacity, const anvil::u64 alignment) -> py::tuple {
                     anvil::memory::LazyScratchAllocator* allocator = nullptr;
-                    const Error ERR = anvil::memory::create(&allocator, capacity, alignment);
-                    if (ERR != OK) {
+                    const anvil::Error ERR = anvil::memory::create(&allocator, capacity, alignment);
+                    if (ERR != anvil::OK) {
                             return py::make_tuple(ERR, py::none());
                     }
                     return py::make_tuple(ERR,
@@ -38,8 +38,8 @@ void bind_lazy_scratch_allocator(pybind11::module_& module) { // NOLINT
                             return anvil::memory::destroy(&null_alloc);
                     }
 
-                    const Error ERR = anvil::memory::destroy(&alloc);
-                    if (ERR != OK) {
+                    const anvil::Error ERR = anvil::memory::destroy(&alloc);
+                    if (ERR != anvil::OK) {
                             return ERR;
                     }
 
@@ -80,33 +80,33 @@ void bind_lazy_scratch_allocator(pybind11::module_& module) { // NOLINT
                                                                                      alignment));
 
                             if (allocation == nullptr) {
-                                    return py::make_tuple(py::none(), OK);
+                                    return py::make_tuple(py::none(), anvil::OK);
                             }
-                            return py::make_tuple(py::capsule(allocation, "char*"), OK);
+                            return py::make_tuple(py::capsule(allocation, "char*"), anvil::OK);
                     }
 
                     allocation =
                         (char*)(anvil::memory::alloc(alloc, allocation_size, alignment));
 
                     if (allocation == nullptr) {
-                            return py::make_tuple(py::none(), OK);
+                            return py::make_tuple(py::none(), anvil::OK);
                     }
 
-                    return py::make_tuple(py::capsule(allocation, "char*"), OK);
+                    return py::make_tuple(py::capsule(allocation, "char*"), anvil::OK);
             },
             py::arg("allocator"), py::arg("allocation_size"), py::arg("alignment"));
 
         m.def(
             "lazy_scratch_allocator_write",
-            [](py::capsule& allocation, py::bytes data) -> Error {
+            [](py::capsule& allocation, py::bytes data) -> anvil::Error {
                     char* ptr = (char*)(allocation.get_pointer());
                     if (ptr == nullptr || ptr == (char*)0x1) {
-                            return NULL_PARAMETER;
+                            return anvil::NULL_PARAMETER;
                     }
 
                     std::string_view sv(data);
                     std::memcpy(ptr, sv.data(), sv.size());
-                    return OK;
+                    return anvil::OK;
             },
             py::arg("allocation"), py::arg("data"));
 
@@ -115,10 +115,10 @@ void bind_lazy_scratch_allocator(pybind11::module_& module) { // NOLINT
             [](py::capsule& allocation, const anvil::u64 size) -> py::tuple {
                     char* ptr = (char*)(allocation.get_pointer());
                     if (ptr == nullptr || ptr == (char*)0x1) {
-                            return py::make_tuple(NULL_PARAMETER, py::none());
+                            return py::make_tuple(anvil::NULL_PARAMETER, py::none());
                     }
 
-                    return py::make_tuple(OK, py::bytes(ptr, size));
+                    return py::make_tuple(anvil::OK, py::bytes(ptr, size));
             },
             py::arg("allocation"), py::arg("size"));
 }

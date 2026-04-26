@@ -3,6 +3,8 @@
 
 #include "anvil/types.hpp"
 
+namespace anvil {
+
 /**
  * @brief A list of error codes that can be used to indicate program errors
  */
@@ -13,5 +15,7 @@ enum Error : anvil::u8 {
         NULL_PARAMETER     = 3,
         OUT_OF_MEMORY      = 4,
 };
+
+} // namespace anvil
 
 #endif // !ANVIL_ERROR_STATUS_HPP

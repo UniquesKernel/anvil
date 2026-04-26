@@ -14,9 +14,9 @@ int main(void) {
         const anvil::u64                            ALLOC_SIZE = 8; // tiny allocations
 
         __attribute__((cleanup(cleanup_allocator))) anvil::memory::LazyStackAllocator* allocator = nullptr;
-        const Error ERR = anvil::memory::create(&allocator, ALLOC_SIZE * NUM_ALLOCS, alignof(anvil::i32));
+        const anvil::Error ERR = anvil::memory::create(&allocator, ALLOC_SIZE * NUM_ALLOCS, alignof(anvil::i32));
 
-        if (ERR != OK) {
+        if (ERR != anvil::OK) {
                 printf("ERROR: %i\n", ERR);
                 return 1;
         }

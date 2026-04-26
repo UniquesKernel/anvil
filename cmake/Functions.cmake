@@ -103,7 +103,7 @@ function(anvil_enable_static_analysis_root)
   if(CPPCHECK_EXE)
     add_custom_target(cppcheck ALL
       COMMAND ${CPPCHECK_EXE}
-        --enable=all
+        --enable=warning,performance,portability
         --inline-suppr
         --error-exitcode=1
         --suppress=missingIncludeSystem

@@ -5,58 +5,35 @@
 #include <vector>
 
 int main(void) {
-        const anvil::i32   NUM_ALLOCS     = 1024 * 1024 * 1024;
-        const anvil::i32   ALLOC_SIZE     = 64; // tiny allocations
+        int total = 100;
+        while (--total) {
+                const anvil::i64         NUM_ALLOCS = (anvil::i64)1024 * (anvil::i64)1024;
+                const anvil::i64         ALLOC_SIZE = (anvil::i64)64;
 
-        // --- ILP SETUP (Two parallel tracks) ---
-        __m256i            v_sum1         = _mm256_setzero_si256();
-        __m256i            v_sum2         = _mm256_setzero_si256();
+                std::vector<anvil::i64*> ptr_arr;
+                ptr_arr.reserve(NUM_ALLOCS);
+                unsigned long long starting_count = __rdtsc();
 
-        // Track 1: [0, 1, 2, 3, 4, 5, 6, 7]
-        __m256i            v_i1           = _mm256_set_epi32(8, 7, 6, 5, 4, 3, 2, 1);
-        // Track 2: [8, 9, 10, 11, 12, 13, 14, 15]
-        __m256i            v_i2           = _mm256_set_epi32(16, 15, 14, 13, 12, 11, 10, 9);
-
-        // Step is now 16
-        __m256i            v_step         = _mm256_set1_epi32(16);
-        unsigned long long starting_count = __rdtsc();
-        std::vector<void*> ptr_arr;
-        ptr_arr.reserve(NUM_ALLOCS);
-        for (anvil::i32 i = 0; i < NUM_ALLOCS; i += 16) {
-                anvil::i32* ptr = (anvil::i32*)(malloc(ALLOC_SIZE));
-                if (ptr == nullptr) [[unlikely]] {
-                        return 1;
+                anvil::i64         sum            = (anvil::i64)0;
+                for (anvil::i64 i = 0; i < NUM_ALLOCS; i++) {
+                        anvil::i64* const ptr = (anvil::i64*)(malloc(ALLOC_SIZE));
+                        if (ptr == nullptr) [[unlikely]] {
+                                return 1;
+                        }
+                        *ptr = i;
+                        ptr_arr.push_back(ptr);
+                }
+                for (const anvil::i64* const& ptr : ptr_arr) {
+                        sum += *ptr;
                 }
 
-                _mm256_store_si256((__m256i*)ptr, v_i1);
-                _mm256_store_si256((__m256i*)(ptr + 8), v_i2); // ptr + 8 ints = 32 bytes forward
+                for (anvil::i64 i = 0; i < ptr_arr.size(); i++) {
+                        free(ptr_arr[i]);
+                }
 
-                v_sum1 = _mm256_add_epi32(v_sum1, v_i1);
-                v_sum2 = _mm256_add_epi32(v_sum2, v_i2);
-
-                v_i1   = _mm256_add_epi32(v_i1, v_step);
-                v_i2   = _mm256_add_epi32(v_i2, v_step);
-                ptr_arr.push_back(ptr);
+                unsigned long long end_count = __rdtsc();
+                printf("SUM: %li\n", sum);
+                printf("CYCLES: %llu\n", end_count - starting_count);
         }
-
-        for (anvil::i32 i = 0; i < ptr_arr.size(); i++) {
-                free(ptr_arr.at(i));
-        }
-
-        // --- HORIZONTAL ADDITION ---
-        // Combine track 2 into track 1
-        v_sum1 = _mm256_add_epi32(v_sum1, v_sum2);
-
-        anvil::i32 sums[8];
-        _mm256_storeu_si256((__m256i*)sums, v_sum1);
-
-        anvil::i32 final_sum = 0;
-        for (anvil::i32 j = 0; j < 8; ++j) {
-                final_sum += sums[j];
-        }
-        unsigned long long end_count = __rdtsc();
-        printf("SUM: %i\n", final_sum);
-        printf("SUM: %llu\n", end_count - starting_count);
-
         return 0;
 }
