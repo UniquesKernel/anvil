@@ -9,6 +9,7 @@ target_compile_options(container PRIVATE
     -include ${PROJECT_SOURCE_DIR}/include/anvil/memory/memory_policy.hpp
 )
 
+target_link_libraries(container STATIC math)
 target_link_libraries(container STATIC memory)
 target_include_directories(${MODULE_NAME}
   PUBLIC
